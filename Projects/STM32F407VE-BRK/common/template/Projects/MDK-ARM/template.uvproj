@@ -343,7 +343,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -355,13 +355,13 @@
             <wLevel>2</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Inc;..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Inc;..\..\..\..\..\..\Drivers\MSP\Inc;..\..\..\..\..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\..\..\..\..\Drivers\CMSIS\Include;..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include</IncludePath>
+              <IncludePath>..\..\Inc;..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Inc;..\..\..\..\..\..\Drivers\MSP\Inc;..\..\..\..\..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\..\..\..\..\Drivers\CMSIS\Include;..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\..\..\..\..\..\Unity\src;..\..\..\..\..\..\Unity\extras\fixture\src</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -736,6 +736,21 @@
               <FileName>stm32f4xx_ll_sdmmc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_sdmmc.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Test/Harness</GroupName>
+          <Files>
+            <File>
+              <FileName>unity.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Unity\src\unity.c</FilePath>
+            </File>
+            <File>
+              <FileName>unity_fixture.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Unity\extras\fixture\src\unity_fixture.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -34,6 +34,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
+#include "unity_fixture.h"
 
 extern void board_init(void);
 extern void board_main(void);

@@ -2,6 +2,7 @@
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
 #include "usart.h"
+#include "unity_fixture.h"
 
 static DMA_HandleTypeDef 	hdma_usart2_rx =
 {
@@ -136,7 +137,24 @@ static void SystemClock_Config(void)
 
 }
 
-static char hello[] = "hello!\r\n";
+int unity_output_char(int a) 
+{
+	uint8_t chr = a;
+	
+	HAL_UART_Transmit(&huartex3.huart, &chr, 1, 10);
+	return a;
+}
+
+TEST_GROUP(Null_Test);
+TEST_SETUP(Null_Test){}
+TEST_TEAR_DOWN(Null_Test){}
+TEST(Null_Test, AssertTrue){	TEST_ASSERT_TRUE(1); }
+
+
+static void RunAllTests(void)
+{
+	RUN_TEST_CASE(Null_Test, AssertTrue);
+}
 
 void board_init(void)
 {
@@ -150,7 +168,9 @@ void board_init(void)
   MX_GPIO_Init();
 	// HAL_UART_Init(&huartex2.huart);
   HAL_UART_Init(&huartex3.huart);
-	HAL_UART_Transmit(&huartex3.huart, (uint8_t*)hello, strlen(hello), 10);
+	// HAL_UART_Transmit(&huartex3.huart, (uint8_t*)hello, strlen(hello), 10);
+	
+	UnityMain(1, 0, RunAllTests);
 }
 
 void board_main(void)
