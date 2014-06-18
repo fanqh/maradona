@@ -227,6 +227,7 @@ sandbox
 *.axf
 *.lst
 *.iex
+*.uvopt
 *.uvgui.*
 
 
