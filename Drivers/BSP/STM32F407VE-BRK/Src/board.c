@@ -1,3 +1,4 @@
+#include <string.h>
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
 #include "usart.h"
@@ -135,6 +136,8 @@ static void SystemClock_Config(void)
 
 }
 
+static char hello[] = "hello!\r\n";
+
 void board_init(void)
 {
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -146,7 +149,8 @@ void board_init(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
 	// HAL_UART_Init(&huartex2.huart);
-  HAL_UART_Init(&huartex3.huart);	
+  HAL_UART_Init(&huartex3.huart);
+	HAL_UART_Transmit(&huartex3.huart, (uint8_t*)hello, strlen(hello), 10);
 }
 
 void board_main(void)
