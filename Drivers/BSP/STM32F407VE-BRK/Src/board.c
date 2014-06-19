@@ -1,6 +1,8 @@
+#include <stdbool.h>
 #include <string.h>
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
+#include "dma.h"
 #include "usart.h"
 #include "unity_fixture.h"
 
@@ -156,8 +158,14 @@ static void RunAllTests(void)
 	RUN_TEST_CASE(Null_Test, AssertTrue);
 }
 
+static char console_ok[] = "console is ok.\r\n";
+static char hello[] = "hello";
+static char world[10] = {0};
+
 void board_init(void)
 {
+	
+	bool loop_ok = false;
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
@@ -166,9 +174,31 @@ void board_init(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-	// HAL_UART_Init(&huartex2.huart);
-  HAL_UART_Init(&huartex3.huart);
-	// HAL_UART_Transmit(&huartex3.huart, (uint8_t*)hello, strlen(hello), 10);
+	MX_DMA_Init();
+
+	HAL_UART_Init(&huartex3.huart);
+	HAL_UART_Transmit(&huartex3.huart, (uint8_t*)console_ok, strlen(console_ok), 10);
+	
+	HAL_UART_Init(&huartex2.huart);
+	HAL_UART_Receive_DMA(&huartex2.huart, (uint8_t*)world, 10);
+	HAL_UART_Transmit_DMA(&huartex2.huart, (uint8_t*)hello, strlen(hello));
+	
+	HAL_Delay(100);
+	
+	if (memcmp(hello, world, strlen(hello)) == 0) {
+		loop_ok = true;
+	}
+	
+	HAL_UART_DMAStop(&huartex2.huart);
+	HAL_UART_DeInit(&huartex2.huart);
+	
+	if (loop_ok)
+	{
+		HAL_UART_Transmit(&huartex3.huart, (uint8_t*)"loop hello success\r\n", strlen("loop hello success\r\n"), 10);
+	}
+	else {
+		HAL_UART_Transmit(&huartex3.huart, (uint8_t*)"loop hello fail\r\n", strlen("loop hello fail\r\n"), 10);
+	}
 	
 	UnityMain(1, 0, RunAllTests);
 }
@@ -177,6 +207,49 @@ void board_main(void)
 {
 	while(1){};
 }
+
+/*************************** interrupt handler *******************************/
+
+/**
+* @brief This function handles System tick timer.
+*/
+void SysTick_Handler(void)
+{
+  HAL_IncTick();
+  HAL_SYSTICK_IRQHandler();
+}
+
+/**
+* @brief This function handles DMA1 Stream6 global interrupt.
+*/
+void DMA1_Stream6_IRQHandler(void)
+{
+  HAL_NVIC_ClearPendingIRQ(DMA1_Stream6_IRQn);
+  HAL_DMA_IRQHandler(&hdma_usart2_tx);
+}
+
+/**
+* @brief This function handles DMA1 Stream5 global interrupt.
+*/
+void DMA1_Stream5_IRQHandler(void)
+{
+  HAL_NVIC_ClearPendingIRQ(DMA1_Stream5_IRQn);
+  HAL_DMA_IRQHandler(&hdma_usart2_rx);
+}
+
+/**
+* @brief This function handles USART2 global interrupt.
+*/
+void USART2_IRQHandler(void)
+{
+  HAL_NVIC_ClearPendingIRQ(USART2_IRQn);
+  HAL_UART_IRQHandler(&huartex2.huart);
+}
+
+
+
+
+/************************************** end of file **************************/
 
 
 
