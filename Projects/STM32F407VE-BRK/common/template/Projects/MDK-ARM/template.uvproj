@@ -424,11 +424,6 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Src\main.c</FilePath>
             </File>
-            <File>
-              <FileName>stm32f4xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Src\stm32f4xx_it.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -443,6 +438,11 @@
               <FileName>gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\dma.c</FilePath>
             </File>
           </Files>
         </Group>
