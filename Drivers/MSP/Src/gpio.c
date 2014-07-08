@@ -34,7 +34,19 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdbool.h>
 #include "gpio.h"
+
+
+GPIO_ClockTypeDef	GPIOA_Clock_Singleton = {.instance = GPIOA, };
+GPIO_ClockTypeDef	GPIOB_Clock_Singleton = {.instance = GPIOB, };
+GPIO_ClockTypeDef	GPIOC_Clock_Singleton = {.instance = GPIOC, };
+GPIO_ClockTypeDef	GPIOD_Clock_Singleton = {.instance = GPIOD, };
+GPIO_ClockTypeDef	GPIOE_Clock_Singleton = {.instance = GPIOE, };
+GPIO_ClockTypeDef	GPIOF_Clock_Singleton = {.instance = GPIOF, };
+GPIO_ClockTypeDef	GPIOG_Clock_Singleton = {.instance = GPIOG, };
+GPIO_ClockTypeDef	GPIOH_Clock_Singleton = {.instance = GPIOH, };
+
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -53,18 +65,118 @@
         * EVENT_OUT
         * EXTI
 */
-void MX_GPIO_Init(void)
+//void MX_GPIO_Init(void)
+//{
+
+//  /* GPIO Ports Clock Enable */
+//  __GPIOH_CLK_ENABLE();
+//  __GPIOD_CLK_ENABLE();
+
+//}
+
+void	GPIOEX_Init(GPIOEX_TypeDef* gpioex)
 {
-
-  /* GPIO Ports Clock Enable */
-  __GPIOH_CLK_ENABLE();
-  __GPIOD_CLK_ENABLE();
-
+	GPIO_Clock_Get(gpioex->clk, gpioex->init.Pin);
+	HAL_GPIO_Init(gpioex->instance, &gpioex->init);
+	gpioex->state = GPIOEX_STATE_SET;
 }
 
-/* USER CODE BEGIN 2 */
+void 	GPIOEX_DeInit(GPIOEX_TypeDef* gpioex)
+{
+	HAL_GPIO_DeInit(gpioex->instance, gpioex->init.Pin);
+	GPIO_Clock_Put(gpioex->clk, gpioex->init.Pin);
+	gpioex->state = GPIOEX_STATE_RESET;
+}
 
-/* USER CODE END 2 */
+void GPIO_Clock_Get(GPIO_ClockTypeDef* clk, uint32_t Pin) 
+{
+	clk->bits |= Pin;
+	clk->bits &= 0x0000FFFF;
+	
+	if (clk->instance == GPIOA)
+	{
+		__GPIOA_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOB)
+	{
+		__GPIOB_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOC)
+	{
+		__GPIOC_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOD)
+	{
+		__GPIOD_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOE)
+	{
+		__GPIOE_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOF)
+	{
+		__GPIOF_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOG)
+	{
+		__GPIOG_CLK_ENABLE();
+	}
+	else if (clk->instance == GPIOH)
+	{
+		__GPIOH_CLK_ENABLE();
+	}
+	else {
+		assert_param(false);
+	}
+}
+
+
+void GPIO_Clock_Put(GPIO_ClockTypeDef* clk, uint32_t Pin)
+{
+	clk->bits &= ~Pin;
+	clk->bits &= 0x0000FFFF;
+	
+	if (clk->instance == GPIOA)
+	{
+		__GPIOA_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOB)
+	{
+		__GPIOB_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOC)
+	{
+		__GPIOC_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOD)
+	{
+		__GPIOD_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOE)
+	{
+		__GPIOE_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOF)
+	{
+		__GPIOF_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOG)
+	{
+		__GPIOG_CLK_DISABLE();
+	}
+	else if (clk->instance == GPIOH)
+	{
+		__GPIOH_CLK_DISABLE();
+	}
+	else {
+		assert_param(false);
+	}	
+}
+
+bool GPIO_Clock_Status(GPIO_ClockTypeDef* clk, uint32_t Pin)
+{
+	return (clk->bits & Pin) ? true : false;
+}
 
 /**
   * @}
@@ -73,5 +185,49 @@ void MX_GPIO_Init(void)
 /**
   * @}
   */
+
+/************************ Defaults ********************************************/
+
+const GPIOEX_TypeDef	PC6_As_Uart6Tx_Default =
+{
+	.instance = GPIOC,
+	.init =
+	{
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_LOW,
+		.Alternate = GPIO_AF8_USART6,			
+	},
+	.clk = &GPIOC_Clock_Singleton,			// don't forget this! bug!
+};
+
+const GPIOEX_TypeDef	PD6_As_Uart2Rx_Default = 
+{
+	.instance = GPIOD,
+	.init =
+	{
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_LOW,
+		.Alternate = GPIO_AF7_USART2,			
+	},
+	.clk = &GPIOD_Clock_Singleton,
+};
+
+const GPIOEX_TypeDef	PD5_As_Uart2Tx_Default =
+{
+	.instance = GPIOD,
+	.init =
+	{
+		.Pin = GPIO_PIN_5,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_LOW,
+		.Alternate = GPIO_AF7_USART2,			
+	},
+	.clk = &GPIOD_Clock_Singleton,		
+};
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

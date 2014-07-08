@@ -41,8 +41,56 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdbool.h>
 #include "stm32f4xx_hal.h"
-void MX_GPIO_Init(void);
+	 
+typedef struct 
+{
+	GPIO_TypeDef		*instance;
+	uint32_t 				bits;
+	
+} GPIO_ClockTypeDef;
+
+typedef enum
+{
+	GPIOEX_STATE_RESET = 0,
+	GPIOEX_STATE_SET,
+} GPIOEX_StateTypeDef;
+	 
+typedef struct
+{
+	GPIO_TypeDef  					*instance;
+	GPIO_InitTypeDef				init;
+	GPIO_ClockTypeDef				*clk;
+	
+	GPIOEX_StateTypeDef			state;
+	
+} GPIOEX_TypeDef;	
+
+extern GPIO_ClockTypeDef	GPIOA_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOB_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOC_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOD_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOE_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOF_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOG_Clock_Singleton;
+extern GPIO_ClockTypeDef	GPIOH_Clock_Singleton;
+
+
+void	GPIOEX_Init(GPIOEX_TypeDef* gpioex);
+void 	GPIOEX_DeInit(GPIOEX_TypeDef* gpioex);
+
+/** in the following function, use only separate Pin defines, don't OR them **/
+void 	GPIO_Clock_Get(GPIO_ClockTypeDef* clk, uint32_t Pin);
+void 	GPIO_Clock_Put(GPIO_ClockTypeDef* clk, uint32_t Pin);
+bool	GPIO_Clock_Status(GPIO_ClockTypeDef* clk, uint32_t Pin);
+
+const extern GPIOEX_TypeDef	PC6_As_Uart6Tx_Default;
+const extern GPIOEX_TypeDef	PD6_As_Uart2Rx_Default;
+const extern GPIOEX_TypeDef	PD5_As_Uart2Tx_Default;
+
+
+// void MX_GPIO_Init(void);
 #ifdef __cplusplus
 }
 #endif
@@ -55,5 +103,7 @@ void MX_GPIO_Init(void);
 /**
   * @}
   */
+
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
