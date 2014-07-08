@@ -40,51 +40,67 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdbool.h>	 
 #include "stm32f4xx_hal.h"
-
-typedef struct {
-
-	uint32_t nvic_priority_group;
-	IRQn_Type irqn;
-	uint32_t preempt_priority;
-	uint32_t sub_priority;
+#include "gpio.h"
+#include "dma.h"
 	
-} UART_IRQTypeDef;
-	
-	 
-struct UARTEX_HandleStruct 
+struct UART_IRQHandlerStruct
 {
-	GPIO_TypeDef  				*gpio_port;
-	GPIO_InitTypeDef			*gpio_init;
+	UART_HandleTypeDef*		handle[7];	/** the [0] element not used. **/
+};
+
+typedef struct UART_IRQHandlerStruct UART_IRQHandlerTypeDef;
+
+struct UARTEX_HandleStruct 
+{	
+	GPIOEX_TypeDef					rxpin;
+	GPIOEX_TypeDef					txpin;
 	
-	UART_HandleTypeDef 		huart;
+	UART_HandleTypeDef 			huart;
 	
-	DMA_HandleTypeDef			*hdma_rx;
-	DMA_HandleTypeDef			*hdma_tx;
+	DMAEX_HandleTypeDef			*hdmaex_rx;
+	DMAEX_HandleTypeDef			*hdmaex_tx;
 	
-	UART_IRQTypeDef				*irq;
+	bool										useIRQ;
+	IRQ_HandleTypeDef				hirq;
 };
 
 typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;
 
+extern UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton;
 
-extern UART_HandleTypeDef huart2;
-extern UART_HandleTypeDef huart3;
 
-void MX_USART2_UART_Init(void);
-void MX_USART3_UART_Init(void);
+void UARTEX_Clone(UARTEX_HandleTypeDef* dst, 
+									const UARTEX_HandleTypeDef* defaults,
+									const GPIOEX_TypeDef* rxpin,
+									const GPIOEX_TypeDef* txpin,
+									const IRQ_HandleTypeDef* irq,
+									DMAEX_HandleTypeDef* rxdma,
+									DMAEX_HandleTypeDef* txdma);
+
+/** utility **/
+void HAL_UART_ClockEnable(USART_TypeDef* uart);
+void HAL_UART_ClockDisable(USART_TypeDef* uart);
+bool HAL_UART_ClockIsEnabled(USART_TypeDef* uart);
+
+int UART_Instance_To_Index(USART_TypeDef* uart);
+									
+/*********************** Defaults *********************************************/
+
+const extern IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default;
+									
+const extern UARTEX_HandleTypeDef UARTEX_Handle_Uart2_Default;			
+
+const extern DMAEX_HandleTypeDef DMAEX_Handle_Uart2Rx_Default;
+const extern DMAEX_HandleTypeDef DMAEX_Handle_Uart2Tx_Default;									
+									
 
 #ifdef __cplusplus
 }
 #endif
 #endif /*__ usart_H */
 
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

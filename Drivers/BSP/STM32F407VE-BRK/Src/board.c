@@ -55,7 +55,7 @@ static UART_IRQTypeDef		irq_usart2 =
 	.irqn = USART2_IRQn,
 };
 	
-static UARTEX_HandleTypeDef huartex2 = 
+UARTEX_HandleTypeDef huartex2 = 
 {	
 	.gpio_port = GPIOD,
 	.gpio_init = &gpio_init_usart2,

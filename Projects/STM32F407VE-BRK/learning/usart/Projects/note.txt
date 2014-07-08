@@ -1,0 +1,12 @@
+Refine Setup/Teardown
+Need new test case for USART interrupt (not dma)
+Need to reset the hardware after close, clear all the error status.
+Try FW1.2 merge
+Try Fingerprint Code
+irq_enabled should be removed out of usart.c/usart_test.c
+
+////////////////////////////////////
+A new hidden dependency found. dma/uart IRQ Handler need GLOBAL. DONE
+split tx/rx pin config? DONE
+All uart tx/rx learning test broken if we change test data to something other than globals in usart.c DONE
+GPIO Clock (similar with that of DMA)
