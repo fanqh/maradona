@@ -1,45 +1,50 @@
+#include <stdlib.h>
+#include <string.h>
 #include "stm32f4xx_hal.h"
 #include "irq.h"
 
-IRQ_HandlerDataStore IRQ_HandlerDataStore_Singleton = {0};
 
-void IRQ_HandlerData_Register(IRQ_HandlerDataStore* data, IRQn_Type irqn, void* p)
+IRQ_HandlerObjectRegistryTypeDef IRQ_HandlerObjectRegistry = {0};
+
+void IRQ_HandlerObject_Register(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn_Type irqn, void* p)
 {
 	if (irqn > FPU_IRQn || p == NULL)
 		return;
 	
-	data->data[irqn] = p;
+	registry->irqh_obj[irqn] = p;
 }
 
-void IRQ_HandlerData_Unregister(IRQ_HandlerDataStore* data, IRQn_Type irqn)
+void IRQ_HandlerObject_Unregister(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn_Type irqn)
 {
 	if (irqn > FPU_IRQn)
 		return;
 	
-	data->data[irqn] = NULL;
+	registry->irqh_obj[irqn] = NULL;
 }
 
-void* IRQ_HandlerData_Get(IRQ_HandlerDataStore* data, IRQn_Type irqn)
+void* IRQ_HandlerObject_Get(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn_Type irqn)
 {
 	if (irqn > FPU_IRQn)
 		return NULL;
 	
-	return data->data[irqn];
+	return registry->irqh_obj[irqn];
 }
 
-void IRQ_Init(IRQ_HandleTypeDef* hirq, void* hdata)
+
+
+void IRQ_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj)
 {
 	assert_param(hirq);
 	assert_param(hirq->irqn <= FPU_IRQn);
 	
 	/** the following assertion forcefully requires hdata & hdata_store be set **/
 	/** without this assumption, it may require the user/caller to do this themselves, which is not reasonable **/
-	assert_param(hirq->hdata_store);
+	assert_param(hirq->registry);
 	
-	if (hdata)
+	if (irqh_obj)
 	{
-		hirq->hdata = hdata;
-		IRQ_HandlerData_Register(hirq->hdata_store, hirq->irqn, hirq->hdata);
+		hirq->irqh_obj = irqh_obj;
+		IRQ_HandlerObject_Register(hirq->registry, hirq->irqn, hirq->irqh_obj);
 	}
 	
 	hirq->state = IRQ_HANDLE_STATE_SET;
@@ -57,11 +62,62 @@ void IRQ_DeInit(IRQ_HandleTypeDef* hirq)
 	
 	hirq->state = IRQ_HANDLE_STATE_RESET;
 	
-	if (hirq->hdata)
+	if (hirq->irqh_obj)
 	{
-		assert_param(hirq->hdata_store);
-		IRQ_HandlerData_Unregister(hirq->hdata_store, hirq->irqn);
-		hirq->hdata = 0;	// remove link
+		assert_param(hirq->registry);
+		IRQ_HandlerObject_Unregister(hirq->registry, hirq->irqn);
+		hirq->irqh_obj = 0;	// remove link
 	}
 }
+
+IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandlerObjectRegistryTypeDef* registry)
+{
+	IRQ_HandleTypeDef* h = (IRQ_HandleTypeDef*)malloc(sizeof(IRQ_HandleTypeDef));
+	if (h == NULL) return NULL;
+	
+	h->irqh_obj = 0;
+	h->registry = registry;
+	h->irqn = irqn;
+	h->preempt_priority = preempt;
+	h->state = IRQ_HANDLE_STATE_RESET;
+	h->sub_priority = sub;
+	
+	return h;
+}
+
+IRQ_HandleTypeDef *IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandlerObjectRegistryTypeDef* registry)
+{
+	return IRQ_Handle_Ctor(hirq->irqn, hirq->preempt_priority, hirq->sub_priority, registry);
+}
+
+void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
+{
+	if (handle) free(handle);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+const IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default =
+{
+	.irqn = USART2_IRQn,
+	.registry = &IRQ_HandlerObjectRegistry,
+	.irqh_obj = 0, // should be override		
+};
+
+const IRQ_HandleTypeDef IRQ_Handle_Uart2RxDMA_Default =
+{
+	.irqn = DMA1_Stream5_IRQn,
+	.registry = &IRQ_HandlerObjectRegistry,
+	.irqh_obj = 0, // THIS ONE should be link to the copied instance.hdma
+};
+
+const IRQ_HandleTypeDef IRQ_Handle_Uart2TxDMA_Default = 
+{
+	.irqn = DMA1_Stream6_IRQn,
+	.registry = &IRQ_HandlerObjectRegistry,
+	.irqh_obj = 0,	// should be override
+};
+
 

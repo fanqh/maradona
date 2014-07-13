@@ -3,38 +3,39 @@
 #include "dma.h"
 #include "gpio.h"
 #include "usart.h"
-#include "unity_fixture.h"
+
+static GPIOEX_TypeDef rxpin_usart3 =
+{
+	.instance = GPIOD,
+	.init =
+	{
+		.Pin = GPIO_PIN_9,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_LOW,
+		.Alternate = GPIO_AF7_USART2,			
+	},
+	.clk = &GPIO_ClockProvider,
+};
+
+static GPIOEX_TypeDef txpin_usart3 = 
+{
+	.instance = GPIOD,
+	.init =
+	{
+		.Pin = GPIO_PIN_8,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_LOW,
+		.Alternate = GPIO_AF7_USART2,			
+	},
+	.clk = &GPIO_ClockProvider,
+};
 
 static UARTEX_HandleTypeDef huartex3 = 
 {	
-	.rxpin = 
-	{
-		.instance = GPIOD,
-		.init =
-		{
-			.Pin = GPIO_PIN_9,
-			.Mode = GPIO_MODE_AF_PP,
-			.Pull = GPIO_NOPULL,
-			.Speed = GPIO_SPEED_LOW,
-			.Alternate = GPIO_AF7_USART2,			
-		},
-		.clk = &GPIOD_Clock_Singleton,
-	},
-	
-	.txpin = 
-	{
-		.instance = GPIOD,
-		.init =
-		{
-			.Pin = GPIO_PIN_8,
-			.Mode = GPIO_MODE_AF_PP,
-			.Pull = GPIO_NOPULL,
-			.Speed = GPIO_SPEED_LOW,
-			.Alternate = GPIO_AF7_USART2,			
-		},
-		.clk = &GPIOD_Clock_Singleton,
-	},	
-	
+	.rxpin = &rxpin_usart3,
+	.txpin = &txpin_usart3,
 	.huart = 
 	{
 		.Instance = USART3,
@@ -95,12 +96,13 @@ static void RunAllTests(void)
 {
 	RUN_TEST_GROUP(LT_Usart_DMA_TxRx);
 	RUN_TEST_GROUP(Usart_DMA_MspInit);
-	RUN_TEST_GROUP(UARTEX_Clone);
-	RUN_TEST_GROUP(IRQ_Handler);
-	RUN_TEST_GROUP(IRQ_Init);
+	RUN_TEST_GROUP(UARTEX_Handle);
+	RUN_TEST_GROUP(IRQ_All);
 	RUN_TEST_GROUP(DMA_Clock);
-	RUN_TEST_GROUP(DMAEX_Init);
-	RUN_TEST_GROUP(GPIO_Clock);
+	RUN_TEST_GROUP(DMAEX_Handle);
+	RUN_TEST_GROUP(GPIO_All);
+	RUN_TEST_GROUP(UsartHalEx_DMA);
+	RUN_TEST_GROUP(UsartIO_DMA);
 }
 
 void board_init(void)
@@ -121,9 +123,6 @@ void board_main(void)
 	while(1){};
 }
 
-/**
-* @brief This function handles System tick timer.
-*/
 void SysTick_Handler(void)
 {
   HAL_IncTick();

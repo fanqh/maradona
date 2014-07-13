@@ -41,6 +41,7 @@
 #endif
 	 
 #include <stddef.h>
+#include "unity_fixture.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
