@@ -36,11 +36,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include "errno_ex.h"
 #include "usart.h"
 #include "gpio.h"
 
 UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton = {0};
-
 
 static void enable_usart_clock(USART_TypeDef* instance)
 {
@@ -123,7 +124,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 	
 	enable_usart_clock(huart->Instance);
 
-	GPIOEX_Init(&hue->rxpin);
+	GPIOEX_Init(hue->rxpin);
 	if (hue->hdmaex_rx)
 	{
 		assert_param(hue->hdmaex_rx->clk);
@@ -132,7 +133,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 		DMAEX_Init(hue->hdmaex_rx);
 	}
 
-	GPIOEX_Init(&hue->txpin);
+	GPIOEX_Init(hue->txpin);
 	if (hue->hdmaex_tx)
 	{
 		assert_param(hue->hdmaex_tx->clk);
@@ -141,9 +142,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 		DMAEX_Init(hue->hdmaex_tx);		
 	}
 		
-	if (hue->useIRQ)
+	if (hue->hirq)
 	{
-		IRQ_Init(&hue->hirq, &hue->huart);
+		IRQ_Init(hue->hirq, &hue->huart);
 	}
 }
 
@@ -172,9 +173,9 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 	
 	UARTEX_HandleTypeDef* hue = container_of(huart, UARTEX_HandleTypeDef, huart);
 	
-	if (hue->useIRQ)
+	if (hue->hirq)
 	{
-    IRQ_DeInit(&hue->hirq);
+    IRQ_DeInit(hue->hirq);
 	}	
 	
 	if (hue->hdmaex_tx)
@@ -191,8 +192,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 		hue->huart.hdmarx = 0;
 	}
 
-	GPIOEX_DeInit(&hue->rxpin);
-	GPIOEX_DeInit(&hue->txpin);
+	GPIOEX_DeInit(hue->rxpin);
+	GPIOEX_DeInit(hue->txpin);
 	
 	disable_usart_clock(huart->Instance);
 } 
@@ -321,22 +322,133 @@ void USART2_IRQHandler(void)
 }
 
 
+UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
+																					const UART_InitTypeDef	*init,
+																					GPIOEX_TypeDef					*rxpin, 		// DI
+																					GPIOEX_TypeDef					*txpin, 		// DI		
+																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
+																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
+																					IRQ_HandleTypeDef				*hirq)			// DI
+{
+	UARTEX_HandleTypeDef* h = (UARTEX_HandleTypeDef*)malloc(sizeof(UARTEX_HandleTypeDef));
+	if (!h) return NULL;
+	
+	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
+	
+	h->rxpin = rxpin;
+	h->txpin = txpin;
+	h->huart.Instance = uart;
+	memmove(&h->huart.Init, init, sizeof(UART_InitTypeDef));
+	h->hdmaex_rx = hdmaex_rx;
+	h->hdmaex_tx = hdmaex_tx;
+	h->hirq = hirq;
+	
+	return h;
+}
+
+void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle)
+{
+	if (handle) free(handle);
+}
+
+UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
+																										const UART_HandleTypeDef* huart,			// instance + init
+																										const GPIOEX_TypeDef*	rxpin,					// instance + init
+																										const GPIOEX_TypeDef*	txpin,					// instance + init
+																										const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
+																										const IRQ_HandleTypeDef* hirq_dmarx,	//
+																										const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
+																										const IRQ_HandleTypeDef* hirq_dmatx,	//
+																										const IRQ_HandleTypeDef* hirq_uart)		// instance + init, optional
+{
+	GPIOEX_TypeDef* rxpinH;
+	GPIOEX_TypeDef* txpinH;
+	DMAEX_HandleTypeDef* dmaExRxH;
+	DMAEX_HandleTypeDef* dmaExTxH;
+	IRQ_HandleTypeDef* irqH;
+	UARTEX_HandleTypeDef* h;
+
+	DMAEX_Handle_FactoryTypeDef dma_factory;
+	dma_factory.clk = factory->dma_clk;
+	dma_factory.reg = factory->registry;	
+	
+	rxpinH = GPIOEX_Ctor(rxpin->instance, &rxpin->init, factory->gpio_clk);
+	if (rxpinH == NULL)
+		goto fail0;
+	
+	txpinH = GPIOEX_Ctor(txpin->instance, &txpin->init, factory->gpio_clk);
+	if (txpinH == NULL)
+		goto fail1;
+	
+	dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmarx, hirq_dmarx);
+	if (dmaExRxH == NULL)
+		goto fail2;
+	
+	dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmatx, hirq_dmatx);
+	if (dmaExTxH == NULL)
+		goto fail3;
+	
+	irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
+	if (irqH == NULL)
+		goto fail4;
+	
+	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH);
+	
+//	h = (UARTEX_HandleTypeDef*)malloc(sizeof(UARTEX_HandleTypeDef));
+	if (h == NULL)
+		goto fail5;
+	
+//	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
+
+//	h->rxpin = rxpinH;
+//	h->txpin = txpinH;
+//	h->hdmaex_rx = dmaExRxH;
+//	h->hdmaex_tx = dmaExTxH;
+//	h->hirq = irqH;
+	
+	return h;
+	
+	fail5:	IRQ_Handle_Dtor(irqH);
+	fail4:	DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
+	fail3:	DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
+	fail2: 	GPIOEX_Dtor(txpinH);
+	fail1:	GPIOEX_Dtor(rxpinH);
+	fail0:	return NULL;
+}
+
+void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, UARTEX_HandleTypeDef* h)
+{
+	DMAEX_Handle_FactoryTypeDef	dma_factory;
+	
+	dma_factory.clk = factory->dma_clk;
+	dma_factory.reg = factory->registry;	
+	
+	DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_rx);
+	DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_tx);
+	GPIOEX_Dtor(h->rxpin);
+	GPIOEX_Dtor(h->txpin);
+	IRQ_Handle_Dtor(h->hirq);
+		
+	free(h);
+}
+
+
+/** obsolete, don't use **/
 void UARTEX_Clone(UARTEX_HandleTypeDef* dst, 							
 									const UARTEX_HandleTypeDef* defaults,		
-									const GPIOEX_TypeDef* rxpin,
-									const GPIOEX_TypeDef* txpin,
-									const IRQ_HandleTypeDef* irq,
+									GPIOEX_TypeDef* rxpin,
+									GPIOEX_TypeDef* txpin,
+									IRQ_HandleTypeDef* irq,
 									DMAEX_HandleTypeDef* rxdma,
 									DMAEX_HandleTypeDef* txdma)
 {
 	(*dst) = (*defaults);
 	
-	if (rxpin) dst->rxpin = (*rxpin);
-	if (txpin) dst->txpin = (*txpin);
+	if (rxpin) dst->rxpin = rxpin;
+	if (txpin) dst->txpin = txpin;
 	
 	if (irq) {
-		dst->useIRQ = true;
-		dst->hirq = (*irq);
+		dst->hirq = irq;
 	}
 
 	if (rxdma)
@@ -350,74 +462,90 @@ void UARTEX_Clone(UARTEX_HandleTypeDef* dst,
 	}
 }
 
+
+
+/** do it anyway, considering we cannot know what is the previously set buffer size, dont make assumptios, leave the POLICY to the caller **/
+HAL_StatusTypeDef HAL_UART_SwapRxDMABuffer(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+{
+	
+	// HAL_StatusTypeDef status;
+	if (h == 0 || buf == 0 || size == 0 || size >= 65535) /** the NDTR accept 65535 at most **/
+		return HAL_ERROR;
+
+#if 0
+			HAL_UART_STATE_RESET             = 0x00,    /*!< Peripheral is not yet Initialized                  */
+			HAL_UART_STATE_READY             = 0x01,    /*!< Peripheral Initialized and ready for use           */
+			HAL_UART_STATE_BUSY              = 0x02,    /*!< an internal process is ongoing                     */   
+			HAL_UART_STATE_BUSY_TX           = 0x12,    /*!< Data Transmission process is ongoing               */ 
+			HAL_UART_STATE_BUSY_RX           = 0x22,    /*!< Data Reception process is ongoing                  */
+			HAL_UART_STATE_BUSY_TX_RX        = 0x32,    /*!< Data Transmission and Reception process is ongoing */  
+fatal	HAL_UART_STATE_TIMEOUT           = 0x03,    /*!< Timeout state                                      */
+n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                                              */  
+#endif
+	
+	if (h->State == HAL_UART_STATE_BUSY)
+		return HAL_BUSY;
+	
+	if (h->State == HAL_UART_STATE_TIMEOUT || h->State == HAL_UART_STATE_RESET || h->State == HAL_UART_STATE_ERROR)
+		return HAL_TIMEOUT;
+	
+	/** for non-rx/tx state, this func takes no effect.*/
+	HAL_UART_DMAPause(h);
+	
+	if (h->State == HAL_UART_STATE_READY || h->State == HAL_UART_STATE_BUSY_TX) {
+		
+		/** resume asap **/
+		HAL_UART_DMAResume(h);
+		
+		if (m0ar)
+			*m0ar = h->hdmarx->Instance->M0AR;
+	
+		if (ndtr) 
+			*ndtr = __HAL_DMA_GET_COUNTER(h->hdmarx);
+		
+		return HAL_UART_Receive_DMA(h, buf, size);
+	}
+	
+	__HAL_DMA_DISABLE_IT(h->hdmarx, DMA_IT_TC);
+	__HAL_DMA_DISABLE(h->hdmarx);				/** this clear DMA_SxCR_EN bit**/	
+	
+	if (m0ar) 
+		*m0ar = h->hdmarx->Instance->M0AR;
+
+	if (ndtr) 
+		*ndtr = __HAL_DMA_GET_COUNTER(h->hdmarx);
+
+	h->hdmarx->Instance->M0AR = (uint32_t)buf;
+	__HAL_DMA_SET_COUNTER(h->hdmarx, size);
+
+	__HAL_DMA_CLEAR_FLAG(h->hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(h->hdmarx));
+	__HAL_DMA_ENABLE(h->hdmarx);
+	__HAL_DMA_ENABLE_IT(h->hdmarx, DMA_IT_TC);	
+	HAL_UART_DMAResume(h);
+		
+	return HAL_OK;
+}
+
+
+
 /************************ Defaults ********************************************/
 
-const IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default =
-{
-	.irqn = USART2_IRQn,
-	.hdata_store = &IRQ_HandlerDataStore_Singleton,
-	.hdata = 0, // should be override		
-};
 
-const DMAEX_HandleTypeDef DMAEX_Handle_Uart2Rx_Default =
+
+const UART_HandleTypeDef	UART_Handle_Uart2_Default =
 {
-	.clk = &DMA_Clock_Singleton,
-	.hdma =
-	{	
-		.Instance = DMA1_Stream5,
-		.Init = 
-		{
-			.Channel = DMA_CHANNEL_4,
-			.Direction = DMA_PERIPH_TO_MEMORY,
-			.PeriphInc = DMA_PINC_DISABLE,
-			.MemInc = DMA_MINC_ENABLE,
-			.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
-			.MemDataAlignment = DMA_MDATAALIGN_BYTE,
-			.Mode = DMA_NORMAL,
-			.Priority = DMA_PRIORITY_LOW,
-			.FIFOMode = DMA_FIFOMODE_DISABLE,
-		},
-	},
-	
-	.useIRQ = true,
-	.hirq = 
+	.Instance = USART2,
+	.Init = 
 	{
-		.irqn = DMA1_Stream5_IRQn,
-		.hdata_store = &IRQ_HandlerDataStore_Singleton,
-		.hdata = 0, // THIS ONE should be link to the copied instance.hdma
+		.BaudRate = 115200,
+		.WordLength = UART_WORDLENGTH_8B,
+		.StopBits = UART_STOPBITS_1,
+		.Parity = UART_PARITY_NONE,
+		.Mode = UART_MODE_TX_RX,
+		.HwFlowCtl = UART_HWCONTROL_NONE,
+		.OverSampling = UART_OVERSAMPLING_16,
 	},
 };
-
-const DMAEX_HandleTypeDef DMAEX_Handle_Uart2Tx_Default = 
-{
-	.hdma =
-	{
-		.Instance = DMA1_Stream6,
-		.Init = 
-		{
-			.Channel = DMA_CHANNEL_4,
-			.Direction = DMA_MEMORY_TO_PERIPH,
-			.PeriphInc = DMA_PINC_DISABLE,
-			.MemInc = DMA_MINC_ENABLE,
-			.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
-			.MemDataAlignment = DMA_MDATAALIGN_BYTE,
-			.Mode = DMA_NORMAL,
-			.Priority = DMA_PRIORITY_LOW,
-			.FIFOMode = DMA_FIFOMODE_DISABLE,
-		},
-	},
-
-	.useIRQ = true,
-	.hirq = 
-	{
-		.irqn = DMA1_Stream6_IRQn,
-		.hdata_store = &IRQ_HandlerDataStore_Singleton,
-		.hdata = 0,	// should be override
-	},	
-	
-	.clk = &DMA_Clock_Singleton,
-};
-
 
 
 const UARTEX_HandleTypeDef UARTEX_Handle_Uart2_Default =

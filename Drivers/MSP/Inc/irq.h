@@ -6,8 +6,19 @@
 
 typedef struct 
 {
-	void* data[FPU_IRQn + 1];
-} IRQ_HandlerDataStore;
+	void* irqh_obj[FPU_IRQn + 1];
+	
+} IRQ_HandlerObjectRegistryTypeDef;
+
+extern IRQ_HandlerObjectRegistryTypeDef IRQ_HandlerObjectRegistry;
+
+void 	IRQ_HandlerObject_Register(IRQ_HandlerObjectRegistryTypeDef* obj, IRQn_Type irqn, void* p);
+void 	IRQ_HandlerObject_Unregister(IRQ_HandlerObjectRegistryTypeDef* obj, IRQn_Type irqn);
+void*	IRQ_HandlerObject_Get(IRQ_HandlerObjectRegistryTypeDef* obj, IRQn_Type irqn);
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 typedef enum
 {
@@ -17,30 +28,39 @@ typedef enum
 
 typedef struct
 {
-	IRQn_Type 							irqn;
-	uint32_t 								preempt_priority;
-	uint32_t 								sub_priority;
-	IRQ_HandlerDataStore*		hdata_store;
+	IRQn_Type 													irqn;
+	uint32_t 														preempt_priority;
+	uint32_t 														sub_priority;
 	
-	/** these are states		**/
-	void*										hdata;
+	IRQ_HandlerObjectRegistryTypeDef*		registry;
 	
-	IRQ_HandleStateTypeDef	state;
+	/** these are runtime states		**/
+	void*																irqh_obj;
+	IRQ_HandleStateTypeDef							state;
 	
 } IRQ_HandleTypeDef;	
 
-
-
-/** singletons **/
-extern IRQ_HandlerDataStore IRQ_HandlerDataStore_Singleton;
+/** ctor, allocate object on heap **/
+IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandlerObjectRegistryTypeDef* registry);
+IRQ_HandleTypeDef *IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandlerObjectRegistryTypeDef* registry);
+void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle);
 
 /** exported functions **/
-void 	IRQ_Init(IRQ_HandleTypeDef* hirq, void* hdata);
+void 	IRQ_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj);
 void 	IRQ_DeInit(IRQ_HandleTypeDef* hirq);
 
-void 	IRQ_HandlerData_Register(IRQ_HandlerDataStore* data, IRQn_Type irqn, void* p);
-void 	IRQ_HandlerData_Unregister(IRQ_HandlerDataStore* data, IRQn_Type irqn);
-void*	IRQ_HandlerData_Get(IRQ_HandlerDataStore* data, IRQn_Type irqn);
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+const extern IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default;
+const extern IRQ_HandleTypeDef 	IRQ_Handle_Uart2TxDMA_Default;
+const extern IRQ_HandleTypeDef 	IRQ_Handle_Uart2RxDMA_Default;		
+
+
+
+
+
 
 
 #endif

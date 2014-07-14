@@ -46,10 +46,9 @@
 	 
 typedef struct 
 {
-	GPIO_TypeDef		*instance;
-	uint32_t 				bits;
+	uint16_t 				bits[8];	/** A to H **/
 	
-} GPIO_ClockTypeDef;
+} GPIO_ClockProviderTypeDef;
 
 typedef enum
 {
@@ -59,31 +58,27 @@ typedef enum
 	 
 typedef struct
 {
-	GPIO_TypeDef  					*instance;
-	GPIO_InitTypeDef				init;
-	GPIO_ClockTypeDef				*clk;
+	GPIO_TypeDef  									*instance;
+	GPIO_InitTypeDef								init;
+	GPIO_ClockProviderTypeDef				*clk;
 	
-	GPIOEX_StateTypeDef			state;
+	GPIOEX_StateTypeDef							state;
 	
 } GPIOEX_TypeDef;	
 
-extern GPIO_ClockTypeDef	GPIOA_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOB_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOC_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOD_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOE_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOF_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOG_Clock_Singleton;
-extern GPIO_ClockTypeDef	GPIOH_Clock_Singleton;
+extern GPIO_ClockProviderTypeDef GPIO_ClockProvider;
 
+
+GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk);
+void GPIOEX_Dtor(GPIOEX_TypeDef* ge);
 
 void	GPIOEX_Init(GPIOEX_TypeDef* gpioex);
 void 	GPIOEX_DeInit(GPIOEX_TypeDef* gpioex);
 
 /** in the following function, use only separate Pin defines, don't OR them **/
-void 	GPIO_Clock_Get(GPIO_ClockTypeDef* clk, uint32_t Pin);
-void 	GPIO_Clock_Put(GPIO_ClockTypeDef* clk, uint32_t Pin);
-bool	GPIO_Clock_Status(GPIO_ClockTypeDef* clk, uint32_t Pin);
+void 	GPIO_Clock_Get(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin);
+void 	GPIO_Clock_Put(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin);
+bool	GPIO_Clock_Status(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin);
 
 const extern GPIOEX_TypeDef	PC6_As_Uart6Tx_Default;
 const extern GPIOEX_TypeDef	PD6_As_Uart2Rx_Default;

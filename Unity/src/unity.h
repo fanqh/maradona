@@ -10,6 +10,7 @@
 #define UNITY
 #define UNITY_EXCLUDE_FLOAT
 #define UNITY_OUTPUT_CHAR(a)		unity_output_char(a)
+
 #include "unity_internals.h"
 
 //-------------------------------------------------------

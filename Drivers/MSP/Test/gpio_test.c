@@ -3,9 +3,8 @@
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
 
-#include "unity_fixture.h"
 
-static GPIO_ClockTypeDef	gclk;
+static GPIO_ClockProviderTypeDef	gclk;
 
 /**
 #define __GPIOA_CLK_ENABLE()         (RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN))
@@ -96,35 +95,53 @@ TEST_GROUP(GPIO_Clock);
 
 TEST_SETUP(GPIO_Clock)
 {
+	int i;
+	
 	__GPIOC_CLK_DISABLE();
 	HAL_GPIO_DeInit(GPIOC, GPIO_PIN_6);
-	
-	gclk.bits = 0;
-	gclk.instance = GPIOC;
+
+	for (i = 0; i < 8; i++)
+	{
+		gclk.bits[i] = 0;
+	}
 }
 
 TEST_TEAR_DOWN(GPIO_Clock)
 {
+	int i;
+	
 	__GPIOC_CLK_DISABLE();
 	HAL_GPIO_DeInit(GPIOC, GPIO_PIN_6);
 	
-	gclk.bits = 0;
-	gclk.instance = GPIOC;
+	for (i = 0; i < 8; i++)
+	{
+		gclk.bits[i] = 0;
+	}
 }
 
 TEST(GPIO_Clock, ClockGet)
 {
-	GPIO_Clock_Get(&gclk, GPIO_PIN_6);
+	GPIO_Clock_Get(&gclk, GPIOC, GPIO_PIN_6);
 	TEST_ASSERT_TRUE(gpioc_clock_is_enabled());
-	TEST_ASSERT_TRUE(GPIO_Clock_Status(&gclk, GPIO_PIN_6));
+	TEST_ASSERT_TRUE(GPIO_Clock_Status(&gclk, GPIOC, GPIO_PIN_6));
 }
 
 TEST(GPIO_Clock, ClockPut)
 {
-	GPIO_Clock_Get(&gclk, GPIO_PIN_6);
-	GPIO_Clock_Put(&gclk, GPIO_PIN_6);
+	GPIO_Clock_Get(&gclk, GPIOC, GPIO_PIN_6);
+	GPIO_Clock_Put(&gclk, GPIOC, GPIO_PIN_6);
 	TEST_ASSERT_FALSE(gpioc_clock_is_enabled());
-	TEST_ASSERT_FALSE(GPIO_Clock_Status(&gclk, GPIO_PIN_6));
+	TEST_ASSERT_FALSE(GPIO_Clock_Status(&gclk, GPIOC, GPIO_PIN_6));
+}
+
+TEST(GPIO_Clock, ClockGet2Put1)
+{
+	GPIO_Clock_Get(&gclk, GPIOC, GPIO_PIN_6);
+	GPIO_Clock_Get(&gclk, GPIOC, GPIO_PIN_7);
+	GPIO_Clock_Put(&gclk, GPIOC, GPIO_PIN_7);
+	TEST_ASSERT_TRUE(gpioc_clock_is_enabled());
+	TEST_ASSERT_TRUE(GPIO_Clock_Status(&gclk, GPIOC, GPIO_PIN_6));
+	TEST_ASSERT_FALSE(GPIO_Clock_Status(&gclk, GPIOC, GPIO_PIN_7));
 }
 
 TEST(GPIO_Clock, GPIOEX_Init)
@@ -134,7 +151,7 @@ TEST(GPIO_Clock, GPIOEX_Init)
 	gpioex.clk = &gclk;	// mock
 	GPIOEX_Init(&gpioex);
 	
-	TEST_ASSERT_TRUE(GPIO_Clock_Status(gpioex.clk, gpioex.init.Pin));
+	TEST_ASSERT_TRUE(GPIO_Clock_Status(gpioex.clk, GPIOC, gpioex.init.Pin));
 	TEST_ASSERT_TRUE(gpio_mode_set(gpioex.instance, &gpioex.init));
 	TEST_ASSERT_EQUAL(GPIOEX_STATE_SET, gpioex.state);
 }
@@ -146,7 +163,7 @@ TEST(GPIO_Clock, GPIOEX_DeInit)
 	GPIOEX_Init(&gpioex);
 	GPIOEX_DeInit(&gpioex);
 	
-	TEST_ASSERT_FALSE(GPIO_Clock_Status(gpioex.clk, gpioex.init.Pin));
+	TEST_ASSERT_FALSE(GPIO_Clock_Status(gpioex.clk, GPIOC, gpioex.init.Pin));
 	TEST_ASSERT_TRUE(gpio_mode_reset(gpioex.instance, &gpioex.init));
 	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, gpioex.state);	
 }
@@ -156,8 +173,68 @@ TEST_GROUP_RUNNER(GPIO_Clock)
 {
 	RUN_TEST_CASE(GPIO_Clock, ClockGet);
 	RUN_TEST_CASE(GPIO_Clock, ClockPut);
+	RUN_TEST_CASE(GPIO_Clock, ClockGet2Put1);
+	
 	RUN_TEST_CASE(GPIO_Clock, GPIOEX_Init);
 	RUN_TEST_CASE(GPIO_Clock, GPIOEX_DeInit);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_GROUP(GPIOEX_Type);
+
+TEST_SETUP(GPIOEX_Type){}
+TEST_TEAR_DOWN(GPIOEX_Type){}
+
+//typedef struct
+//{
+//	GPIO_TypeDef  					*instance;
+//	GPIO_InitTypeDef				init;
+//	GPIO_ClockProviderTypeDef				*clk;
+//	
+//	GPIOEX_StateTypeDef			state;
+//	
+//} GPIOEX_TypeDef;		
+TEST(GPIOEX_Type, Ctor)
+{
+	GPIOEX_TypeDef* ge;
+	GPIO_ClockProviderTypeDef	clk;
+	
+	ge = GPIOEX_Ctor(PC6_As_Uart6Tx_Default.instance, &PC6_As_Uart6Tx_Default.init, &clk);
+	
+	TEST_ASSERT_NOT_NULL(ge);
+	TEST_ASSERT_EQUAL_HEX32(PC6_As_Uart6Tx_Default.instance, ge->instance);
+	TEST_ASSERT_EQUAL_MEMORY(&PC6_As_Uart6Tx_Default.init, &ge->init, sizeof(GPIO_InitTypeDef));
+	TEST_ASSERT_EQUAL_HEX32(&clk, ge->clk);
+	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, ge->state);
+	
+	if (ge) free(ge);
+}
+
+TEST(GPIOEX_Type, Dtor)
+{
+	GPIOEX_TypeDef* ge;
+	GPIO_ClockProviderTypeDef	clk;
+	
+	ge = GPIOEX_Ctor(PC6_As_Uart6Tx_Default.instance, &PC6_As_Uart6Tx_Default.init, &clk);
+
+	if (ge) GPIOEX_Dtor(ge);
+}
+	
+TEST_GROUP_RUNNER(GPIOEX_Type)
+{
+	RUN_TEST_CASE(GPIOEX_Type, Ctor);
+	RUN_TEST_CASE(GPIOEX_Type, Dtor);
+}
+
+TEST_GROUP_RUNNER(GPIO_All)
+{
+	RUN_TEST_GROUP(GPIO_Clock);
+	RUN_TEST_GROUP(GPIOEX_Type);
+}
+
+
+	
 

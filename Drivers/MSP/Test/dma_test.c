@@ -1,8 +1,8 @@
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include "stm32f4xx_hal.h"
 #include "dma.h"
-#include "unity_fixture.h"
 
 /******************************************************************************
 
@@ -21,7 +21,7 @@ Then Test Plan:
 
 ******************************************************************************/
 
-static DMA_ClockTypeDef dma_clock = {0,0};
+static DMA_ClockProviderTypeDef dma_clk = {0,0};
 
 static bool dma1_clock_enabled(void)
 {
@@ -32,7 +32,7 @@ TEST_GROUP(DMA_Clock);
 
 TEST_SETUP(DMA_Clock)
 {
-	memset(&dma_clock, 0, sizeof(dma_clock));
+	memset(&dma_clk, 0, sizeof(dma_clk));
 	__DMA1_CLK_DISABLE();
 	__DMA2_CLK_DISABLE();
 }
@@ -50,29 +50,28 @@ TEST_TEAR_DOWN(DMA_Clock)
 
 TEST(DMA_Clock, ClockOffTurnOneOnClockOn)
 {
-	// assume all clocks off.
-	DMA_Clock_Get(&dma_clock, DMA1_Stream5);
+	DMA_Clock_Get(&dma_clk, DMA1_Stream5);
 	TEST_ASSERT_TRUE(dma1_clock_enabled());
 }
 
 TEST(DMA_Clock, ClockOffTurnOneOnBitSet)
 {	
-	DMA_Clock_Get(&dma_clock, DMA1_Stream5);
-	TEST_ASSERT_TRUE(DMA_Clock_Status(&dma_clock, DMA1_Stream5));
+	DMA_Clock_Get(&dma_clk, DMA1_Stream5);
+	TEST_ASSERT_TRUE(DMA_Clock_Status(&dma_clk, DMA1_Stream5));
 }
 
 TEST(DMA_Clock, ClockOnTurnOffClockOff)
 {
-	DMA_Clock_Get(&dma_clock, DMA1_Stream5);
-	DMA_Clock_Put(&dma_clock, DMA1_Stream5);
+	DMA_Clock_Get(&dma_clk, DMA1_Stream5);
+	DMA_Clock_Put(&dma_clk, DMA1_Stream5);
 	TEST_ASSERT_FALSE(dma1_clock_enabled());
 }
 
 TEST(DMA_Clock, ClockOnTurnOffBitClear)
 {
-	DMA_Clock_Get(&dma_clock, DMA1_Stream5);
-	DMA_Clock_Put(&dma_clock, DMA1_Stream5);
-	TEST_ASSERT_FALSE(DMA_Clock_Status(&dma_clock, DMA1_Stream5));
+	DMA_Clock_Get(&dma_clk, DMA1_Stream5);
+	DMA_Clock_Put(&dma_clk, DMA1_Stream5);
+	TEST_ASSERT_FALSE(DMA_Clock_Status(&dma_clk, DMA1_Stream5));
 }
 
 TEST_GROUP_RUNNER(DMA_Clock)
@@ -83,78 +82,189 @@ TEST_GROUP_RUNNER(DMA_Clock)
 	RUN_TEST_CASE(DMA_Clock, ClockOnTurnOffBitClear);
 }
 
-TEST_GROUP(DMAEX_Init);
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-static DMAEX_HandleTypeDef hdmaex;
+//typedef struct {
+//	
+//	DMA_ClockProviderTypeDef							*clk;
+//	IRQ_HandlerObjectRegistryTypeDef			*reg;
+//	
+//} DMAEX_Handle_FactoryTypeDef;
 
-#define DMAEX	(&hdmaex)
+//DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(DMAEX_Handle_FactoryTypeDef* factory, 
+//																									const DMA_HandleTypeDef* hdma,
+//																									const IRQ_HandleTypeDef* hirq);
 
-TEST_SETUP(DMAEX_Init)
+//const DMA_InitTypeDef DMA_Init_Uart2Rx =
+//{
+//	.Channel = DMA_CHANNEL_4,
+//	.Direction = DMA_PERIPH_TO_MEMORY,
+//	.PeriphInc = DMA_PINC_DISABLE,
+//	.MemInc = DMA_MINC_ENABLE,
+//	.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+//	.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+//	.Mode = DMA_NORMAL,
+//	.Priority = DMA_PRIORITY_LOW,
+//	.FIFOMode = DMA_FIFOMODE_DISABLE,
+//};
+
+TEST_GROUP(DMAEX_Handle);
+TEST_SETUP(DMAEX_Handle)
 {
-	hdmaex = DMAEX_Handle_Uart2Rx_Default;
-	IRQ_DeInit(&hdmaex.hirq);
-	DMAEX_DeInit(&hdmaex);
-	DMA_Clock_Put(hdmaex.clk, hdmaex.hdma.Instance);	
 }
 
-TEST_TEAR_DOWN(DMAEX_Init)
-{
-	hdmaex = DMAEX_Handle_Uart2Rx_Default;
-	IRQ_DeInit(&hdmaex.hirq);
-	DMAEX_DeInit(&hdmaex);
-	DMA_Clock_Put(hdmaex.clk, hdmaex.hdma.Instance);		
+TEST_TEAR_DOWN(DMAEX_Handle)
+{	
 }
 
-TEST(DMAEX_Init, DMAClockBitShouldBeSet)
+TEST(DMAEX_Handle, Ctor)
 {
-	DMAEX_Init(DMAEX);
-	TEST_ASSERT_TRUE(DMA_Clock_Status(DMAEX->clk, DMAEX->hdma.Instance));
-}
+	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
+	DMA_ClockProviderTypeDef clk;
+	IRQ_HandleTypeDef	irq;
 
-TEST(DMAEX_Init, DMAHALShouldBeInitialized)
-{
-	DMAEX_Init(DMAEX);
-	TEST_ASSERT_EQUAL(HAL_DMA_STATE_READY, DMAEX->hdma.State);
-}
-
-TEST(DMAEX_Init, DMAHandleRegisteredForIRQHandler)
-{
-	DMAEX_Init(DMAEX);
-	TEST_ASSERT_EQUAL(&DMAEX->hdma, DMAEX->hirq.hdata);
-}
-
-TEST(DMAEX_Init, DMAIRQShouldBeInitialized)
-{
-	DMAEX_Init(DMAEX);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_SET, DMAEX->hirq.state);
-}
-
-TEST(DMAEX_Init, DMAEXHandleStateShouldBeSet)
-{
-	DMAEX_Init(DMAEX);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, DMAEX->state);
-}
-
-TEST(DMAEX_Init, DMAEX_DeInit)
-{
-	DMAEX_Init(DMAEX);
-	DMAEX_DeInit(DMAEX);
+	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
+	TEST_ASSERT_NOT_NULL(h);
+	TEST_ASSERT_EQUAL_HEX32(&clk, h->clk);
+	TEST_ASSERT_EQUAL_HEX32(dfl->Instance, h->hdma.Instance);
+	TEST_ASSERT_EQUAL_MEMORY(&dfl->Init, &h->hdma.Init, sizeof(dfl->Init));
+	TEST_ASSERT_EQUAL_HEX32(&irq, h->hirq);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, h->state);
 	
-	TEST_ASSERT_FALSE(DMA_Clock_Status(DMAEX->clk, DMAEX->hdma.Instance));
-	TEST_ASSERT_EQUAL(HAL_DMA_STATE_RESET, DMAEX->hdma.State);
-	TEST_ASSERT_NULL(DMAEX->hirq.hdata);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, DMAEX->hirq.state);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, DMAEX->state);
+	// all other field should be zero
+	TEST_ASSERT_EQUAL(0, h->hdma.ErrorCode);
+	TEST_ASSERT_EQUAL(0, h->hdma.Lock);
+	TEST_ASSERT_EQUAL(0, h->hdma.Parent);
+	TEST_ASSERT_EQUAL(0, h->hdma.State);
+	TEST_ASSERT_EQUAL(0, h->hdma.XferCpltCallback);
+	TEST_ASSERT_EQUAL(0, h->hdma.XferErrorCallback);
+	TEST_ASSERT_EQUAL(0, h->hdma.XferHalfCpltCallback);
+	TEST_ASSERT_EQUAL(0, h->hdma.XferM1CpltCallback);
+	
+	if (h) free(h);
 }
 
-TEST_GROUP_RUNNER(DMAEX_Init)
+TEST(DMAEX_Handle, Dtor)
 {
-	RUN_TEST_CASE(DMAEX_Init, DMAClockBitShouldBeSet);
-	RUN_TEST_CASE(DMAEX_Init, DMAHALShouldBeInitialized);
-	RUN_TEST_CASE(DMAEX_Init, DMAHandleRegisteredForIRQHandler);
-	RUN_TEST_CASE(DMAEX_Init, DMAIRQShouldBeInitialized);
-	RUN_TEST_CASE(DMAEX_Init, DMAEXHandleStateShouldBeSet);
-	RUN_TEST_CASE(DMAEX_Init, DMAEX_DeInit);
+	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
+	DMA_ClockProviderTypeDef clk;
+	IRQ_HandleTypeDef	irq;
+
+	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
+	DMAEX_Handle_Dtor(h);
+	
+	// if dtor failed to recycle or overrun, unity will catch the bug.
+}
+
+TEST(DMAEX_Handle, FactoryCreate)
+{
+	DMA_ClockProviderTypeDef					clk;
+	IRQ_HandlerObjectRegistryTypeDef	registry;
+	DMAEX_Handle_FactoryTypeDef 			factory;
+	
+	DMA_HandleTypeDef									hdma;
+	IRQ_HandleTypeDef									hirq;
+
+	DMAEX_HandleTypeDef*							h;
+	
+	memset(&hdma, 0xA5, sizeof(hdma));
+	memset(&hirq, 0xB5, sizeof(hirq));
+	
+	factory.clk = &clk;
+	factory.reg = &registry;
+	
+	hirq.state = IRQ_HANDLE_STATE_RESET;
+	
+	h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &hirq);
+	
+	TEST_ASSERT_NOT_NULL(h);
+	TEST_ASSERT_EQUAL_HEX32(factory.clk, h->clk);
+	
+	TEST_ASSERT_EQUAL_HEX32(hdma.Instance, h->hdma.Instance);
+	TEST_ASSERT_EQUAL_MEMORY(&hdma.Init, &h->hdma.Init, sizeof(DMA_InitTypeDef));
+
+	TEST_ASSERT_EQUAL(hirq.irqn, h->hirq->irqn);
+	TEST_ASSERT_EQUAL(hirq.preempt_priority, h->hirq->preempt_priority);
+	TEST_ASSERT_EQUAL(hirq.sub_priority, h->hirq->sub_priority);
+	TEST_ASSERT_EQUAL(factory.reg, h->hirq->registry);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->hirq->state);
+	
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, h->state);
+	
+	if (h->hirq) free(h->hirq);
+	if (h) free(h);
+}
+
+TEST(DMAEX_Handle, FactoryDestroy)
+{
+	DMA_ClockProviderTypeDef					clk;
+	IRQ_HandlerObjectRegistryTypeDef	registry;
+	DMAEX_Handle_FactoryTypeDef 			factory;
+	
+	DMA_HandleTypeDef									hdma;
+	IRQ_HandleTypeDef									hirq;
+
+	DMAEX_HandleTypeDef*							h;
+	
+	memset(&hdma, 0xA5, sizeof(hdma));
+	memset(&hirq, 0xB5, sizeof(hirq));
+	
+	factory.clk = &clk;
+	factory.reg = &registry;
+	
+	hirq.state = IRQ_HANDLE_STATE_RESET;
+	
+	h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &hirq);
+	DMAEX_Handle_FactoryDestroy(&factory, h);
+}
+
+
+
+TEST(DMAEX_Handle, DMAEX_Init)
+{
+	IRQ_HandleTypeDef* irq = IRQ_Handle_Ctor(DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
+	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, irq);
+	
+	DMAEX_Init(hdmaex);
+	
+	TEST_ASSERT_TRUE(DMA_Clock_Status(hdmaex->clk, hdmaex->hdma.Instance));
+	TEST_ASSERT_EQUAL(HAL_DMA_STATE_READY, hdmaex->hdma.State);
+	TEST_ASSERT_EQUAL(&hdmaex->hdma, hdmaex->hirq->irqh_obj);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_SET, hdmaex->hirq->state);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, hdmaex->state);
+	
+	DMAEX_Handle_Dtor(hdmaex);
+	IRQ_Handle_Dtor(irq);
+}
+
+TEST(DMAEX_Handle, DMAEX_DeInit)
+{
+	IRQ_HandleTypeDef* irq = IRQ_Handle_Ctor(DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
+	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, irq);
+	
+	DMAEX_Init(hdmaex);
+	DMAEX_DeInit(hdmaex);
+	
+	TEST_ASSERT_FALSE(DMA_Clock_Status(hdmaex->clk, hdmaex->hdma.Instance));
+	TEST_ASSERT_EQUAL(HAL_DMA_STATE_RESET, hdmaex->hdma.State);
+	TEST_ASSERT_NULL(hdmaex->hirq->irqh_obj);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, hdmaex->hirq->state);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, hdmaex->state);
+	
+	DMAEX_Handle_Dtor(hdmaex);
+	IRQ_Handle_Dtor(irq);
+}
+
+TEST_GROUP_RUNNER(DMAEX_Handle)
+{
+	RUN_TEST_CASE(DMAEX_Handle, Ctor);	
+	RUN_TEST_CASE(DMAEX_Handle, Dtor);
+	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);
+	RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
+	RUN_TEST_CASE(DMAEX_Handle, DMAEX_Init);
+	RUN_TEST_CASE(DMAEX_Handle, DMAEX_DeInit);
 }
 
 

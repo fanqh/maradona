@@ -35,48 +35,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
+#include <string.h>
 #include "gpio.h"
 
-
-GPIO_ClockTypeDef	GPIOA_Clock_Singleton = {.instance = GPIOA, };
-GPIO_ClockTypeDef	GPIOB_Clock_Singleton = {.instance = GPIOB, };
-GPIO_ClockTypeDef	GPIOC_Clock_Singleton = {.instance = GPIOC, };
-GPIO_ClockTypeDef	GPIOD_Clock_Singleton = {.instance = GPIOD, };
-GPIO_ClockTypeDef	GPIOE_Clock_Singleton = {.instance = GPIOE, };
-GPIO_ClockTypeDef	GPIOF_Clock_Singleton = {.instance = GPIOF, };
-GPIO_ClockTypeDef	GPIOG_Clock_Singleton = {.instance = GPIOG, };
-GPIO_ClockTypeDef	GPIOH_Clock_Singleton = {.instance = GPIOH, };
-
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/*----------------------------------------------------------------------------*/
-/* Configure GPIO                                                             */
-/*----------------------------------------------------------------------------*/
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */
-
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-*/
-//void MX_GPIO_Init(void)
-//{
-
-//  /* GPIO Ports Clock Enable */
-//  __GPIOH_CLK_ENABLE();
-//  __GPIOD_CLK_ENABLE();
-
-//}
+GPIO_ClockProviderTypeDef GPIO_ClockProvider = {0};
 
 void	GPIOEX_Init(GPIOEX_TypeDef* gpioex)
 {
-	GPIO_Clock_Get(gpioex->clk, gpioex->init.Pin);
+	GPIO_Clock_Get(gpioex->clk, gpioex->instance, gpioex->init.Pin);
 	HAL_GPIO_Init(gpioex->instance, &gpioex->init);
 	gpioex->state = GPIOEX_STATE_SET;
 }
@@ -84,107 +50,232 @@ void	GPIOEX_Init(GPIOEX_TypeDef* gpioex)
 void 	GPIOEX_DeInit(GPIOEX_TypeDef* gpioex)
 {
 	HAL_GPIO_DeInit(gpioex->instance, gpioex->init.Pin);
-	GPIO_Clock_Put(gpioex->clk, gpioex->init.Pin);
+	GPIO_Clock_Put(gpioex->clk, gpioex->instance, gpioex->init.Pin);
 	gpioex->state = GPIOEX_STATE_RESET;
 }
 
-void GPIO_Clock_Get(GPIO_ClockTypeDef* clk, uint32_t Pin) 
+void GPIO_Clock_Get(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin) 
 {
-	clk->bits |= Pin;
-	clk->bits &= 0x0000FFFF;
+	int index;
+	uint16_t prev, curr;
 	
-	if (clk->instance == GPIOA)
+	if (gpiox == GPIOA)
 	{
-		__GPIOA_CLK_ENABLE();
+		index = 0;
 	}
-	else if (clk->instance == GPIOB)
+	else if (gpiox == GPIOB)
 	{
-		__GPIOB_CLK_ENABLE();
+		index = 1;
 	}
-	else if (clk->instance == GPIOC)
+	else if (gpiox == GPIOC)
 	{
-		__GPIOC_CLK_ENABLE();
+		index = 2;
 	}
-	else if (clk->instance == GPIOD)
+	else if (gpiox == GPIOD)
 	{
-		__GPIOD_CLK_ENABLE();
+		index = 3;
 	}
-	else if (clk->instance == GPIOE)
+	else if (gpiox == GPIOE)
+	{	
+		index = 4;
+	}
+	else if (gpiox == GPIOF)
 	{
-		__GPIOE_CLK_ENABLE();
+		index = 5;
 	}
-	else if (clk->instance == GPIOF)
+	else if (gpiox == GPIOG)
 	{
-		__GPIOF_CLK_ENABLE();
+		index = 6;
 	}
-	else if (clk->instance == GPIOG)
+	else if (gpiox == GPIOH)
 	{
-		__GPIOG_CLK_ENABLE();
+		index = 7;
 	}
-	else if (clk->instance == GPIOH)
+	else 
 	{
-		__GPIOH_CLK_ENABLE();
+		return;
 	}
-	else {
-		assert_param(false);
+	
+	prev = clk->bits[index];
+	curr = (clk->bits[index] |= Pin);		/**** need new case, get twice, put once, clock on ****/
+
+	if (prev == 0 && curr != 0)
+	{
+		switch (index)
+		{
+			case 0:
+				__GPIOA_CLK_ENABLE();
+				break;
+			case 1:
+				__GPIOB_CLK_ENABLE();
+				break;
+			case 2:
+				__GPIOC_CLK_ENABLE();
+				break;
+			case 3:
+				__GPIOD_CLK_ENABLE();
+				break;
+			case 4:
+				__GPIOE_CLK_ENABLE();
+				break;
+			case 5:
+				__GPIOF_CLK_ENABLE();
+				break;
+			case 6:
+				__GPIOG_CLK_ENABLE();
+				break;
+			case 7:
+				__GPIOH_CLK_ENABLE();
+				break;
+			default:
+				break;
+		}
 	}
 }
 
 
-void GPIO_Clock_Put(GPIO_ClockTypeDef* clk, uint32_t Pin)
+void GPIO_Clock_Put(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin)
 {
-	clk->bits &= ~Pin;
-	clk->bits &= 0x0000FFFF;
+	int index;
+	uint16_t prev, curr;	
 	
-	if (clk->instance == GPIOA)
+	if (gpiox == GPIOA)
 	{
-		__GPIOA_CLK_DISABLE();
+		index = 0;
 	}
-	else if (clk->instance == GPIOB)
+	else if (gpiox == GPIOB)
 	{
-		__GPIOB_CLK_DISABLE();
+		index = 1;
 	}
-	else if (clk->instance == GPIOC)
+	else if (gpiox == GPIOC)
 	{
-		__GPIOC_CLK_DISABLE();
+		index = 2;
 	}
-	else if (clk->instance == GPIOD)
+	else if (gpiox == GPIOD)
 	{
-		__GPIOD_CLK_DISABLE();
+		index = 3;
 	}
-	else if (clk->instance == GPIOE)
+	else if (gpiox == GPIOE)
+	{	
+		index = 4;
+	}
+	else if (gpiox == GPIOF)
 	{
-		__GPIOE_CLK_DISABLE();
+		index = 5;
 	}
-	else if (clk->instance == GPIOF)
+	else if (gpiox == GPIOG)
 	{
-		__GPIOF_CLK_DISABLE();
+		index = 6;
 	}
-	else if (clk->instance == GPIOG)
+	else if (gpiox == GPIOH)
 	{
-		__GPIOG_CLK_DISABLE();
+		index = 7;
 	}
-	else if (clk->instance == GPIOH)
+	else 
 	{
-		__GPIOH_CLK_DISABLE();
+		return;
 	}
-	else {
-		assert_param(false);
+	
+	prev = clk->bits[index];
+	curr = (clk->bits[index] &= ~Pin);
+
+	if (prev != 0 && curr == 0)
+	{
+		switch (index)
+		{
+			case 0:
+				__GPIOA_CLK_DISABLE();
+				break;
+			case 1:
+				__GPIOB_CLK_DISABLE();
+				break;
+			case 2:
+				__GPIOC_CLK_DISABLE();
+				break;
+			case 3:
+				__GPIOD_CLK_DISABLE();
+				break;
+			case 4:
+				__GPIOE_CLK_DISABLE();
+				break;
+			case 5:
+				__GPIOF_CLK_DISABLE();
+				break;
+			case 6:
+				__GPIOG_CLK_DISABLE();
+				break;
+			case 7:
+				__GPIOH_CLK_DISABLE();
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+bool GPIO_Clock_Status(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin)
+{
+	int index;
+	
+	if (gpiox == GPIOA)
+	{
+		index = 0;
+	}
+	else if (gpiox == GPIOB)
+	{
+		index = 1;
+	}
+	else if (gpiox == GPIOC)
+	{
+		index = 2;
+	}
+	else if (gpiox == GPIOD)
+	{
+		index = 3;
+	}
+	else if (gpiox == GPIOE)
+	{	
+		index = 4;
+	}
+	else if (gpiox == GPIOF)
+	{
+		index = 5;
+	}
+	else if (gpiox == GPIOG)
+	{
+		index = 6;
+	}
+	else if (gpiox == GPIOH)
+	{
+		index = 7;
+	}
+	else 
+	{
+		return false;
 	}	
+	
+	return (clk->bits[index] & Pin) ? true : false;
 }
 
-bool GPIO_Clock_Status(GPIO_ClockTypeDef* clk, uint32_t Pin)
+GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk)
 {
-	return (clk->bits & Pin) ? true : false;
+	GPIOEX_TypeDef* ge = (GPIOEX_TypeDef*)malloc(sizeof(GPIOEX_TypeDef));
+	if (ge == NULL) return NULL;
+	
+	memset(ge, 0, sizeof(GPIOEX_TypeDef));
+	
+	ge->instance = gpiox;
+	memmove(&ge->init, init, sizeof(GPIO_InitTypeDef));
+	ge->clk = clk;
+	ge->state = GPIOEX_STATE_RESET;
+	
+	return ge;
 }
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+void GPIOEX_Dtor(GPIOEX_TypeDef* ge)
+{
+	if (ge) free(ge);
+}
 
 /************************ Defaults ********************************************/
 
@@ -199,7 +290,7 @@ const GPIOEX_TypeDef	PC6_As_Uart6Tx_Default =
 		.Speed = GPIO_SPEED_LOW,
 		.Alternate = GPIO_AF8_USART6,			
 	},
-	.clk = &GPIOC_Clock_Singleton,			// don't forget this! bug!
+	.clk = &GPIO_ClockProvider,			// don't forget this! bug!
 };
 
 const GPIOEX_TypeDef	PD6_As_Uart2Rx_Default = 
@@ -213,7 +304,7 @@ const GPIOEX_TypeDef	PD6_As_Uart2Rx_Default =
 		.Speed = GPIO_SPEED_LOW,
 		.Alternate = GPIO_AF7_USART2,			
 	},
-	.clk = &GPIOD_Clock_Singleton,
+	.clk = &GPIO_ClockProvider,
 };
 
 const GPIOEX_TypeDef	PD5_As_Uart2Tx_Default =
@@ -227,7 +318,7 @@ const GPIOEX_TypeDef	PD5_As_Uart2Tx_Default =
 		.Speed = GPIO_SPEED_LOW,
 		.Alternate = GPIO_AF7_USART2,			
 	},
-	.clk = &GPIOD_Clock_Singleton,		
+	.clk = &GPIO_ClockProvider,		
 };
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

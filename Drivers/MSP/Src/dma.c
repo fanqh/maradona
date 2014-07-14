@@ -1,8 +1,12 @@
+#include <stdlib.h>
+#include <string.h>
 #include "stm32f4xx_hal.h"
+#include "irq.h"
 #include "dma.h"
 
+
 /** DMA Clock (Resource Manager) Singleton **/
-DMA_ClockTypeDef 						DMA_Clock_Singleton = {0};
+DMA_ClockProviderTypeDef 						DMA_ClockProvider = {0};
 
 
 /******************************************************************************
@@ -52,29 +56,19 @@ void 	DMAEX_Init(DMAEX_HandleTypeDef* dmaex)
 {
 	DMA_Clock_Get(dmaex->clk, dmaex->hdma.Instance);
 	HAL_DMA_Init(&dmaex->hdma);
-	IRQ_Init(&dmaex->hirq, &dmaex->hdma);				/** make the link **/
+	IRQ_Init(dmaex->hirq, &dmaex->hdma);				/** make the link **/
 	dmaex->state = DMAEX_HANDLE_STATE_SET;
 }
 
 void	DMAEX_DeInit(DMAEX_HandleTypeDef* dmaex)
 {
-	IRQ_DeInit(&dmaex->hirq);
+	IRQ_DeInit(dmaex->hirq);
 	HAL_DMA_DeInit(&dmaex->hdma);
 	DMA_Clock_Put(dmaex->clk, dmaex->hdma.Instance);
 	dmaex->state = DMAEX_HANDLE_STATE_RESET;
 }
 
-//void 	DMAEX_Clone(DMAEX_HandleTypeDef* dst, const DMAEX_HandleTypeDef* src)
-//{
-//	(*dst) = (*src);
-//	
-//	if (dst->useIRQ)
-//	{
-//		dst->hirq.hdata = &dst->hdma;
-//	}
-//}
-
-void DMA_Clock_Get(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
+void DMA_Clock_Get(DMA_ClockProviderTypeDef* dma_clk, DMA_Stream_TypeDef* stream)
 {
 	int pos = 0;
 	
@@ -89,8 +83,8 @@ void DMA_Clock_Get(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 	{
 		pos = (stream - DMA1_Stream0);
 		
-		dma_clock->dma1 |= (1 << pos);
-		if (dma_clock->dma1)
+		dma_clk->dma1 |= (1 << pos);
+		if (dma_clk->dma1)
 		{
 			__DMA1_CLK_ENABLE();
 		}
@@ -109,8 +103,8 @@ void DMA_Clock_Get(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 	{
 		pos = (stream - DMA2_Stream0);
 		
-		(dma_clock->dma2) |= (1 << pos);
-		if (dma_clock->dma2)
+		(dma_clk->dma2) |= (1 << pos);
+		if (dma_clk->dma2)
 		{
 			__DMA2_CLK_ENABLE();
 		}
@@ -119,7 +113,7 @@ void DMA_Clock_Get(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 	}
 }
 
-void DMA_Clock_Put(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
+void DMA_Clock_Put(DMA_ClockProviderTypeDef* dma_clk, DMA_Stream_TypeDef* stream)
 {
 	int pos = 0;
 	
@@ -134,8 +128,8 @@ void DMA_Clock_Put(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 	{
 		pos = (stream - DMA1_Stream0);
 		
-		(dma_clock->dma1) &= ~(1 << pos);
-		if (dma_clock->dma1 == 0)
+		(dma_clk->dma1) &= ~(1 << pos);
+		if (dma_clk->dma1 == 0)
 		{
 			__DMA1_CLK_DISABLE();
 		}
@@ -154,8 +148,8 @@ void DMA_Clock_Put(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 	{
 		pos = (stream - DMA2_Stream0);
 		
-		(dma_clock->dma2) &= ~(1 << pos);
-		if (dma_clock->dma2 == 0)
+		(dma_clk->dma2) &= ~(1 << pos);
+		if (dma_clk->dma2 == 0)
 		{
 			__DMA2_CLK_DISABLE();
 		}
@@ -164,7 +158,7 @@ void DMA_Clock_Put(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 	}	
 }
 
-bool DMA_Clock_Status(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
+bool DMA_Clock_Status(DMA_ClockProviderTypeDef* dma_clk, DMA_Stream_TypeDef* stream)
 {
 	int pos = 0;
 	
@@ -178,7 +172,7 @@ bool DMA_Clock_Status(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 			DMA1_Stream7 == stream)
 	{
 		pos = (stream - DMA1_Stream0);
-		return (dma_clock->dma1 & (1 << pos)) ? true : false;
+		return (dma_clk->dma1 & (1 << pos)) ? true : false;
 	}
 	
 	if (DMA2_Stream0 == stream ||
@@ -191,7 +185,7 @@ bool DMA_Clock_Status(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 			DMA2_Stream7 == stream)
 	{
 		pos = (stream - DMA2_Stream0);
-		return (dma_clock->dma2 & (1 << pos)) ? true : false;;		
+		return (dma_clk->dma2 & (1 << pos)) ? true : false;;		
 	}	
 	
 	assert_param(false);
@@ -201,25 +195,78 @@ bool DMA_Clock_Status(DMA_ClockTypeDef* dma_clock, DMA_Stream_TypeDef* stream)
 
 
 
+DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_InitTypeDef *init,
+	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
+{
+	DMAEX_HandleTypeDef* h = (DMAEX_HandleTypeDef*)malloc(sizeof(DMAEX_HandleTypeDef));
+	if (!h) return NULL;
+	
+	memset(h, 0, sizeof(DMAEX_HandleTypeDef));
+	
+	h->clk = clk;
+	h->hdma.Instance = instance;
+	memmove(&h->hdma.Init, init, sizeof(DMA_InitTypeDef));
+	h->hirq = hirq;
+	h->state = DMAEX_HANDLE_STATE_RESET;
+	
+	return h;
+}
+
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(DMAEX_Handle_FactoryTypeDef* factory, 
+																									const DMA_HandleTypeDef* hdma,
+																									const IRQ_HandleTypeDef* hirq)
+{
+	DMAEX_HandleTypeDef* dmaExH;
+	IRQ_HandleTypeDef* irqH;
+	
+	irqH = IRQ_Handle_Ctor_By_Template(hirq, factory->reg);
+	if (irqH == NULL)
+		return NULL;
+	
+	dmaExH = DMAEX_Handle_Ctor(hdma->Instance, &hdma->Init, factory->clk, irqH);
+	if (dmaExH == NULL)
+	{
+		IRQ_Handle_Dtor(irqH);
+		return NULL;
+	}
+
+	return dmaExH;
+}
+
+void DMAEX_Handle_FactoryDestroy(DMAEX_Handle_FactoryTypeDef* factory, DMAEX_HandleTypeDef* handle)
+{
+	if (handle)
+	{
+		if (handle->hirq)
+		{
+			free(handle->hirq);
+		}
+		
+		free(handle);
+	}
+}
+
+void DMAEX_Handle_Dtor(DMAEX_HandleTypeDef* handle)
+{
+	if (handle) free(handle);
+}
+
 void DMA1_Stream5_IRQHandler(void)
 {
   HAL_NVIC_ClearPendingIRQ(DMA1_Stream5_IRQn);
 
-	DMA_HandleTypeDef* handle = IRQ_HandlerData_Get(&IRQ_HandlerDataStore_Singleton, DMA1_Stream5_IRQn);
+	DMA_HandleTypeDef* handle = IRQ_HandlerObject_Get(&IRQ_HandlerObjectRegistry, DMA1_Stream5_IRQn);
 	if (handle)
 	{
 		HAL_DMA_IRQHandler(handle);
 	}
 }
 
-/**
-* @brief This function handles DMA1 Stream6 global interrupt.
-*/
 void DMA1_Stream6_IRQHandler(void)
 {
   HAL_NVIC_ClearPendingIRQ(DMA1_Stream6_IRQn);
 	
-	DMA_HandleTypeDef* handle = IRQ_HandlerData_Get(&IRQ_HandlerDataStore_Singleton, DMA1_Stream6_IRQn);
+	DMA_HandleTypeDef* handle = IRQ_HandlerObject_Get(&IRQ_HandlerObjectRegistry, DMA1_Stream6_IRQn);
 	if (handle)
 	{
 		HAL_DMA_IRQHandler(handle);
@@ -227,11 +274,101 @@ void DMA1_Stream6_IRQHandler(void)
 }
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Defaults to be cloned.
+// Defaults
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+//const DMA_InitTypeDef DMA_Init_Uart2Rx_Default =
+//{
+//	.Channel = DMA_CHANNEL_4,
+//	.Direction = DMA_PERIPH_TO_MEMORY,
+//	.PeriphInc = DMA_PINC_DISABLE,
+//	.MemInc = DMA_MINC_ENABLE,
+//	.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+//	.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+//	.Mode = DMA_NORMAL,
+//	.Priority = DMA_PRIORITY_LOW,
+//	.FIFOMode = DMA_FIFOMODE_DISABLE,
+//};
+
+const DMA_HandleTypeDef	DMA_Handle_Uart2Rx_Default = 
+{
+	.Instance = DMA1_Stream5,
+	.Init = 
+	{
+		.Channel = DMA_CHANNEL_4,
+		.Direction = DMA_PERIPH_TO_MEMORY,
+		.PeriphInc = DMA_PINC_DISABLE,
+		.MemInc = DMA_MINC_ENABLE,
+		.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+		.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+		.Mode = DMA_NORMAL,
+		.Priority = DMA_PRIORITY_LOW,
+		.FIFOMode = DMA_FIFOMODE_DISABLE,
+	},	
+};
+
+const DMA_HandleTypeDef	DMA_Handle_Uart2Tx_Default = 
+{
+	.Instance = DMA1_Stream6,
+	.Init = 
+	{
+		.Channel = DMA_CHANNEL_4,
+		.Direction = DMA_MEMORY_TO_PERIPH,
+		.PeriphInc = DMA_PINC_DISABLE,
+		.MemInc = DMA_MINC_ENABLE,
+		.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+		.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+		.Mode = DMA_NORMAL,
+		.Priority = DMA_PRIORITY_LOW,
+		.FIFOMode = DMA_FIFOMODE_DISABLE,
+	},
+};
+
+const DMAEX_HandleTypeDef DMAEX_Handle_Uart2Rx_Default =
+{
+	.clk = &DMA_ClockProvider,
+	.hdma =
+	{	
+		.Instance = DMA1_Stream5,
+		.Init = 
+		{
+			.Channel = DMA_CHANNEL_4,
+			.Direction = DMA_PERIPH_TO_MEMORY,
+			.PeriphInc = DMA_PINC_DISABLE,
+			.MemInc = DMA_MINC_ENABLE,
+			.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+			.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+			.Mode = DMA_NORMAL,
+			.Priority = DMA_PRIORITY_LOW,
+			.FIFOMode = DMA_FIFOMODE_DISABLE,
+		},
+	},
+};
+
+const DMAEX_HandleTypeDef DMAEX_Handle_Uart2Tx_Default = 
+{
+	.hdma =
+	{
+		.Instance = DMA1_Stream6,
+		.Init = 
+		{
+			.Channel = DMA_CHANNEL_4,
+			.Direction = DMA_MEMORY_TO_PERIPH,
+			.PeriphInc = DMA_PINC_DISABLE,
+			.MemInc = DMA_MINC_ENABLE,
+			.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+			.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+			.Mode = DMA_NORMAL,
+			.Priority = DMA_PRIORITY_LOW,
+			.FIFOMode = DMA_FIFOMODE_DISABLE,
+		},
+	},	
+	
+	.clk = &DMA_ClockProvider,
+};
 
 
