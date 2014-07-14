@@ -361,12 +361,12 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 																										const IRQ_HandleTypeDef* hirq_dmatx,	//
 																										const IRQ_HandleTypeDef* hirq_uart)		// instance + init, optional
 {
-	GPIOEX_TypeDef* rxpinH;
-	GPIOEX_TypeDef* txpinH;
-	DMAEX_HandleTypeDef* dmaExRxH;
-	DMAEX_HandleTypeDef* dmaExTxH;
-	IRQ_HandleTypeDef* irqH;
-	UARTEX_HandleTypeDef* h;
+	GPIOEX_TypeDef* rxpinH = NULL;
+	GPIOEX_TypeDef* txpinH = NULL;
+	DMAEX_HandleTypeDef* dmaExRxH = NULL;
+	DMAEX_HandleTypeDef* dmaExTxH = NULL;
+	IRQ_HandleTypeDef* irqH = NULL;
+	UARTEX_HandleTypeDef* h = NULL;
 
 	DMAEX_Handle_FactoryTypeDef dma_factory;
 	dma_factory.clk = factory->dma_clk;
@@ -380,37 +380,36 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	if (txpinH == NULL)
 		goto fail1;
 	
-	dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmarx, hirq_dmarx);
-	if (dmaExRxH == NULL)
-		goto fail2;
+	if (hdmarx && hirq_dmarx)
+	{
+		dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmarx, hirq_dmarx);
+		if (dmaExRxH == NULL)
+			goto fail2;
+	}
 	
-	dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmatx, hirq_dmatx);
-	if (dmaExTxH == NULL)
-		goto fail3;
+	if (hdmatx && hirq_dmatx)
+	{
+		dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmatx, hirq_dmatx);
+		if (dmaExTxH == NULL)
+			goto fail3;
+	}
 	
-	irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
-	if (irqH == NULL)
-		goto fail4;
+	if (hirq_uart)
+	{
+		irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
+		if (irqH == NULL)
+			goto fail4;
+	}
 	
 	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH);
-	
-//	h = (UARTEX_HandleTypeDef*)malloc(sizeof(UARTEX_HandleTypeDef));
 	if (h == NULL)
 		goto fail5;
 	
-//	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
-
-//	h->rxpin = rxpinH;
-//	h->txpin = txpinH;
-//	h->hdmaex_rx = dmaExRxH;
-//	h->hdmaex_tx = dmaExTxH;
-//	h->hirq = irqH;
-	
 	return h;
 	
-	fail5:	IRQ_Handle_Dtor(irqH);
-	fail4:	DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
-	fail3:	DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
+	fail5:	if (hirq_uart) IRQ_Handle_Dtor(irqH);
+	fail4:	if (hdmatx && hirq_dmatx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
+	fail3:	if (hdmarx && hirq_dmarx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
 	fail2: 	GPIOEX_Dtor(txpinH);
 	fail1:	GPIOEX_Dtor(rxpinH);
 	fail0:	return NULL;
