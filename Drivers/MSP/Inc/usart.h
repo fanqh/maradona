@@ -58,12 +58,12 @@ typedef struct
 
 } UARTEX_Operations;
 	
-struct UART_IRQHandlerStruct
-{
-	UART_HandleTypeDef*		handle[7];	/** the [0] element not used. **/
-};
+//struct UART_IRQHandlerStruct
+//{
+//	UART_HandleTypeDef*		handle[7];	/** the [0] element not used. **/
+//};
 
-typedef struct UART_IRQHandlerStruct UART_IRQHandlerTypeDef;
+//typedef struct UART_IRQHandlerStruct UART_IRQHandlerTypeDef;
 
 struct UARTEX_HandleStruct 
 {	
@@ -82,7 +82,7 @@ struct UARTEX_HandleStruct
 
 typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;
 
-extern UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton;
+//extern UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton;
 
 UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					const UART_InitTypeDef	*init,

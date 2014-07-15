@@ -41,7 +41,7 @@
 #include "usart.h"
 #include "gpio.h"
 
-UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton = {0};
+// UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton = {0};
 
 static void enable_usart_clock(USART_TypeDef* instance)
 {
@@ -315,9 +315,11 @@ void USART2_IRQHandler(void)
 {
   HAL_NVIC_ClearPendingIRQ(USART2_IRQn);
 	
-	if (Uart_IRQ_Handler_Singleton.handle[2])
+	UART_HandleTypeDef* handle = IRQ_HandlerObject_Get(&IRQ_HandlerObjectRegistry, USART2_IRQn);
+	
+	if (handle)
 	{
-		HAL_UART_IRQHandler(Uart_IRQ_Handler_Singleton.handle[2]);
+		HAL_UART_IRQHandler(handle);
 	}
 }
 
