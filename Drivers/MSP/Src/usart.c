@@ -409,7 +409,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 			goto fail4;
 	}
 	
-	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, 0);
+	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, factory->uart_ops);
 	if (h == NULL)
 		goto fail5;
 	
@@ -561,7 +561,7 @@ static HAL_StatusTypeDef UARTEX_Swap(UARTEX_HandleTypeDef* hue, uint8_t* buf, si
 	return HAL_UART_SwapRxDMABuffer(&hue->huart, buf, size, m0ar, ndtr);
 }
 
-UARTEX_Operations UARTEX_Operations_Default = 
+UARTEX_Operations UARTEX_Ops_Default = 
 {
 	.init = UARTEX_Init,
 	.deinit = UARTEX_DeInit,

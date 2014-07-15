@@ -58,7 +58,7 @@ typedef struct
 
 } UARTEX_Operations;
 
-extern UARTEX_Operations UARTEX_Operations_Default;
+extern UARTEX_Operations UARTEX_Ops_Default;
 
 struct UARTEX_HandleStruct 
 {	

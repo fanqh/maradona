@@ -322,6 +322,7 @@ TEST(UARTEX_Handle, FactoryCreate)
 	factory.dma_clk = &DMA_ClockProvider;
 	factory.gpio_clk = &GPIO_ClockProvider;
 	factory.registry = &IRQ_HandlerObjectRegistry;
+	factory.uart_ops = &UARTEX_Ops_Default;
 	
 	dma_factory.clk = factory.dma_clk;
 	dma_factory.reg = factory.registry;
@@ -373,6 +374,12 @@ TEST(UARTEX_Handle, FactoryCreate)
 		if (h->hirq)
 		{
 			TEST_ASSERT_EQUAL(hirq_uart->irqn, h->hirq->irqn);
+		}
+		
+		TEST_ASSERT_NOT_NULL(h->ops);
+		if (h->ops)
+		{
+			TEST_ASSERT_EQUAL(factory.uart_ops, h->ops);
 		}
 		
 		TEST_ASSERT_EQUAL(huart->Instance, h->huart.Instance);
