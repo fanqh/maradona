@@ -378,7 +378,14 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 
 	DMAEX_Handle_FactoryTypeDef dma_factory;
 	dma_factory.clk = factory->dma_clk;
-	dma_factory.reg = factory->registry;	
+	dma_factory.reg = factory->registry;
+
+	if (factory->dma_clk == NULL ||
+			factory->gpio_clk == NULL ||
+			factory->registry == NULL ||
+			factory->uart_ops == NULL)
+	
+	return NULL;
 	
 	rxpinH = GPIOEX_Ctor(rxpin->instance, &rxpin->init, factory->gpio_clk);
 	if (rxpinH == NULL)

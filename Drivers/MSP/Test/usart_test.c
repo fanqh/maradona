@@ -395,7 +395,47 @@ TEST(UARTEX_Handle, FactoryCreate)
 	}
 }
 
-TEST(UARTEX_Handle, FactoryCreateWithNull)
+TEST(UARTEX_Handle, FactoryCreateWithInvalidFactory)
+{
+	UARTEX_HandleTypeDef* h;
+	UARTEX_Handle_FactoryTypeDef factory, fac;
+	
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
+	factory.uart_ops = &UARTEX_Ops_Default;
+	
+	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
+	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
+	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
+	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
+	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
+	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
+	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
+	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
+	
+	fac = factory;
+	fac.dma_clk = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+	
+	fac = factory;
+	fac.gpio_clk = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+
+	fac = factory;
+	fac.registry = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+
+	fac = factory;
+	fac.uart_ops = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+}
+
+TEST(UARTEX_Handle, FactoryCreateWithoutDMAIRQ)
 {
 	UARTEX_HandleTypeDef* h;
 	UARTEX_Handle_FactoryTypeDef factory;
@@ -403,6 +443,7 @@ TEST(UARTEX_Handle, FactoryCreateWithNull)
 	factory.dma_clk = &DMA_ClockProvider;
 	factory.gpio_clk = &GPIO_ClockProvider;
 	factory.registry = &IRQ_HandlerObjectRegistry;
+	factory.uart_ops = &UARTEX_Ops_Default;
 	
 	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
 	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
@@ -452,7 +493,8 @@ TEST_GROUP_RUNNER(UARTEX_Handle)
 	RUN_TEST_CASE(UARTEX_Handle, CtorInvalidArgs);
 	RUN_TEST_CASE(UARTEX_Handle, Dtor);
 	RUN_TEST_CASE(UARTEX_Handle, FactoryCreate);
-	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithNull);
+	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithInvalidFactory);
+	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithoutDMAIRQ);
 	RUN_TEST_CASE(UARTEX_Handle, FactoryDestroy);
 }
 
