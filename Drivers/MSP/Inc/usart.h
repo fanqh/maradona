@@ -44,6 +44,19 @@
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
 #include "dma.h"
+	 
+struct UARTEX_HandleStruct;
+typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;	 
+	 
+typedef struct 
+{
+	HAL_StatusTypeDef (*init)(UARTEX_HandleTypeDef *hue);
+	HAL_StatusTypeDef (*deinit)(UARTEX_HandleTypeDef *hue);
+	HAL_StatusTypeDef (*send)(UARTEX_HandleTypeDef *hue, uint8_t *pData, uint16_t Size);
+	HAL_StatusTypeDef (*recv)(UARTEX_HandleTypeDef *hue, uint8_t *pData, uint16_t Size);
+	HAL_StatusTypeDef (*swap)(UARTEX_HandleTypeDef* hue, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
+
+} UARTEX_Operations;
 	
 struct UART_IRQHandlerStruct
 {
@@ -63,6 +76,8 @@ struct UARTEX_HandleStruct
 	DMAEX_HandleTypeDef			*hdmaex_tx;
 	
 	IRQ_HandleTypeDef				*hirq;
+	
+	UARTEX_Operations				*ops;
 };
 
 typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;
@@ -79,14 +94,6 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					
-																					
-void UARTEX_Clone(UARTEX_HandleTypeDef* dst, 
-									const UARTEX_HandleTypeDef* defaults,
-									GPIOEX_TypeDef* rxpin,
-									GPIOEX_TypeDef* txpin,
-									IRQ_HandleTypeDef* irq,
-									DMAEX_HandleTypeDef* rxdma,
-									DMAEX_HandleTypeDef* txdma);
 
 typedef struct 
 {
@@ -94,17 +101,19 @@ typedef struct
 	DMA_ClockProviderTypeDef*					dma_clk;
 	GPIO_ClockProviderTypeDef*				gpio_clk;
 	
+	UARTEX_Operations*								uart_ops;
+	
 } UARTEX_Handle_FactoryTypeDef;	
 
 UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
-																										const UART_HandleTypeDef* huart,				// instance + init
-																										const GPIOEX_TypeDef*	rxpin,						// instance + init
-																										const GPIOEX_TypeDef*	txpin,						// instance + init
-																										const DMA_HandleTypeDef* hdmarx, 				// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_dmarx,		// instance + init, optional
-																										const DMA_HandleTypeDef* hdmatx,				// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_dmatx,		// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_uart);		// instance + init, optional
+																										const UART_HandleTypeDef* huart,						// instance + init
+																										const GPIOEX_TypeDef*	rxpin,								// instance + init
+																										const GPIOEX_TypeDef*	txpin,								// instance + init
+																										const DMA_HandleTypeDef* hdmarx, 						// instance + init, optional
+																										const IRQ_HandleTypeDef* hirq_dmarx,				// instance + init, optional
+																										const DMA_HandleTypeDef* hdmatx,						// instance + init, optional
+																										const IRQ_HandleTypeDef* hirq_dmatx,				// instance + init, optional
+																										const IRQ_HandleTypeDef* hirq_uart);				// instance + init, optional
 
 void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, UARTEX_HandleTypeDef* h);																										
 																										
@@ -123,10 +132,6 @@ int UART_Instance_To_Index(USART_TypeDef* uart);
 
 const extern UART_HandleTypeDef	UART_Handle_Uart2_Default;
 const extern UARTEX_HandleTypeDef UARTEX_Handle_Uart2_Default;			
-
-									
-
-
 
 #ifdef __cplusplus
 }
