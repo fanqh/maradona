@@ -57,13 +57,8 @@ typedef struct
 	HAL_StatusTypeDef (*swap)(UARTEX_HandleTypeDef* hue, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
 
 } UARTEX_Operations;
-	
-//struct UART_IRQHandlerStruct
-//{
-//	UART_HandleTypeDef*		handle[7];	/** the [0] element not used. **/
-//};
 
-//typedef struct UART_IRQHandlerStruct UART_IRQHandlerTypeDef;
+extern UARTEX_Operations UARTEX_Operations_Default;
 
 struct UARTEX_HandleStruct 
 {	
@@ -82,15 +77,14 @@ struct UARTEX_HandleStruct
 
 typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;
 
-//extern UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton;
-
 UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					const UART_InitTypeDef	*init,
 																					GPIOEX_TypeDef					*rxpin, 		// DI
 																					GPIOEX_TypeDef					*txpin, 		// DI		
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
-																					IRQ_HandleTypeDef				*hirq);			// DI
+																					IRQ_HandleTypeDef				*hirq,			// DI
+																					UARTEX_Operations				*ops);
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					

@@ -41,7 +41,6 @@
 #include "usart.h"
 #include "gpio.h"
 
-// UART_IRQHandlerTypeDef	Uart_IRQ_Handler_Singleton = {0};
 
 static void enable_usart_clock(USART_TypeDef* instance)
 {
@@ -308,9 +307,9 @@ bool HAL_UART_ClockIsEnabled(USART_TypeDef* uart)
 	return false;
 }
 
-/**
-* @brief This function handles USART2 global interrupt.
-*/
+///////////////////////////////////////////////////////////////////////////////
+// This function handles USART2 global interrupt.
+
 void USART2_IRQHandler(void)
 {
   HAL_NVIC_ClearPendingIRQ(USART2_IRQn);
@@ -330,9 +329,15 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					GPIOEX_TypeDef					*txpin, 		// DI		
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
-																					IRQ_HandleTypeDef				*hirq)			// DI
+																					IRQ_HandleTypeDef				*hirq,			// DI
+																					UARTEX_Operations				*ops)
 {
-	UARTEX_HandleTypeDef* h = (UARTEX_HandleTypeDef*)malloc(sizeof(UARTEX_HandleTypeDef));
+	UARTEX_HandleTypeDef* h;
+	
+	if (uart == NULL || init == NULL || rxpin == NULL || txpin == NULL || ops == NULL)
+		return NULL;
+	
+	h = (UARTEX_HandleTypeDef*)malloc(sizeof(UARTEX_HandleTypeDef));
 	if (!h) return NULL;
 	
 	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
@@ -344,6 +349,7 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 	h->hdmaex_rx = hdmaex_rx;
 	h->hdmaex_tx = hdmaex_tx;
 	h->hirq = hirq;
+	h->ops = ops;
 	
 	return h;
 }
@@ -403,7 +409,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 			goto fail4;
 	}
 	
-	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH);
+	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, 0);
 	if (h == NULL)
 		goto fail5;
 	
@@ -434,34 +440,34 @@ void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, U
 }
 
 
-/** obsolete, don't use **/
-void UARTEX_Clone(UARTEX_HandleTypeDef* dst, 							
-									const UARTEX_HandleTypeDef* defaults,		
-									GPIOEX_TypeDef* rxpin,
-									GPIOEX_TypeDef* txpin,
-									IRQ_HandleTypeDef* irq,
-									DMAEX_HandleTypeDef* rxdma,
-									DMAEX_HandleTypeDef* txdma)
-{
-	(*dst) = (*defaults);
-	
-	if (rxpin) dst->rxpin = rxpin;
-	if (txpin) dst->txpin = txpin;
-	
-	if (irq) {
-		dst->hirq = irq;
-	}
+///** obsolete, don't use **/
+//void UARTEX_Clone(UARTEX_HandleTypeDef* dst, 							
+//									const UARTEX_HandleTypeDef* defaults,		
+//									GPIOEX_TypeDef* rxpin,
+//									GPIOEX_TypeDef* txpin,
+//									IRQ_HandleTypeDef* irq,
+//									DMAEX_HandleTypeDef* rxdma,
+//									DMAEX_HandleTypeDef* txdma)
+//{
+//	(*dst) = (*defaults);
+//	
+//	if (rxpin) dst->rxpin = rxpin;
+//	if (txpin) dst->txpin = txpin;
+//	
+//	if (irq) {
+//		dst->hirq = irq;
+//	}
 
-	if (rxdma)
-	{
-		dst->hdmaex_rx = rxdma;
-	}
-	
-	if (txdma)
-	{
-		dst->hdmaex_tx = txdma;
-	}
-}
+//	if (rxdma)
+//	{
+//		dst->hdmaex_rx = rxdma;
+//	}
+//	
+//	if (txdma)
+//	{
+//		dst->hdmaex_tx = txdma;
+//	}
+//}
 
 
 
@@ -527,11 +533,45 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 	return HAL_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// thin wrappers, no test cases 
 
+static HAL_StatusTypeDef UARTEX_Init(UARTEX_HandleTypeDef *hue)
+{
+	return HAL_UART_Init(&hue->huart);
+}
 
-/************************ Defaults ********************************************/
+static HAL_StatusTypeDef UARTEX_DeInit(UARTEX_HandleTypeDef *hue) 
+{
+	return HAL_UART_DeInit(&hue->huart);
+}
 
+static HAL_StatusTypeDef UARTEX_Send(UARTEX_HandleTypeDef *hue, uint8_t *pData, uint16_t Size)
+{
+	return HAL_UART_Transmit_DMA(&hue->huart, pData, Size);
+}
 
+static HAL_StatusTypeDef UARTEX_Recv(UARTEX_HandleTypeDef *hue, uint8_t *pData, uint16_t Size)
+{
+	return HAL_UART_Receive_DMA(&hue->huart, pData, Size);
+}
+
+static HAL_StatusTypeDef UARTEX_Swap(UARTEX_HandleTypeDef* hue, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr)
+{
+	return HAL_UART_SwapRxDMABuffer(&hue->huart, buf, size, m0ar, ndtr);
+}
+
+UARTEX_Operations UARTEX_Operations_Default = 
+{
+	.init = UARTEX_Init,
+	.deinit = UARTEX_DeInit,
+	.send = UARTEX_Send,
+	.recv = UARTEX_Recv,
+	.swap = UARTEX_Swap,
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// Defauts
 
 const UART_HandleTypeDef	UART_Handle_Uart2_Default =
 {

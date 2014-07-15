@@ -256,8 +256,9 @@ TEST(UARTEX_Handle, Ctor)
 	DMAEX_HandleTypeDef hdmaex_rx;
 	DMAEX_HandleTypeDef	hdmaex_tx;
 	IRQ_HandleTypeDef	hirq;
+	UARTEX_Operations ops;
 	
-	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq);
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
 	
 	TEST_ASSERT_NOT_NULL(h);
 	TEST_ASSERT_EQUAL_HEX32(&rx, h->rxpin);
@@ -267,8 +268,36 @@ TEST(UARTEX_Handle, Ctor)
 	TEST_ASSERT_EQUAL_HEX32(&hdmaex_rx, h->hdmaex_rx);
 	TEST_ASSERT_EQUAL_HEX32(&hdmaex_tx, h->hdmaex_tx);
 	TEST_ASSERT_EQUAL_HEX32(&hirq, h->hirq);
+	TEST_ASSERT_EQUAL_HEX32(&ops, h->ops);
 	
 	if (h) free(h);
+}
+
+TEST(UARTEX_Handle, CtorInvalidArgs)
+{
+	UARTEX_HandleTypeDef* h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	UARTEX_Operations ops;
+	
+	// h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	h = UARTEX_Handle_Ctor(0, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, 0, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, 0, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, 0, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, 0);
+	TEST_ASSERT_NULL(h);
 }
 
 TEST(UARTEX_Handle, Dtor)
@@ -280,7 +309,7 @@ TEST(UARTEX_Handle, Dtor)
 	DMAEX_HandleTypeDef	hdmaex_tx;
 	IRQ_HandleTypeDef	hirq;
 	
-	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq);
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, 0);
 	if (h) UARTEX_Handle_Dtor(h);
 }
 
@@ -413,6 +442,7 @@ TEST(UARTEX_Handle, FactoryDestroy)
 TEST_GROUP_RUNNER(UARTEX_Handle)
 {
 	RUN_TEST_CASE(UARTEX_Handle, Ctor);
+	RUN_TEST_CASE(UARTEX_Handle, CtorInvalidArgs);
 	RUN_TEST_CASE(UARTEX_Handle, Dtor);
 	RUN_TEST_CASE(UARTEX_Handle, FactoryCreate);
 	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithNull);
