@@ -3,6 +3,7 @@
 
 #include "configuration.h"
 #include "stm32f4xx_hal.h"
+#include "usart.h"
 #include "uart_io.h"
 
 /*** intercept hal api ***/
@@ -22,15 +23,18 @@ extern usart_api_t usart_apis;
 /** see public header file for forward declaration **/
 struct UART_IO_HandleStruct {
 	
-	UART_HandleTypeDef	*handle;
+	UARTEX_HandleTypeDef		*handle;
 	
 	char								*rbuf[2];		/** two pointers **/
+	int									rbuf_size;
+	
 	char								*rx_upper;
 	char 								*rx_head;
 	char								*rx_tail;	
 	
 	char								*tbuf[2];		/** two pointers **/
-
+	int 								tbuf_size;
+	
 	char								*tx_head;
 	char								*tx_tail;
 };

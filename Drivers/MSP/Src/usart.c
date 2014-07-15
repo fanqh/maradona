@@ -41,7 +41,6 @@
 #include "usart.h"
 #include "gpio.h"
 
-
 static void enable_usart_clock(USART_TypeDef* instance)
 {
 	if(instance == USART1)

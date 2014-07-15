@@ -73,6 +73,10 @@ struct UARTEX_HandleStruct
 	IRQ_HandleTypeDef				*hirq;
 	
 	UARTEX_Operations				*ops;
+	
+	/** This field are used for test/mock					**/
+	/** UART Ex Operations never touch this field **/
+	void										*test_data;					
 };
 
 typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;

@@ -82,7 +82,6 @@ static void SystemClock_Config(void)
 
 }
 
-
 int unity_output_char(int a) 
 {
 	uint8_t chr = a;
@@ -90,7 +89,6 @@ int unity_output_char(int a)
 	HAL_UART_Transmit(&huartex3.huart, &chr, 1, 10);
 	return a;
 }
-
 
 static void RunAllTests(void)
 {

@@ -269,6 +269,7 @@ TEST(UARTEX_Handle, Ctor)
 	TEST_ASSERT_EQUAL_HEX32(&hdmaex_tx, h->hdmaex_tx);
 	TEST_ASSERT_EQUAL_HEX32(&hirq, h->hirq);
 	TEST_ASSERT_EQUAL_HEX32(&ops, h->ops);
+	TEST_ASSERT_EQUAL_HEX32(0, h->test_data);
 	
 	if (h) free(h);
 }
