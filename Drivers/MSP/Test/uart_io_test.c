@@ -66,8 +66,6 @@ static	UART_IO_HandleTypeDef 	m_huio_default =
 
 static	UART_IO_HandleTypeDef 	m_huio;
 
-//static 	uint32_t 								m_rx_m0ar;
-//static 	int 										m_rx_ndtr;
 static 	uint32_t								m_tx_m0ar;
 static 	int											m_tx_ndtr;
 
@@ -79,6 +77,7 @@ static 	int											m_tx_ndtr;
 
 
 /** utils begin **/
+#define			WHATEVER						1234
 #define 		TEST_BUFFER_SIZE 		1024
 static 			char 								test_buffer[TEST_BUFFER_SIZE];
 
