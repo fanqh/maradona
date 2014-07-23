@@ -97,7 +97,7 @@ void GPIO_Clock_Get(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_
 	}
 	
 	prev = clk->bits[index];
-	curr = (clk->bits[index] |= Pin);		/**** need new case, get twice, put once, clock on ****/
+	curr = (clk->bits[index] |= Pin);		/**** need new case, get twice, put once, clock on ****/  /*hehe, good*/
 
 	if (prev == 0 && curr != 0)
 	{

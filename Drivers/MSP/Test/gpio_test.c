@@ -119,14 +119,14 @@ TEST_TEAR_DOWN(GPIO_Clock)
 	}
 }
 
-TEST(GPIO_Clock, ClockGet)
+TEST(GPIO_Clock, ClockGet)   //enable clock 
 {
 	GPIO_Clock_Get(&gclk, GPIOC, GPIO_PIN_6);
 	TEST_ASSERT_TRUE(gpioc_clock_is_enabled());
 	TEST_ASSERT_TRUE(GPIO_Clock_Status(&gclk, GPIOC, GPIO_PIN_6));
 }
 
-TEST(GPIO_Clock, ClockPut)
+TEST(GPIO_Clock, ClockPut)//disable clock
 {
 	GPIO_Clock_Get(&gclk, GPIOC, GPIO_PIN_6);
 	GPIO_Clock_Put(&gclk, GPIOC, GPIO_PIN_6);

@@ -125,7 +125,7 @@ TEST(DMAEX_Handle, Ctor)
 	DMA_ClockProviderTypeDef clk;
 	IRQ_HandleTypeDef	irq;
 
-	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
+	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq); //返回扩展类型handle，然后赋值测试，感觉意义不大
 	TEST_ASSERT_NOT_NULL(h);
 	TEST_ASSERT_EQUAL_HEX32(&clk, h->clk);
 	TEST_ASSERT_EQUAL_HEX32(dfl->Instance, h->hdma.Instance);
@@ -146,7 +146,8 @@ TEST(DMAEX_Handle, Ctor)
 	if (h) free(h);
 }
 
-TEST(DMAEX_Handle, Dtor)
+TEST(DMAEX_Handle, Dtor)//收回handle
+
 {
 	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
 	DMA_ClockProviderTypeDef clk;
@@ -261,7 +262,7 @@ TEST_GROUP_RUNNER(DMAEX_Handle)
 {
 	RUN_TEST_CASE(DMAEX_Handle, Ctor);	
 	RUN_TEST_CASE(DMAEX_Handle, Dtor);
-	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);
+	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);//DMA handle 和irq  handle
 	RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_Init);
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_DeInit);
