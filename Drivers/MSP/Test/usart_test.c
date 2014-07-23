@@ -6,51 +6,16 @@
 #include "usart.h"
 #include "usart_test.h"
 
-#define UART_IO_BUFFER_SIZE	64
+static UARTEX_HandleTypeDef* huartex_dma;
+static UARTEX_HandleTypeDef* huartex;
 
-#define HUARTEX_DMA					(&huartex2_dma)
-#define HUART_DMA						(&huartex2_dma.huart)
+#define HUARTEX_DMA 	(huartex_dma)
+#define HUART_DMA			(&huartex_dma->huart)
+
+#define HUARTEX				(huartex)
+#define HUART					(&huartex->huart)
 
 const char alphabet[] = "abcdefghijklmnopqrstuvwxyz";
-
-static UARTEX_HandleTypeDef 	huartex2_pd5_pd6;	// originally used as polling mode test data
-static UARTEX_HandleTypeDef 	huartex2_dma;
-static DMAEX_HandleTypeDef 		hdmaex_rx_uart2;
-static DMAEX_HandleTypeDef 		hdmaex_tx_uart2;
-static IRQ_HandleTypeDef 			hirq_uart2_rxdma;
-static IRQ_HandleTypeDef 			hirq_uart2_txdma;
-static IRQ_HandleTypeDef			hirq_uart2;
-static IRQ_HandleTypeDef			hirq_uart2_dma;
-static GPIOEX_TypeDef					rxpin;
-static GPIOEX_TypeDef					txpin;
-static GPIOEX_TypeDef					rxpin_dma;
-static GPIOEX_TypeDef					txpin_dma;
-
-void refresh_static_variables(void)
-{
-	rxpin = PD6_As_Uart2Rx_Default;
-	txpin = PD5_As_Uart2Tx_Default;
-	hirq_uart2 = IRQ_Handle_Uart2_Default;
-	
-	UARTEX_Clone(&huartex2_pd5_pd6, &UARTEX_Handle_Uart2_Default, 
-		&rxpin, &txpin, &hirq_uart2, NULL, NULL);
-	
-	rxpin_dma = PD6_As_Uart2Rx_Default;
-	txpin_dma = PD5_As_Uart2Tx_Default;
-	
-	hirq_uart2_rxdma = IRQ_Handle_Uart2RxDMA_Default;
-	hirq_uart2_txdma = IRQ_Handle_Uart2TxDMA_Default;
-	
-	hdmaex_rx_uart2 = DMAEX_Handle_Uart2Rx_Default;
-	hdmaex_rx_uart2.hirq = &hirq_uart2_rxdma;
-	
-	hdmaex_tx_uart2 = DMAEX_Handle_Uart2Tx_Default;
-	hdmaex_tx_uart2.hirq = &hirq_uart2_txdma;
-	
-	hirq_uart2_dma = IRQ_Handle_Uart2_Default;
-	UARTEX_Clone(&huartex2_dma, 	&UARTEX_Handle_Uart2_Default, 
-	&rxpin_dma, &txpin_dma, &hirq_uart2_dma, &hdmaex_rx_uart2, &hdmaex_tx_uart2);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 /** Analysis
@@ -132,7 +97,7 @@ Deinit Assertion:
 ******************************************************************************/	
 
 ///////////////////////////////////////////////////////////////////////////////
-// internal functions (some may be obsolete)
+// internal functions (most are obsolete)
 
 bool gpio_modes_all_input(GPIO_TypeDef* gpiox, uint32_t pins)
 {
@@ -248,207 +213,329 @@ bool uart_rxdma_linked(UART_HandleTypeDef* huart, DMA_HandleTypeDef* rx)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// TEST GROUP BEGIN - MspInit
-
-TEST_GROUP(Usart_DMA_MspInit);
-TEST_SETUP(Usart_DMA_MspInit)
+// create and destroy test data
+//
+static void CreateTestData(void)
 {
-//	__USART2_FORCE_RESET();
-//	__DMA1_FORCE_RESET();
-//	
-//	__USART2_RELEASE_RESET();
-//	__DMA1_FORCE_RESET();
-
-//	rxpin = PD6_As_Uart2Rx_Default;
-//	txpin = PD5_As_Uart2Tx_Default;
-//	hirq_uart2 = IRQ_Handle_Uart2_Default;
-//	
-//	UARTEX_Clone(&huartex2_pd5_pd6, &UARTEX_Handle_Uart2_Default, 
-//		&rxpin, &txpin, &hirq_uart2, NULL, NULL);
-//	
-//	rxpin_dma = PD6_As_Uart2Rx_Default;
-//	txpin_dma = PD5_As_Uart2Tx_Default;
-//	
-//	// DMAEX_Clone(&hdmaex_rx_uart2, &DMAEX_Handle_Uart2Rx_Default);
-//	hirq_uart2_rxdma = IRQ_Handle_DMA1_Stream5_Default;
-//	hirq_uart2_txdma = IRQ_Handle_DMA1_Stream6_Default;
-//	
-//	hdmaex_rx_uart2 = DMAEX_Handle_Uart2Rx_Default;
-//	hdmaex_rx_uart2.hirq = &hirq_uart2_rxdma;
-//	
-//	hdmaex_tx_uart2 = DMAEX_Handle_Uart2Tx_Default;
-//	hdmaex_tx_uart2.hirq = &hirq_uart2_txdma;
-//	
-//	hirq_uart2_dma = IRQ_Handle_Uart2_Default;
-//	UARTEX_Clone(&huartex2_dma, 	&UARTEX_Handle_Uart2_Default, 
-//		&rxpin_dma, &txpin_dma, 
-//		&hirq_uart2_dma, &hdmaex_rx_uart2, &hdmaex_tx_uart2);
-
-	refresh_static_variables();
-}
-
-TEST_TEAR_DOWN(Usart_DMA_MspInit)
-{
-}
+	UARTEX_Handle_FactoryTypeDef factory;
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
 	
-
-TEST(Usart_DMA_MspInit, InitUartClockShouldBeEnabled)
-{
-	UART_HandleTypeDef* h = &huartex2_pd5_pd6.huart;
-	HAL_UART_MspInit(h);
-	TEST_ASSERT_TRUE(HAL_UART_ClockIsEnabled(h->Instance));
-}
-
-
-TEST(Usart_DMA_MspInit, InitRxPinGpioShouldBeInitialized)
-{
-	UARTEX_HandleTypeDef* hue = &huartex2_pd5_pd6;
+	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(&factory, &UART_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, &PD5_As_Uart2Tx_Default, 
+		&DMA_Handle_Uart2Rx_Default, &IRQ_Handle_Uart2RxDMA_Default, &DMA_Handle_Uart2Tx_Default, &IRQ_Handle_Uart2TxDMA_Default,
+		&IRQ_Handle_Uart2_Default);
 	
-	HAL_UART_MspInit(&hue->huart);
-	TEST_ASSERT_EQUAL(GPIOEX_STATE_SET, hue->rxpin->state);
+	HUARTEX = UARTEX_Handle_FactoryCreate(&factory, &UART_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, &PD5_As_Uart2Tx_Default, 
+		NULL, NULL, NULL, NULL, NULL);	
 }
 
-TEST(Usart_DMA_MspInit, InitTxPinGpioShouldBeInitialized)
+static void DestroyTestData(void)
 {
-	UARTEX_HandleTypeDef* hue = &huartex2_pd5_pd6;
+	UARTEX_Handle_FactoryTypeDef factory;
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
 	
-	HAL_UART_MspInit(&hue->huart);
-	TEST_ASSERT_EQUAL(GPIOEX_STATE_SET, hue->txpin->state);
+	UARTEX_Handle_FactoryDestroy(&factory, huartex_dma);
+	UARTEX_Handle_FactoryDestroy(&factory, huartex);	
 }
 
-TEST(Usart_DMA_MspInit, InitRxDMAShouldBeLinked)
+///////////////////////////////////////////////////////////////////////////////
+// UARTEX_Handle Tests Ctor, Dtor, Factories
+//
+TEST_GROUP(UARTEX_Handle);
+TEST_SETUP(UARTEX_Handle){}
+TEST_TEAR_DOWN(UARTEX_Handle){}
+	
+TEST(UARTEX_Handle, Ctor)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	TEST_ASSERT_TRUE(uart_rxdma_linked(HUART_DMA, &HUARTEX_DMA->hdmaex_rx->hdma));
+	UARTEX_HandleTypeDef* h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	UARTEX_Operations ops;
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	
+	TEST_ASSERT_NOT_NULL(h);
+	TEST_ASSERT_EQUAL_HEX32(&rx, h->rxpin);
+	TEST_ASSERT_EQUAL_HEX32(&tx, h->txpin);
+	TEST_ASSERT_EQUAL(USART2, h->huart.Instance);
+	TEST_ASSERT_EQUAL_MEMORY(&UART_Handle_Uart2_Default.Init, &h->huart.Init, sizeof(UART_InitTypeDef));
+	TEST_ASSERT_EQUAL_HEX32(&hdmaex_rx, h->hdmaex_rx);
+	TEST_ASSERT_EQUAL_HEX32(&hdmaex_tx, h->hdmaex_tx);
+	TEST_ASSERT_EQUAL_HEX32(&hirq, h->hirq);
+	TEST_ASSERT_EQUAL_HEX32(&ops, h->ops);
+	TEST_ASSERT_EQUAL_HEX32(0, h->test_data);
+	
+	if (h) free(h);
 }
 
-TEST(Usart_DMA_MspInit, InitRxDMAEXShouldBeInitialized)
+TEST(UARTEX_Handle, CtorInvalidArgs)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, HUARTEX_DMA->hdmaex_rx->state);
+	UARTEX_HandleTypeDef* h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	UARTEX_Operations ops;
+	
+	// h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	h = UARTEX_Handle_Ctor(0, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, 0, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, 0, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, 0, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_NULL(h);
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, 0);
+	TEST_ASSERT_NULL(h);
 }
 
-
-TEST(Usart_DMA_MspInit, InitTxDMAShouldBeLinked)
+TEST(UARTEX_Handle, Dtor)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	TEST_ASSERT_TRUE(uart_txdma_linked(HUART_DMA, &HUARTEX_DMA->hdmaex_tx->hdma));
+	UARTEX_HandleTypeDef* h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	
+	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, 0);
+	if (h) UARTEX_Handle_Dtor(h);
 }
 
-TEST(Usart_DMA_MspInit, InitTxDMAEXShouldBeInitialized)
+TEST(UARTEX_Handle, FactoryCreate)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, HUARTEX_DMA->hdmaex_tx->state);
+	UARTEX_HandleTypeDef* h;
+	UARTEX_Handle_FactoryTypeDef factory;
+	DMAEX_Handle_FactoryTypeDef	dma_factory;
+	
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
+	factory.uart_ops = &UARTEX_Ops_Default;
+	
+	dma_factory.clk = factory.dma_clk;
+	dma_factory.reg = factory.registry;
+	
+	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
+	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
+	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
+	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
+	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
+	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
+	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
+	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
+	
+	h = UARTEX_Handle_FactoryCreate(&factory, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	
+	TEST_ASSERT_NOT_NULL(h);
+	if (h) {
+		
+		TEST_ASSERT_NOT_NULL(h->hdmaex_rx);
+		if (h->hdmaex_rx)
+		{
+			TEST_ASSERT_EQUAL_HEX32(hdmarx->Instance, h->hdmaex_rx->hdma.Instance);
+			TEST_ASSERT_EQUAL(hirq_dmarx->irqn, h->hdmaex_rx->hirq->irqn);
+		}
+		
+		TEST_ASSERT_NOT_NULL(h->hdmaex_tx);
+		if (h->hdmaex_tx)
+		{
+			TEST_ASSERT_EQUAL_HEX32(hdmatx->Instance, h->hdmaex_tx->hdma.Instance);
+			TEST_ASSERT_EQUAL(hirq_dmatx->irqn, h->hdmaex_tx->hirq->irqn);
+		}
+		
+		TEST_ASSERT_NOT_NULL(h->rxpin);
+		
+		if (h->rxpin)
+		{
+			TEST_ASSERT_EQUAL(rxpin->instance, h->rxpin->instance);
+			TEST_ASSERT_EQUAL(rxpin->init.Pin, h->rxpin->init.Pin);
+		}
+		
+		TEST_ASSERT_NOT_NULL(h->txpin);
+		if (h->txpin)
+		{
+			TEST_ASSERT_EQUAL(txpin->instance, h->txpin->instance);
+			TEST_ASSERT_EQUAL(txpin->init.Pin, h->txpin->init.Pin);
+		}
+		
+		TEST_ASSERT_NOT_NULL(h->hirq);
+		if (h->hirq)
+		{
+			TEST_ASSERT_EQUAL(hirq_uart->irqn, h->hirq->irqn);
+		}
+		
+		TEST_ASSERT_NOT_NULL(h->ops);
+		if (h->ops)
+		{
+			TEST_ASSERT_EQUAL(factory.uart_ops, h->ops);
+		}
+		
+		TEST_ASSERT_EQUAL(huart->Instance, h->huart.Instance);
+		
+	
+		DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_rx);
+		DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_tx);
+		GPIOEX_Dtor(h->rxpin);
+		GPIOEX_Dtor(h->txpin);
+		IRQ_Handle_Dtor(h->hirq);
+		
+		free(h);
+	}
 }
 
-TEST(Usart_DMA_MspInit, InitUartIRQHandleShouldBeInitialized)
+TEST(UARTEX_Handle, FactoryCreateWithInvalidFactory)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_SET, HUARTEX_DMA->hirq->state);
+	UARTEX_HandleTypeDef* h;
+	UARTEX_Handle_FactoryTypeDef factory, fac;
+	
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
+	factory.uart_ops = &UARTEX_Ops_Default;
+	
+	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
+	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
+	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
+	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
+	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
+	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
+	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
+	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
+	
+	fac = factory;
+	fac.dma_clk = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+	
+	fac = factory;
+	fac.gpio_clk = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+
+	fac = factory;
+	fac.registry = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
+
+	fac = factory;
+	fac.uart_ops = NULL;
+	h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	TEST_ASSERT_NULL(h);
 }
 
-TEST(Usart_DMA_MspInit, DeInitUartIRQHandleShouldBeDeInitialized)
+TEST(UARTEX_Handle, FactoryCreateWithoutDMAIRQ)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	HAL_UART_MspDeInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, HUARTEX_DMA->hirq->state);
+	UARTEX_HandleTypeDef* h;
+	UARTEX_Handle_FactoryTypeDef factory;
+	
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
+	factory.uart_ops = &UARTEX_Ops_Default;
+	
+	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
+	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
+	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
+	
+	h = UARTEX_Handle_FactoryCreate(&factory, huart, rxpin, txpin, NULL, NULL, NULL, NULL, NULL);
+	
+	TEST_ASSERT_NOT_NULL(h);
+	if (h) {
+		
+		TEST_ASSERT_NULL(h->hdmaex_rx);		
+		TEST_ASSERT_NULL(h->hdmaex_tx);		
+		TEST_ASSERT_NULL(h->hirq);
+		
+		GPIOEX_Dtor(h->rxpin);
+		GPIOEX_Dtor(h->txpin);
+		
+		free(h);
+	}	
 }
 
-TEST(Usart_DMA_MspInit, DeInitTxDMAEXShouldBeDeInitialized)
+TEST(UARTEX_Handle, FactoryDestroy)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	HAL_UART_MspDeInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, HUARTEX_DMA->hdmaex_tx->state);
+	UARTEX_HandleTypeDef* h;
+	UARTEX_Handle_FactoryTypeDef factory;
+	
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
+	
+	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
+	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
+	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
+	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
+	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
+	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
+	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
+	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
+	
+	h = UARTEX_Handle_FactoryCreate(&factory, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
+	UARTEX_Handle_FactoryDestroy(&factory, h);
 }
 
-TEST(Usart_DMA_MspInit, DeInitTxDMAShouldBeUnlinked)
+TEST_GROUP_RUNNER(UARTEX_Handle)
 {
-	HAL_UART_MspInit(HUART_DMA);
-	HAL_UART_MspDeInit(HUART_DMA);
-	TEST_ASSERT_NULL(HUART_DMA->hdmatx);
-	TEST_ASSERT_NULL(HUARTEX_DMA->hdmaex_tx->hdma.Parent);
-}
-
-TEST(Usart_DMA_MspInit, DeInitRxDMAEXShouldBeDeInitialized)
-{
-	HAL_UART_MspInit(HUART_DMA);
-	HAL_UART_MspDeInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, HUARTEX_DMA->hdmaex_rx->state);
-}
-
-TEST(Usart_DMA_MspInit, DeInitRxDMAShouldBeUnlinked)
-{
-	HAL_UART_MspInit(HUART_DMA);
-	HAL_UART_MspDeInit(HUART_DMA);
-	TEST_ASSERT_NULL(HUART_DMA->hdmarx);
-	TEST_ASSERT_NULL(HUARTEX_DMA->hdmaex_rx->hdma.Parent);
-}
-
-TEST(Usart_DMA_MspInit, DeInitRxTxPinGpioShouldBeDeInitialized)
-{
-	HAL_UART_MspInit(HUART_DMA);
-	HAL_UART_MspDeInit(HUART_DMA);
-	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, HUARTEX_DMA->rxpin->state);
-	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, HUARTEX_DMA->txpin->state);
-}
-
-TEST_GROUP_RUNNER(Usart_DMA_MspInit)
-{
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitUartClockShouldBeEnabled);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitRxPinGpioShouldBeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitTxPinGpioShouldBeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitRxDMAShouldBeLinked);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitRxDMAEXShouldBeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitTxDMAShouldBeLinked);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitTxDMAEXShouldBeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, InitUartIRQHandleShouldBeInitialized);
-
-	RUN_TEST_CASE(Usart_DMA_MspInit, DeInitUartIRQHandleShouldBeDeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, DeInitTxDMAEXShouldBeDeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, DeInitTxDMAShouldBeUnlinked);
-	RUN_TEST_CASE(Usart_DMA_MspInit, DeInitRxDMAEXShouldBeDeInitialized);
-	RUN_TEST_CASE(Usart_DMA_MspInit, DeInitRxDMAShouldBeUnlinked);
-	RUN_TEST_CASE(Usart_DMA_MspInit, DeInitRxTxPinGpioShouldBeDeInitialized);
+	RUN_TEST_CASE(UARTEX_Handle, Ctor);
+	RUN_TEST_CASE(UARTEX_Handle, CtorInvalidArgs);
+	RUN_TEST_CASE(UARTEX_Handle, Dtor);
+	RUN_TEST_CASE(UARTEX_Handle, FactoryCreate);
+	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithInvalidFactory);
+	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithoutDMAIRQ);
+	RUN_TEST_CASE(UARTEX_Handle, FactoryDestroy);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// The first several case are learning tests
+// The following tests requires hardware connections, short usart 2 tx and rx
 //
-/***********	The following cases are Learning Tests **************************
-
-	USART2 tx/rx short required to run these tests.
-
-******************************************************************************/
-
-TEST_GROUP(LT_Usart_DMA_TxRx);
-TEST_SETUP(LT_Usart_DMA_TxRx)
+TEST_GROUP(UART_DMA_TxRx);
+TEST_SETUP(UART_DMA_TxRx)
 {
-//	hirq_uart2_rxdma = IRQ_Handle_DMA1_Stream5_Default;
-//	hirq_uart2_txdma = IRQ_Handle_DMA1_Stream6_Default;
-//	
-//	hdmaex_rx_uart2 = DMAEX_Handle_Uart2Rx_Default;
-//	hdmaex_rx_uart2.hirq = &hirq_uart2_rxdma;
-//	
-//	hdmaex_tx_uart2 = DMAEX_Handle_Uart2Tx_Default;
-//	hdmaex_tx_uart2.hirq = &hirq_uart2_txdma;
-//	
-//	hirq_uart2_dma = IRQ_Handle_Uart2_Default;
-//	
-//	UARTEX_Clone(&huartex2_dma, 	&UARTEX_Handle_Uart2_Default, 
-//		&PD6_As_Uart2Rx_Default, &PD5_As_Uart2Tx_Default, 
-//		&hirq_uart2_dma, &hdmaex_rx_uart2, &hdmaex_tx_uart2);
+	UARTEX_Handle_FactoryTypeDef factory;
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
 	
-	refresh_static_variables();
+	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(&factory, &UART_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, &PD5_As_Uart2Tx_Default, 
+		&DMA_Handle_Uart2Rx_Default, &IRQ_Handle_Uart2RxDMA_Default, &DMA_Handle_Uart2Tx_Default, &IRQ_Handle_Uart2TxDMA_Default,
+		&IRQ_Handle_Uart2_Default);
 	
-	HAL_UART_Init(HUART_DMA);
+	HAL_UART_Init(HUART_DMA);	
 }
 
-TEST_TEAR_DOWN(LT_Usart_DMA_TxRx)
+TEST_TEAR_DOWN(UART_DMA_TxRx)
 {
+	volatile uint32_t dr;
+	
+	UARTEX_Handle_FactoryTypeDef factory;
+	factory.dma_clk = &DMA_ClockProvider;
+	factory.gpio_clk = &GPIO_ClockProvider;
+	factory.registry = &IRQ_HandlerObjectRegistry;
+	
 	HAL_UART_DMAStop(HUART_DMA);
+	/** read to clear ORE **/
+	if (HUART_DMA->Instance->SR & USART_SR_RXNE)
+		dr = HUART_DMA->Instance->DR;
 	HAL_UART_DeInit(HUART_DMA);
+	
+	UARTEX_Handle_FactoryDestroy(&factory, HUARTEX_DMA);	
 }
-
 
 void loopBackSixBytesDMA(void) 	// reuse this op to demonstrate the usart is fine after certain operation 
 {
@@ -480,13 +567,13 @@ void loopBackSixBytesDMA(void) 	// reuse this op to demonstrate the usart is fin
 	TEST_ASSERT_EQUAL_STRING(token, rx);	
 }
 
-TEST(LT_Usart_DMA_TxRx, LoopBackSixBytesTwice)
+TEST(UART_DMA_TxRx, LoopBackSixBytesTwice)
 {
 	loopBackSixBytesDMA();
 	loopBackSixBytesDMA();
 }
 
-TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesInWaitStopCheckManner)
+TEST(UART_DMA_TxRx, ReceiveMultipleBytesInWaitStopCheckManner)
 {
 	char rx[64];
 	char tx[64];
@@ -528,7 +615,7 @@ TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesInWaitStopCheckManner)
 	loopBackSixBytesDMA();
 }
 
-TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesInSuspendResumeManner)
+TEST(UART_DMA_TxRx, ReceiveMultipleBytesInSuspendResumeManner)
 {
 	char rx[64];
 	char tx[64];
@@ -555,7 +642,7 @@ TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesInSuspendResumeManner)
 	timestamp = HAL_GetTick();
 	for (;;) {
 		
-		if (HAL_GetTick() - timestamp > 5000) {	// fail occasionally, don't know why. change this value and
+		if (HAL_GetTick() - timestamp > 100) {	// fail occasionally, don't know why. change this value and
 																						// recompile probably fix the problem.
 			TEST_FAIL_MESSAGE(fill);
 			return;
@@ -633,7 +720,7 @@ static void receiveBufferOverflow(int rx_buf_size, int by_num) {
 	TEST_ASSERT_EQUAL_MEMORY(alphabet, rx, rx_buf_size);				/** mem equal						**/	
 }
 
-TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByZero)
+TEST(UART_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByZero)
 {
 	uint32_t usart_sr;
 	
@@ -663,7 +750,7 @@ TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByZero)
 	TEST_ASSERT_FALSE(usart_sr & USART_SR_RXNE);	/* no rx data */
 }
 
-TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByOne)
+TEST(UART_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByOne)
 {
 	char chr;
 	int buf_size = 8;
@@ -688,7 +775,7 @@ TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByOne)
 	TEST_ASSERT_EQUAL(alphabet[buf_size], chr);
 }
 
-TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByTwo)
+TEST(UART_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByTwo)
 {
 	char chr;
 	int buf_size = 8;
@@ -714,297 +801,14 @@ TEST(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByTwo)
 }
 
 
-TEST_GROUP_RUNNER(LT_Usart_DMA_TxRx)
+TEST(UART_DMA_TxRx, SwapRxDMABufferInvalidArgs)
 {
-	RUN_TEST_CASE(LT_Usart_DMA_TxRx, LoopBackSixBytesTwice);
-	RUN_TEST_CASE(LT_Usart_DMA_TxRx, ReceiveMultipleBytesInWaitStopCheckManner);
-	RUN_TEST_CASE(LT_Usart_DMA_TxRx, ReceiveMultipleBytesInSuspendResumeManner);
-	RUN_TEST_CASE(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByZero);
-	RUN_TEST_CASE(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByOne);
-	RUN_TEST_CASE(LT_Usart_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByTwo);
-}
-
-
-/////////////////////////////////////
-//
-
-TEST_GROUP(UARTEX_Handle);
-TEST_SETUP(UARTEX_Handle){}
-TEST_TEAR_DOWN(UARTEX_Handle){}
-	
-TEST(UARTEX_Handle, Ctor)
-{
-	UARTEX_HandleTypeDef* h;
-	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
-	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
-	DMAEX_HandleTypeDef hdmaex_rx;
-	DMAEX_HandleTypeDef	hdmaex_tx;
-	IRQ_HandleTypeDef	hirq;
-	
-	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq);
-	
-	TEST_ASSERT_NOT_NULL(h);
-	TEST_ASSERT_EQUAL_HEX32(&rx, h->rxpin);
-	TEST_ASSERT_EQUAL_HEX32(&tx, h->txpin);
-	TEST_ASSERT_EQUAL(USART2, h->huart.Instance);
-	TEST_ASSERT_EQUAL_MEMORY(&UART_Handle_Uart2_Default.Init, &h->huart.Init, sizeof(UART_InitTypeDef));
-	TEST_ASSERT_EQUAL_HEX32(&hdmaex_rx, h->hdmaex_rx);
-	TEST_ASSERT_EQUAL_HEX32(&hdmaex_tx, h->hdmaex_tx);
-	TEST_ASSERT_EQUAL_HEX32(&hirq, h->hirq);
-	
-	if (h) free(h);
-}
-
-TEST(UARTEX_Handle, Dtor)
-{
-	UARTEX_HandleTypeDef* h;
-	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
-	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
-	DMAEX_HandleTypeDef hdmaex_rx;
-	DMAEX_HandleTypeDef	hdmaex_tx;
-	IRQ_HandleTypeDef	hirq;
-	
-	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq);
-	if (h) UARTEX_Handle_Dtor(h);
-}
-
-TEST(UARTEX_Handle, FactoryCreate)
-{
-	UARTEX_HandleTypeDef* h;
-	UARTEX_Handle_FactoryTypeDef factory;
-	DMAEX_Handle_FactoryTypeDef	dma_factory;
-	
-	factory.dma_clk = &DMA_ClockProvider;
-	factory.gpio_clk = &GPIO_ClockProvider;
-	factory.registry = &IRQ_HandlerObjectRegistry;
-	
-	dma_factory.clk = factory.dma_clk;
-	dma_factory.reg = factory.registry;
-	
-	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
-	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
-	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
-	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
-	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
-	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
-	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
-	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
-	
-	h = UARTEX_Handle_FactoryCreate(&factory, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
-	
-	TEST_ASSERT_NOT_NULL(h);
-	if (h) {
-		
-		TEST_ASSERT_NOT_NULL(h->hdmaex_rx);
-		if (h->hdmaex_rx)
-		{
-			TEST_ASSERT_EQUAL_HEX32(hdmarx->Instance, h->hdmaex_rx->hdma.Instance);
-			TEST_ASSERT_EQUAL(hirq_dmarx->irqn, h->hdmaex_rx->hirq->irqn);
-		}
-		
-		TEST_ASSERT_NOT_NULL(h->hdmaex_tx);
-		if (h->hdmaex_tx)
-		{
-			TEST_ASSERT_EQUAL_HEX32(hdmatx->Instance, h->hdmaex_tx->hdma.Instance);
-			TEST_ASSERT_EQUAL(hirq_dmatx->irqn, h->hdmaex_tx->hirq->irqn);
-		}
-		
-		TEST_ASSERT_NOT_NULL(h->rxpin);
-		
-		if (h->rxpin)
-		{
-			TEST_ASSERT_EQUAL(rxpin->instance, h->rxpin->instance);
-			TEST_ASSERT_EQUAL(rxpin->init.Pin, h->rxpin->init.Pin);
-		}
-		
-		TEST_ASSERT_NOT_NULL(h->txpin);
-		if (h->txpin)
-		{
-			TEST_ASSERT_EQUAL(txpin->instance, h->txpin->instance);
-			TEST_ASSERT_EQUAL(txpin->init.Pin, h->txpin->init.Pin);
-		}
-		
-		TEST_ASSERT_NOT_NULL(h->hirq);
-		if (h->hirq)
-		{
-			TEST_ASSERT_EQUAL(hirq_uart->irqn, h->hirq->irqn);
-		}
-		
-		TEST_ASSERT_EQUAL(huart->Instance, h->huart.Instance);
-		
-	
-		DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_rx);
-		DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_tx);
-		GPIOEX_Dtor(h->rxpin);
-		GPIOEX_Dtor(h->txpin);
-		IRQ_Handle_Dtor(h->hirq);
-		
-		free(h);
-	}
-}
-
-TEST(UARTEX_Handle, FactoryDestroy)
-{
-	UARTEX_HandleTypeDef* h;
-	UARTEX_Handle_FactoryTypeDef factory;
-	
-	factory.dma_clk = &DMA_ClockProvider;
-	factory.gpio_clk = &GPIO_ClockProvider;
-	factory.registry = &IRQ_HandlerObjectRegistry;
-	
-	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
-	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
-	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
-	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
-	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
-	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
-	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
-	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
-	
-	h = UARTEX_Handle_FactoryCreate(&factory, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
-	UARTEX_Handle_FactoryDestroy(&factory, h);
-}
-
-TEST_GROUP_RUNNER(UARTEX_Handle)
-{
-	RUN_TEST_CASE(UARTEX_Handle, Ctor);
-	RUN_TEST_CASE(UARTEX_Handle, Dtor);
-	RUN_TEST_CASE(UARTEX_Handle, FactoryCreate);
-	RUN_TEST_CASE(UARTEX_Handle, FactoryDestroy);
-}
-
-/////////////////////////////////////
-// TEST GROUP BEGIN - UARTEX_Clone
-
-//TEST_GROUP(UARTEX_Clone);
-//TEST_SETUP(UARTEX_Clone)
-//{
-//}
-
-//TEST_TEAR_DOWN(UARTEX_Clone)
-//{
-//}
-
-//TEST(UARTEX_Clone, CloneNoIRQNoDMA)
-//{
-//	UARTEX_HandleTypeDef dst;
-
-//	int 	size = sizeof(UART_HandleTypeDef);
-//	
-//	UARTEX_Clone(&dst, 	&UARTEX_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, 
-//		&PD5_As_Uart2Tx_Default, NULL, NULL, NULL);	
-//	
-//	TEST_ASSERT_EQUAL_MEMORY(&PD6_As_Uart2Rx_Default, &dst.rxpin, sizeof(GPIOEX_TypeDef));
-//	TEST_ASSERT_EQUAL_MEMORY(&PD5_As_Uart2Tx_Default, &dst.txpin, sizeof(GPIOEX_TypeDef));
-//	TEST_ASSERT_EQUAL_MEMORY(&UARTEX_Handle_Uart2_Default.huart, &dst.huart, size);
-//	TEST_ASSERT_FALSE(dst.useIRQ);
-//}
-
-//TEST(UARTEX_Clone, CloneIRQNoDMA)
-//{
-//	UARTEX_HandleTypeDef dst;
-//	
-//	UARTEX_Clone(&dst, 	&UARTEX_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, 
-//		&PD5_As_Uart2Tx_Default, &IRQ_Handle_Uart2_Default, NULL, NULL);	
-//	
-//	TEST_ASSERT_TRUE(dst.useIRQ);
-////	TEST_ASSERT_EQUAL(&dst.huart, dst.hirq.hdata);
-////	dst.hirq.hdata = 0;
-//	TEST_ASSERT_EQUAL_MEMORY(&IRQ_Handle_Uart2_Default, &dst.hirq, sizeof(IRQ_HandleTypeDef));
-//}
-
-//TEST(UARTEX_Clone, CloneIRQDMA)
-//{
-//	UARTEX_HandleTypeDef dst;
-//	DMAEX_HandleTypeDef rxdma;
-//	DMAEX_HandleTypeDef txdma;
-//	
-//	rxdma = DMAEX_Handle_Uart2Rx_Default;
-//	txdma = DMAEX_Handle_Uart2Rx_Default;
-//	
-//	UARTEX_Clone(&dst, 	&UARTEX_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, 
-//		&PD5_As_Uart2Tx_Default, &IRQ_Handle_Uart2_Default, &rxdma, &txdma);
-//	
-//	TEST_ASSERT_EQUAL_HEX32(&rxdma, dst.hdmaex_rx);
-//	TEST_ASSERT_EQUAL_HEX32(&txdma, dst.hdmaex_tx);
-//	
-////	TEST_ASSERT_EQUAL_HEX32(&rxdma.hdma, dst.huart.hdmarx);
-////	TEST_ASSERT_EQUAL_HEX32(&txdma.hdma, dst.huart.hdmatx);
-////	
-////	TEST_ASSERT_EQUAL_HEX32(&dst.huart, rxdma.hdma.Parent);
-////	TEST_ASSERT_EQUAL_HEX32(&dst.huart, txdma.hdma.Parent);
-//}
-
-//TEST_GROUP_RUNNER(UARTEX_Clone)
-//{
-//	RUN_TEST_CASE(UARTEX_Clone, CloneNoIRQNoDMA);
-//	RUN_TEST_CASE(UARTEX_Clone, CloneIRQNoDMA);
-//	RUN_TEST_CASE(UARTEX_Clone, CloneIRQDMA);
-//}
-
-UARTEX_HandleTypeDef* UsartHalExHandle;
-
-
-#ifdef HUART_DMA
-#undef HUART_DMA
-#define HUART_DMA (&UsartHalExHandle->huart)
-#endif
-
-TEST_GROUP(UsartHalEx_DMA);
-TEST_SETUP(UsartHalEx_DMA)
-{	
-	// refresh_static_variables();
-/**
-	const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
-	const GPIOEX_TypeDef* rxpin = &PD6_As_Uart2Rx_Default;
-	const GPIOEX_TypeDef* txpin = &PD5_As_Uart2Tx_Default;
-	const DMA_HandleTypeDef* hdmarx = &DMA_Handle_Uart2Rx_Default;
-	const IRQ_HandleTypeDef* hirq_dmarx = &IRQ_Handle_Uart2RxDMA_Default;
-	const DMA_HandleTypeDef* hdmatx = &DMA_Handle_Uart2Tx_Default;
-	const IRQ_HandleTypeDef* hirq_dmatx = &IRQ_Handle_Uart2TxDMA_Default;
-	const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default; **/	
-	
-	UARTEX_Handle_FactoryTypeDef factory;
-	factory.dma_clk = &DMA_ClockProvider;
-	factory.gpio_clk = &GPIO_ClockProvider;
-	factory.registry = &IRQ_HandlerObjectRegistry;
-	
-	UsartHalExHandle = UARTEX_Handle_FactoryCreate(&factory, &UART_Handle_Uart2_Default, &PD6_As_Uart2Rx_Default, &PD5_As_Uart2Tx_Default, 
-		&DMA_Handle_Uart2Rx_Default, &IRQ_Handle_Uart2RxDMA_Default, &DMA_Handle_Uart2Tx_Default, &IRQ_Handle_Uart2TxDMA_Default,
-		&IRQ_Handle_Uart2_Default);
-	
-	HAL_UART_Init(HUART_DMA);
-}
-
-TEST_TEAR_DOWN(UsartHalEx_DMA)
-{
-	volatile uint32_t dr;
-	UARTEX_Handle_FactoryTypeDef factory;
-	factory.dma_clk = &DMA_ClockProvider;
-	factory.gpio_clk = &GPIO_ClockProvider;
-	factory.registry = &IRQ_HandlerObjectRegistry;
-	
-	HAL_UART_DMAStop(HUART_DMA);
-	
-	/** read to clear ORE **/
-	if (HUART_DMA->Instance->SR & USART_SR_RXNE)
-		dr = HUART_DMA->Instance->DR;
-		
-	HAL_UART_DeInit(HUART_DMA);
-	
-	UARTEX_Handle_FactoryDestroy(&factory, UsartHalExHandle);
-}
-
-TEST(UsartHalEx_DMA, SwapRxDMABufferInvalidArgs)
-{
-//	HAL_StatusTypeDef HAL_UART_SwapRxDMABuffer(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr)
-
-	TEST_ASSERT_EQUAL(HAL_ERROR, HAL_UART_SwapRxDMABuffer(0, (uint8_t*)1, 1, 0, 0));			/** null handle **/
+	TEST_ASSERT_EQUAL(HAL_ERROR, HAL_UART_SwapRxDMABuffer(0, (uint8_t*)1, 1, 0, 0));					/** null handle **/
 	TEST_ASSERT_EQUAL(HAL_ERROR, HAL_UART_SwapRxDMABuffer(HUART_DMA, 0, 1, 0, 0));						/** null buf pointer **/
 	TEST_ASSERT_EQUAL(HAL_ERROR, HAL_UART_SwapRxDMABuffer(HUART_DMA, (uint8_t*)1, 0, 0, 0));	/** zero pointer size **/
 }
 
-TEST(UsartHalEx_DMA, SwapRxDMABufferInvalidUartHalState)
+TEST(UART_DMA_TxRx, SwapRxDMABufferInvalidUartHalState)
 {
 	UART_HandleTypeDef handle;
 	char chr;
@@ -1036,8 +840,7 @@ TEST(UsartHalEx_DMA, SwapRxDMABufferInvalidUartHalState)
 	TEST_ASSERT_EQUAL(HAL_TIMEOUT, HAL_UART_SwapRxDMABuffer(&handle, (uint8_t*)&chr, 1, 0, 0));
 }
 
-
-TEST(UsartHalEx_DMA, SwapRxDMABufferReplaceEmptyBuffer)
+TEST(UART_DMA_TxRx, SwapRxDMABufferReplaceEmptyBuffer)
 {
 	char original[16];
 	char replace[16];
@@ -1064,49 +867,196 @@ TEST(UsartHalEx_DMA, SwapRxDMABufferReplaceEmptyBuffer)
 	TEST_ASSERT_EQUAL_HEX32((uint32_t)sizeof(replace), __HAL_DMA_GET_COUNTER(HUART_DMA->hdmarx));
 }
 
-TEST_GROUP_RUNNER(UsartHalEx_DMA)
+TEST_GROUP_RUNNER(UART_DMA_TxRx)
 {
-	RUN_TEST_CASE(UsartHalEx_DMA, SwapRxDMABufferInvalidArgs);
-	RUN_TEST_CASE(UsartHalEx_DMA, SwapRxDMABufferInvalidUartHalState);
-	RUN_TEST_CASE(UsartHalEx_DMA, SwapRxDMABufferReplaceEmptyBuffer);
+	/** these are learning tests. **/
+	RUN_TEST_CASE(UART_DMA_TxRx, LoopBackSixBytesTwice);
+	RUN_TEST_CASE(UART_DMA_TxRx, ReceiveMultipleBytesInWaitStopCheckManner);
+	RUN_TEST_CASE(UART_DMA_TxRx, ReceiveMultipleBytesInSuspendResumeManner);
+	RUN_TEST_CASE(UART_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByZero);
+	RUN_TEST_CASE(UART_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByOne);
+	RUN_TEST_CASE(UART_DMA_TxRx, ReceiveMultipleBytesAfterRxOverflowByTwo);
+	
+	/** these are 'real' tests. **/
+	RUN_TEST_CASE(UART_DMA_TxRx, SwapRxDMABufferInvalidArgs);
+	RUN_TEST_CASE(UART_DMA_TxRx, SwapRxDMABufferInvalidUartHalState);
+	RUN_TEST_CASE(UART_DMA_TxRx, SwapRxDMABufferReplaceEmptyBuffer);
 }
 
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
+// TEST GROUP - UART Msp
+//
+TEST_GROUP(UART_Msp);
+TEST_SETUP(UART_Msp)
+{
+	CreateTestData();
+}
+
+TEST_TEAR_DOWN(UART_Msp)
+{
+	DestroyTestData();
+}
+
+TEST(UART_Msp, InitUartClockShouldBeEnabled)
+{
+	HAL_UART_MspInit(HUART);
+	TEST_ASSERT_TRUE(HAL_UART_ClockIsEnabled(HUART->Instance));
+	HAL_UART_MspDeInit(HUART);
+}
+
+
+TEST(UART_Msp, InitRxPinGpioShouldBeInitialized)
+{
+	HAL_UART_MspInit(HUART);
+	TEST_ASSERT_EQUAL(GPIOEX_STATE_SET, HUARTEX->rxpin->state);
+	HAL_UART_MspDeInit(HUART);
+}
+
+TEST(UART_Msp, InitTxPinGpioShouldBeInitialized)
+{
+	HAL_UART_MspInit(HUART);
+	TEST_ASSERT_EQUAL(GPIOEX_STATE_SET, HUARTEX->txpin->state);
+	HAL_UART_MspDeInit(HUART);
+}
+
+TEST(UART_Msp, InitRxDMAShouldBeLinked)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	TEST_ASSERT_TRUE(uart_rxdma_linked(HUART_DMA, &HUARTEX_DMA->hdmaex_rx->hdma));
+	HAL_UART_MspDeInit(HUART_DMA);
+}
+
+TEST(UART_Msp, InitRxDMAEXShouldBeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, HUARTEX_DMA->hdmaex_rx->state);
+	HAL_UART_MspDeInit(HUART_DMA);
+}
+
+
+TEST(UART_Msp, InitTxDMAShouldBeLinked)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	TEST_ASSERT_TRUE(uart_txdma_linked(HUART_DMA, &HUARTEX_DMA->hdmaex_tx->hdma));
+	HAL_UART_MspDeInit(HUART_DMA);
+}
+
+TEST(UART_Msp, InitTxDMAEXShouldBeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, HUARTEX_DMA->hdmaex_tx->state);
+	HAL_UART_MspDeInit(HUART_DMA);
+}
+
+TEST(UART_Msp, InitUartIRQHandleShouldBeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_SET, HUARTEX_DMA->hirq->state);
+	HAL_UART_MspDeInit(HUART_DMA);
+}
+
+TEST(UART_Msp, DeInitUartIRQHandleShouldBeDeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	HAL_UART_MspDeInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, HUARTEX_DMA->hirq->state);
+}
+
+TEST(UART_Msp, DeInitTxDMAEXShouldBeDeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	HAL_UART_MspDeInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, HUARTEX_DMA->hdmaex_tx->state);
+}
+
+TEST(UART_Msp, DeInitTxDMAShouldBeUnlinked)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	HAL_UART_MspDeInit(HUART_DMA);
+	TEST_ASSERT_NULL(HUART_DMA->hdmatx);
+	TEST_ASSERT_NULL(HUARTEX_DMA->hdmaex_tx->hdma.Parent);
+}
+
+TEST(UART_Msp, DeInitRxDMAEXShouldBeDeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	HAL_UART_MspDeInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, HUARTEX_DMA->hdmaex_rx->state);
+}
+
+TEST(UART_Msp, DeInitRxDMAShouldBeUnlinked)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	HAL_UART_MspDeInit(HUART_DMA);
+	TEST_ASSERT_NULL(HUART_DMA->hdmarx);
+	TEST_ASSERT_NULL(HUARTEX_DMA->hdmaex_rx->hdma.Parent);
+}
+
+TEST(UART_Msp, DeInitRxTxPinGpioShouldBeDeInitialized)
+{
+	HAL_UART_MspInit(HUART_DMA);
+	HAL_UART_MspDeInit(HUART_DMA);
+	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, HUARTEX_DMA->rxpin->state);
+	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, HUARTEX_DMA->txpin->state);
+}
+
+TEST_GROUP_RUNNER(UART_Msp)
+{
+	RUN_TEST_CASE(UART_Msp, InitUartClockShouldBeEnabled);
+	RUN_TEST_CASE(UART_Msp, InitRxPinGpioShouldBeInitialized);
+	RUN_TEST_CASE(UART_Msp, InitTxPinGpioShouldBeInitialized);
+	RUN_TEST_CASE(UART_Msp, InitRxDMAShouldBeLinked);
+	RUN_TEST_CASE(UART_Msp, InitRxDMAEXShouldBeInitialized);
+	RUN_TEST_CASE(UART_Msp, InitTxDMAShouldBeLinked);
+	RUN_TEST_CASE(UART_Msp, InitTxDMAEXShouldBeInitialized);
+	RUN_TEST_CASE(UART_Msp, InitUartIRQHandleShouldBeInitialized);
+
+	RUN_TEST_CASE(UART_Msp, DeInitUartIRQHandleShouldBeDeInitialized);
+	RUN_TEST_CASE(UART_Msp, DeInitTxDMAEXShouldBeDeInitialized);
+	RUN_TEST_CASE(UART_Msp, DeInitTxDMAShouldBeUnlinked);
+	RUN_TEST_CASE(UART_Msp, DeInitRxDMAEXShouldBeDeInitialized);
+	RUN_TEST_CASE(UART_Msp, DeInitRxDMAShouldBeUnlinked);
+	RUN_TEST_CASE(UART_Msp, DeInitRxTxPinGpioShouldBeDeInitialized);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
+// hardware independent, and hardware dependent
+// 
+TEST_GROUP_RUNNER(UART_All_HI)
+{
+	RUN_TEST_GROUP(UARTEX_Handle);	
+	RUN_TEST_GROUP(UART_Msp);	
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// TEST GROUP END - UARTEX_Clone   //
-
-
+TEST_GROUP_RUNNER(UART_All_HD)
+{
+	RUN_TEST_GROUP(UART_DMA_TxRx);
+}
 
 
 

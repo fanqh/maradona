@@ -82,7 +82,6 @@ static void SystemClock_Config(void)
 
 }
 
-
 int unity_output_char(int a) 
 {
 	uint8_t chr = a;
@@ -91,18 +90,15 @@ int unity_output_char(int a)
 	return a;
 }
 
-
 static void RunAllTests(void)
 {
 	RUN_TEST_GROUP(GPIO_All);
 	RUN_TEST_GROUP(IRQ_All);
-	RUN_TEST_GROUP(DMA_Clock);
-	RUN_TEST_GROUP(DMAEX_Handle);
-	RUN_TEST_GROUP(UARTEX_Handle);	
-	RUN_TEST_GROUP(UsartHalEx_DMA);
+	RUN_TEST_GROUP(DMA_All);
+	RUN_TEST_GROUP(UART_All_HI);
+	RUN_TEST_GROUP(UART_All_HD);
+
 	RUN_TEST_GROUP(UsartIO_DMA);
-	RUN_TEST_GROUP(Usart_DMA_MspInit);	
-	RUN_TEST_GROUP(LT_Usart_DMA_TxRx);
 }
 
 void board_init(void)

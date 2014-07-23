@@ -5,7 +5,18 @@
 #include "uart_io.h"
 #include "uart_io_private.h"
 
-
+typedef struct 
+{
+	/** simulated registers **/
+	uint32_t 								rx_m0ar;
+	int 										rx_ndtr;
+	uint32_t								tx_m0ar;
+ 	int											tx_ndtr;
+	
+	char*										rxdma_buf;
+	char*										txdma_buf;
+	
+} uio_testdata_t;
 
 /*** hal apis that will be mocked ***/
 const usart_api_t usart_apis_default =
@@ -28,11 +39,18 @@ static 	UART_HandleTypeDef			m_huart_default =
 	.State = HAL_UART_STATE_RESET,
 };
 
+static UARTEX_HandleTypeDef			m_huartex_default =
+{
+	.huart = 
+	{
+		.State = HAL_UART_STATE_RESET,
+	}
+};
+		
 static 	UART_HandleTypeDef 			m_huart;
-
 static	UART_IO_HandleTypeDef 	m_huio_default = 
 {
-	.handle = &m_huart,
+	.handle = &m_huartex_default,
 	.rbuf[0] = rxbuf[0],
 	.rbuf[1] = rxbuf[1],
 	.rx_upper = rxbuf[1],
@@ -48,19 +66,18 @@ static	UART_IO_HandleTypeDef 	m_huio_default =
 
 static	UART_IO_HandleTypeDef 	m_huio;
 
-static 	uint32_t 								m_rx_m0ar;
-static 	int 										m_rx_ndtr;
 static 	uint32_t								m_tx_m0ar;
 static 	int											m_tx_ndtr;
 
-extern 	HAL_StatusTypeDef __uart_io_rx_flip_buffer(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_ok(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_error(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_timeout(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_busy(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
+// extern 	HAL_StatusTypeDef __uart_io_rx_flip_buffer(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
+//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_ok(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
+//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_error(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
+//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_timeout(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
+//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_busy(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
 
 
 /** utils begin **/
+#define			WHATEVER						1234
 #define 		TEST_BUFFER_SIZE 		1024
 static 			char 								test_buffer[TEST_BUFFER_SIZE];
 
@@ -88,6 +105,7 @@ const static char literal[] =
 
 const char* literal_end = literal + sizeof(literal);
 
+
 HAL_StatusTypeDef m_init_hal_ok(UART_HandleTypeDef *huart) {
 	
 	TEST_ASSERT_EQUAL(HAL_UART_STATE_RESET, huart->State);
@@ -100,13 +118,13 @@ HAL_StatusTypeDef m_init_hal_err(UART_HandleTypeDef *huart) {
 }
 
 // HAL_StatusTypeDef (*transmit)(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
-HAL_StatusTypeDef m_receive_hal_ok(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size) 
-{
-	m_rx_m0ar = (uint32_t)pData;
-	m_rx_ndtr = Size;
-	
-	return HAL_OK;
-}
+//HAL_StatusTypeDef m_receive_hal_ok(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size) 
+//{
+//	m_rx_m0ar = (uint32_t)pData;
+//	m_rx_ndtr = Size;
+//	
+//	return HAL_OK;
+//}
 
 // HAL_StatusTypeDef HAL_UART_Transmit_DMA(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
 static HAL_StatusTypeDef m_transmit_hal_ok(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size)
@@ -124,20 +142,56 @@ static HAL_StatusTypeDef m_transmit_hal_busy(UART_HandleTypeDef *huart, uint8_t 
 	return HAL_BUSY;
 }
 
-
 /** set and fill upper buffer **/
-static void fill_rx_upper(int index, int offset, const char* src, int size)
-{	
-	/** upper buffer head will NEVER point to the first char in buffer **/
-	TEST_ASSERT_TRUE(size + offset < UART_IO_BUFFER_SIZE);
+//static void fill_rx_upper(UART_IO_HandleTypeDef* huio,	/** object 							**/ 
+//													int index, 										/** which one as upper 	**/
+//													int offset, 									/** upper offset				**/
+//													const char* src, 
+//													int size)
+//{	
+//	/** upper buffer head will NEVER point to the first char in buffer **/
+//	TEST_ASSERT_TRUE(size + offset < UART_IO_BUFFER_SIZE);
+//	
+//	huio->rx_upper = huio->rbuf[index];
+//	huio->rx_head = &huio->rx_upper[offset];
+//	huio->rx_tail = huio->rx_head + size;
+//	
+//	if (size)
+//	{
+//		memmove(huio->rx_head, src, size);
+//	}
+//}
+
+static void fill_rx_testdata(	UART_IO_HandleTypeDef* huio, 	/** handle 								**/
+															int index,										/** upper									**/
+															int offset,										/** upper offset 					**/
+															const char* upper,						/** content for upper 		**/
+															int upper_size,								/** upper buffer fillsize **/
+															const char* dma,							/** dma buffer 						**/
+															int dma_size,									/** size to copy into dma buffer **/
+															int rx_size)									/** previously set dma recv size **/
+{
+	int other;
+	uio_testdata_t* td = huio->handle->test_data;
 	
-	m_huio.rx_upper = m_huio.rbuf[index];
-	m_huio.rx_head = &m_huio.rx_upper[offset];
-	m_huio.rx_tail = m_huio.rx_head + size;
+	huio->rx_upper = huio->rbuf[index];
+	huio->rx_head = &huio->rx_upper[offset];
+	huio->rx_tail = huio->rx_head + upper_size;
 	
-	if (size)
+	if (upper_size)
 	{
-		memmove(m_huio.rx_head, src, size);
+		memmove(huio->rx_head, upper, upper_size);
+	}
+	
+	other = (index == 0) ? 1 : 0;
+	
+	td->rx_m0ar = (uint32_t)huio->rbuf[other];
+	td->rx_ndtr = rx_size - dma_size;
+	td->rxdma_buf = huio->rbuf[other];
+	
+	if (dma_size)
+	{
+		memmove(td->rxdma_buf, dma, dma_size);
 	}
 }
 
@@ -152,23 +206,55 @@ static void fill_tx_upper(int index, const char* src, int size)
 
 /** set and fill dma buffer **/
 /** dst is set as dma buffer **/
-static void fill_dma_buffer(char* dst, const char* src, int size)
-{
-	TEST_ASSERT_NOT_EQUAL(0, dst);
-	TEST_ASSERT_NOT_EQUAL(0, src);
-	TEST_ASSERT_NOT_EQUAL(0, size);
-	TEST_ASSERT_TRUE(size < UART_IO_BUFFER_SIZE);
-	
-	m_rx_m0ar = (uint32_t)dst;
-	m_rx_ndtr = UART_IO_BUFFER_SIZE - size;
-	
-	memmove(dst, src, size);
-}
+//static void fill_dma_buffer(char* dst, const char* src, int size)
+//{
+//	TEST_ASSERT_NOT_EQUAL(0, dst);
+//	TEST_ASSERT_NOT_EQUAL(0, src);
+//	TEST_ASSERT_NOT_EQUAL(0, size);
+//	TEST_ASSERT_TRUE(size < UART_IO_BUFFER_SIZE);
+//	
+//	m_rx_m0ar = (uint32_t)dst;
+//	m_rx_ndtr = UART_IO_BUFFER_SIZE - size;
+//	
+//	memmove(dst, src, size);
+//}
 
 /** utils end **/
 
-TEST_GROUP(UsartIO_DMA);
 
+
+
+
+//HAL_StatusTypeDef rx_flip_buffer_mock_hal_ok(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+//{
+//	if (m0ar) *m0ar = m_rx_m0ar;
+//	if (ndtr) *ndtr = m_rx_ndtr;
+//	
+//	m_rx_m0ar = (uint32_t)buf;
+//	m_rx_ndtr = size;
+//	
+//	return HAL_OK;
+//}
+
+//HAL_StatusTypeDef rx_flip_buffer_mock_hal_error(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+//{
+//	return HAL_ERROR;
+//}
+
+//HAL_StatusTypeDef rx_flip_buffer_mock_hal_busy(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+//{
+//	return HAL_BUSY;
+//}
+
+//HAL_StatusTypeDef rx_flip_buffer_mock_hal_timeout(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+//{
+//	return HAL_TIMEOUT;
+//}
+
+///////////////////////////////////////////////////////////////////////////////
+// Read
+//
+TEST_GROUP(UsartIO_DMA);
 TEST_SETUP(UsartIO_DMA)
 {
 	memset(test_buffer, 0, TEST_BUFFER_SIZE);
@@ -178,58 +264,29 @@ TEST_SETUP(UsartIO_DMA)
 	m_huart = m_huart_default;
 	m_huio = m_huio_default;
 	
-	m_rx_m0ar = 0;
-	m_rx_ndtr = 0;
+//	m_rx_m0ar = 0;
+//	m_rx_ndtr = 0;
 	
 	usart_apis = usart_apis_default;
+	
+	// UARTEX_HandleTypeDef
 }
 
 TEST_TEAR_DOWN(UsartIO_DMA)
 {
 }
 
-HAL_StatusTypeDef rx_flip_buffer_mock_hal_ok(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
-{
-	if (m0ar) *m0ar = m_rx_m0ar;
-	if (ndtr) *ndtr = m_rx_ndtr;
-	
-	m_rx_m0ar = (uint32_t)buf;
-	m_rx_ndtr = size;
-	
-	return HAL_OK;
-}
-
-HAL_StatusTypeDef rx_flip_buffer_mock_hal_error(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
-{
-	return HAL_ERROR;
-}
-
-HAL_StatusTypeDef rx_flip_buffer_mock_hal_busy(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
-{
-	return HAL_BUSY;
-}
-
-HAL_StatusTypeDef rx_flip_buffer_mock_hal_timeout(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
-{
-	return HAL_TIMEOUT;
-}
-
-/******************************************************************************
- *
- * Read
- *
- * int UART_IO_Read(UART_IO_HandleTypeDef* h, char* buffer, size_t buffer_size)
- *
- *****************************************************************************/
 TEST(UsartIO_DMA, ReadInvalidArgs)
 {
 	char c;
+	UART_IO_HandleTypeDef huio;
 	
+	/** These tests are enough, don't validate 'internal state' of opaque struct, pointless. **/
 	TEST_ASSERT_EQUAL(-1, UART_IO_Read(0, &c, 1));					/** null handle **/
 	TEST_ASSERT_EQUAL(EINVAL, errno);
-	TEST_ASSERT_EQUAL(-1, UART_IO_Read(&m_huio, 0, 1));			/** null buf p	**/
+	TEST_ASSERT_EQUAL(-1, UART_IO_Read(&huio, 0, 1));				/** null buf p	**/
 	TEST_ASSERT_EQUAL(EINVAL, errno);
-	TEST_ASSERT_EQUAL(0, UART_IO_Read(&m_huio, &c, 0));			/** no error checking as linux **/
+	TEST_ASSERT_EQUAL(0, UART_IO_Read(&huio, &c, 0));				/** no error checking as linux **/
 }
 
 TEST(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer)
@@ -238,16 +295,41 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer)
 	char buf[64];
 	int read;
 	
-	/** prepare **/
-	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, sample, strlen(sample));	/** use buffer 1 as upper buffer **/
+	UART_IO_HandleTypeDef huio;	
+	UARTEX_HandleTypeDef hue;
+	char rxbuf0[64];
+	char rxbuf1[64];
 	
-	read = UART_IO_Read(&m_huio, buf, strlen(sample));
+	memset(&huio, 0, sizeof(huio));
+	memset(&hue, 0, sizeof(hue));
+	hue.huart.State = HAL_UART_STATE_RESET;
+	huio.handle = &hue;
+	huio.rbuf[0] = rxbuf0;
+	huio.rbuf[1] = rxbuf1;
+	
+	// fill_rx_upper(&huio, 1, 1, sample, strlen(sample));	/** use buffer 1 as upper buffer **/
+	fill_rx_testdata(&huio, 1, 1, sample, strlen(sample), 0, 0, 0);
+	
+	memset(buf, 0, sizeof(buf));	
+	read = UART_IO_Read(&huio, buf, strlen(sample));
 	
 	TEST_ASSERT_EQUAL(strlen(sample), read);
 	TEST_ASSERT_EQUAL_MEMORY(sample, buf, strlen(sample));
 }
 
+
+HAL_StatusTypeDef swap_mock_hal_ok(UARTEX_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+{
+	uio_testdata_t* test_data = (uio_testdata_t*)h->test_data;
+	
+	if (m0ar) *m0ar = test_data->rx_m0ar;
+	if (ndtr) *ndtr = test_data->rx_ndtr;
+	
+	test_data->rx_m0ar = (uint32_t)buf;
+	test_data->rx_ndtr = size;
+	
+	return HAL_OK;
+}
 
 TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 {
@@ -255,125 +337,174 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	const char hard[] = "driven";
 	char buf[64];
 	int read;
+
+	UART_IO_HandleTypeDef huio;
+	UARTEX_HandleTypeDef hue;
+	uio_testdata_t td;
+	UARTEX_Operations uart_ops;
+	
+	char rxbuf0[64];
+	char rxbuf1[64];
+	
+	memset(&huio, 0, sizeof(huio));
+	memset(&hue, 0, sizeof(hue));
+	hue.huart.State = HAL_UART_STATE_RESET;
+	huio.handle = &hue;
+	huio.rbuf[0] = rxbuf0;
+	huio.rbuf[1] = rxbuf1;
+
+	memset(&uart_ops, 0, sizeof(uart_ops));
+	uart_ops.swap = swap_mock_hal_ok;
+	huio.handle->ops = &uart_ops;	
+	
+	memset(&td, 0, sizeof(td));	
+	huio.handle->test_data = &td;
+	fill_rx_testdata(&huio, 0, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);
 	
 	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, soft, strlen(soft));
-	fill_dma_buffer(m_huio.rbuf[0], hard, strlen(hard)); 
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_ok;
-	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
 	
 	TEST_ASSERT_EQUAL(strlen(soft) + strlen(hard), read);
 	TEST_ASSERT_EQUAL_STRING("testdriven", buf);
 }
 
+static HAL_StatusTypeDef swap_mock_hal_error(UARTEX_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+{
+	return HAL_ERROR;
+}
 
-TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalError)
+static HAL_StatusTypeDef swap_mock_hal_busy(UARTEX_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+{
+	return HAL_BUSY;
+}
+
+static HAL_StatusTypeDef swap_mock_hal_timeout(UARTEX_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
+{
+	return HAL_TIMEOUT;
+}
+
+TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout)
 {
 	const char soft[] = "test";
 	const char hard[] = "driven";
 	char buf[64];
 	int read;
+
+	UART_IO_HandleTypeDef huio;
+	UARTEX_HandleTypeDef hue;
+	uio_testdata_t td;
+	UARTEX_Operations uart_ops;
 	
-	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, soft, strlen(soft));
-	fill_dma_buffer(m_huio.rbuf[0], hard, strlen(hard)); 
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_error;
+	char rxbuf0[64];
+	char rxbuf1[64];
 	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
+	memset(&huio, 0, sizeof(huio));
+	memset(&hue, 0, sizeof(hue));
+	hue.huart.State = HAL_UART_STATE_RESET;
+	huio.handle = &hue;
+	huio.rbuf[0] = rxbuf0;
+	huio.rbuf[1] = rxbuf1;
+
+	memset(&uart_ops, 0, sizeof(uart_ops));
+	huio.handle->ops = &uart_ops;	
 	
+	memset(&td, 0, sizeof(td));	
+	huio.handle->test_data = &td;
+	
+	// fill and mock
+	fill_rx_testdata(&huio, 0, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
+	uart_ops.swap = swap_mock_hal_error; // swap_mock_hal_ok;
+	
+	memset(buf, 0, sizeof(buf));	
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
+	
+	TEST_ASSERT_EQUAL(strlen(soft), read);
+	TEST_ASSERT_EQUAL_STRING(soft, buf);
+	
+	// refill and remock
+	fill_rx_testdata(&huio, 1, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
+	uart_ops.swap = swap_mock_hal_busy;
+	
+	memset(buf, 0, sizeof(buf));	
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
+
+	TEST_ASSERT_EQUAL(strlen(soft), read);
+	TEST_ASSERT_EQUAL_STRING(soft, buf);
+	
+	// refill and remock
+	fill_rx_testdata(&huio, 1, 2, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
+	uart_ops.swap = swap_mock_hal_timeout;
+	
+	memset(buf, 0, sizeof(buf));	
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
+
 	TEST_ASSERT_EQUAL(strlen(soft), read);
 	TEST_ASSERT_EQUAL_STRING(soft, buf);	
 }
 
-TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalBusy)
+TEST(UsartIO_DMA, ReadWhenBufferEmptyAndHalErrorBusyTimeout)
 {
-	const char soft[] = "test";
-	const char hard[] = "driven";
+	/** This case says if upper buffer is empty and HAL in error state, the function should return error **/
 	char buf[64];
 	int read;
 	
-	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, soft, strlen(soft));
-	fill_dma_buffer(m_huio.rbuf[0], hard, strlen(hard)); 
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_busy;
+	UART_IO_HandleTypeDef huio;
+	UARTEX_HandleTypeDef hue;
+	uio_testdata_t td;
+	UARTEX_Operations uart_ops;
 	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
+	char rxbuf0[64];
+	char rxbuf1[64];
 	
-	TEST_ASSERT_EQUAL(strlen(soft), read);
-	TEST_ASSERT_EQUAL_STRING(soft, buf);	
-}
+	memset(&huio, 0, sizeof(huio));
+	memset(&hue, 0, sizeof(hue));
+	hue.huart.State = HAL_UART_STATE_RESET;
+	huio.handle = &hue;
+	huio.rbuf[0] = rxbuf0;
+	huio.rbuf[1] = rxbuf1;
 
-
-TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalTimeout)
-{
-	const char soft[] = "test";
-	const char hard[] = "driven";
-	char buf[64];
-	int read;
+	memset(&uart_ops, 0, sizeof(uart_ops));
+	huio.handle->ops = &uart_ops;	
 	
-	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, soft, strlen(soft));
-	fill_dma_buffer(m_huio.rbuf[0], hard, strlen(hard)); 
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_timeout;
+	memset(&td, 0, sizeof(td));	
+	huio.handle->test_data = &td;
 	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
-	
-	TEST_ASSERT_EQUAL(strlen(soft), read);
-	TEST_ASSERT_EQUAL_STRING(soft, buf);	
-}
-
-
-TEST(UsartIO_DMA, ReadWhenBufferEmptyAndHalError)
-{
-	char buf[64];
-	int read;
+	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
+	huio.handle->ops->swap = swap_mock_hal_error;
 	
 	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, 0, 0);	/** size 0 **/
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_error;
-	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
 	
 	TEST_ASSERT_EQUAL(-1, read);
 	TEST_ASSERT_EQUAL(EINVAL, errno);	
-}
-
-TEST(UsartIO_DMA, ReadWhenBufferEmptyAndHalBusy)
-{
-	char buf[64];
-	int read;
+	
+	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
+	huio.handle->ops->swap = swap_mock_hal_busy;
 	
 	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, 0, 0);	/** size 0 **/
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_busy;
-	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
 	
 	TEST_ASSERT_EQUAL(-1, read);
 	TEST_ASSERT_EQUAL(EBUSY, errno);	
-}
 
-TEST(UsartIO_DMA, ReadWhenBufferEmptyAndHalTimeout)
-{
-	char buf[64];
-	int read;
+	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
+	huio.handle->ops->swap = swap_mock_hal_timeout;
 	
 	memset(buf, 0, sizeof(buf));
-	fill_rx_upper(1, 1, 0, 0);	/** size 0 **/
-	usart_apis.UART_IO_RxFlipBuffer = rx_flip_buffer_mock_hal_timeout;
-	
-	read = UART_IO_Read(&m_huio, buf, sizeof(buf));
+	read = UART_IO_Read(&huio, buf, sizeof(buf));
 	
 	TEST_ASSERT_EQUAL(-1, read);
 	TEST_ASSERT_EQUAL(EIO, errno);	
 }
 
+///////////////////////////////////////////////////////////////////////////////
+#if 0
 /******************************************************************************
  * 
  * Test Cases for USART_IO_Open
  *
  *****************************************************************************/
+
 //TEST(UsartIO_DMA, OpenInvalidArgs)
 //{
 //	TEST_ASSERT_EQUAL(0, UART_IO_Open(0));
@@ -431,17 +562,13 @@ TEST(UsartIO_DMA, ReadWhenBufferEmptyAndHalTimeout)
 //	TEST_ASSERT_TRUE(m_huio.tx_head == &m_huio.tbuf[1][0]);
 //	TEST_ASSERT_TRUE(m_huio.tx_tail == m_huio.tx_head);
 //}
+#endif
 
-/******************************************************************************
- *
- * write
- *
- * int UART_IO_Write(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
- *
- *****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
 TEST(UsartIO_DMA, WriteInvalidArgs)
 {
 	char c;
+	UART_IO_HandleTypeDef huio;
 	
 	TEST_ASSERT_EQUAL(-1, UART_IO_Write(0, &c, 1));
 	TEST_ASSERT_EQUAL(EINVAL, errno);
@@ -458,17 +585,17 @@ TEST(UsartIO_DMA, WriteHalStateTimeout)
 	char c;
 
 	errno = 0;
-	m_huio.handle->State = HAL_UART_STATE_TIMEOUT;
+	m_huio.handle->huart.State = HAL_UART_STATE_TIMEOUT;
 	TEST_ASSERT_EQUAL(-1, UART_IO_Write(&m_huio, &c, 1));
 	TEST_ASSERT_EQUAL(EIO, errno);
 	
 	errno = 0;
-	m_huio.handle->State = HAL_UART_STATE_RESET;
+	m_huio.handle->huart.State = HAL_UART_STATE_RESET;
 	TEST_ASSERT_EQUAL(-1, UART_IO_Write(&m_huio, &c, 1));
 	TEST_ASSERT_EQUAL(EIO, errno);
 
 	errno = 0;
-	m_huio.handle->State = HAL_UART_STATE_ERROR;
+	m_huio.handle->huart.State = HAL_UART_STATE_ERROR;
 	TEST_ASSERT_EQUAL(-1, UART_IO_Write(&m_huio, &c, 1));
 	TEST_ASSERT_EQUAL(EIO, errno);
 	
@@ -483,7 +610,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)
 	
 	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_ok;
 	fill_tx_upper(1, s1, strlen(s1));
-	m_huio.handle->State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
 	
 	written = UART_IO_Write(&m_huio, s2, strlen(s2));
 
@@ -506,7 +633,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	
 	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_busy;
 	fill_tx_upper(1, s1, strlen(s1));
-	m_huio.handle->State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
 	
 	written = UART_IO_Write(&m_huio, s2, strlen(s2));
 
@@ -532,7 +659,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	
 	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_ok;
 	fill_tx_upper(1, s1, sizeof(s1));
-	m_huio.handle->State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
 	
 	written = UART_IO_Write(&m_huio, s2, sizeof(s2));
 
@@ -562,7 +689,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	
 	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_busy;
 	fill_tx_upper(1, s1, sizeof(s1));
-	m_huio.handle->State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
 	
 	written = UART_IO_Write(&m_huio, s2, sizeof(s2));
 
@@ -585,13 +712,8 @@ TEST_GROUP_RUNNER(UsartIO_DMA)
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer);
 	
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady);
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalError);
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalBusy);
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalTimeout);
-	
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBufferEmptyAndHalError);
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBufferEmptyAndHalBusy);
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBufferEmptyAndHalTimeout);
+	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout);	
+	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBufferEmptyAndHalErrorBusyTimeout);
 	
 //	RUN_TEST_CASE(UsartIO_DMA, OpenInvalidArgs);
 //	RUN_TEST_CASE(UsartIO_DMA, OpenPortUnavailable);
