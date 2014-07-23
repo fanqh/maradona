@@ -253,7 +253,7 @@ UART_IO_HandleTypeDef* UART_IO_Open(int port)
 
 
 /*
- * This function read out of upper buffer first, then flip and read again.
+ * This function read out of upper buffer first, then flip (fetch DMA buffer) and read again.
  * Flip at most once. The assumption is if there are data in either buffers, 
  * this function should not return 0
  *

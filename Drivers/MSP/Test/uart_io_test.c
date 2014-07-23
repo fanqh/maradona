@@ -383,7 +383,7 @@ static HAL_StatusTypeDef swap_mock_hal_timeout(UARTEX_HandleTypeDef* h, uint8_t*
 	return HAL_TIMEOUT;
 }
 
-TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout)
+TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferNotEmpty)
 {
 	const char soft[] = "test";
 	const char hard[] = "driven";
@@ -442,7 +442,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	TEST_ASSERT_EQUAL_STRING(soft, buf);	
 }
 
-TEST(UsartIO_DMA, ReadWhenBufferEmptyAndHalErrorBusyTimeout)
+TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferEmpty)
 {
 	/** This case says if upper buffer is empty and HAL in error state, the function should return error **/
 	char buf[64];
@@ -708,12 +708,16 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
  *****************************************************************************/
 TEST_GROUP_RUNNER(UsartIO_DMA)
 {
+	// args invalid
+	// args valid, read n bytes, n <= bytes in upper buffer
+	// args valid, n > bytes in upper buffer, and HAL READY
+	// args valid, n > bytes in upper buffer, and HAL not READY and upper buffer not empty
+	// args valid, n > bytes in upper buffer, and HAL not READY adn upper buffer empty
 	RUN_TEST_CASE(UsartIO_DMA, ReadInvalidArgs);
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer);
-	
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady);
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout);	
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBufferEmptyAndHalErrorBusyTimeout);
+	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferNotEmpty);	
+	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferEmpty);
 	
 //	RUN_TEST_CASE(UsartIO_DMA, OpenInvalidArgs);
 //	RUN_TEST_CASE(UsartIO_DMA, OpenPortUnavailable);
