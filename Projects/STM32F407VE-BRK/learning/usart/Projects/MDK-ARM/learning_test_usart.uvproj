@@ -343,7 +343,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -474,6 +474,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\uart_io.c</FilePath>
             </File>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\rtc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -488,6 +493,11 @@
               <FileName>note.txt</FileName>
               <FileType>5</FileType>
               <FilePath>..\note.txt</FilePath>
+            </File>
+            <File>
+              <FileName>learn_rtc.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\learn_rtc.txt</FilePath>
             </File>
           </Files>
         </Group>
