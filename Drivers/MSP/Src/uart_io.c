@@ -383,7 +383,8 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 		
 		if (count == size) {
 			
-			status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+			// status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+			status = h->handle->ops->send(h->handle, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
 			if (status == HAL_OK) {
 				
 				h->tx_head = (h->tx_head == h->tbuf[0]) ? h->tbuf[1] : h->tbuf[0];
@@ -395,7 +396,8 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 		}
 	}
 	
-	status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+	// status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+	status = h->handle->ops->send(h->handle, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
 	if (status == HAL_OK)
 	{
 		h->tx_tail = h->tx_head = (h->tx_head == h->tbuf[0]) ? h->tbuf[1] : h->tbuf[0];

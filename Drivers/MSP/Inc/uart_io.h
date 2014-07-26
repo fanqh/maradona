@@ -9,14 +9,19 @@
 /** forward declaration **/
 typedef struct UART_IO_HandleStruct UART_IO_HandleTypeDef;
 
+/** tested **/
+int 										UART_IO_Read(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
+/** testing **/
+int 										UART_IO_Write(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
 
+/** not tested yet **/
 void										UART_IO_DeInitAll(void);
 void 										UART_IO_Task(void);
 
 UART_IO_HandleTypeDef* 	UART_IO_Open(int port);
-int 										UART_IO_Read(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
+
 int											UART_IO_FlushRx(UART_IO_HandleTypeDef* uio);
-int 										UART_IO_Write(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
+
 int											UART_IO_FlushTx(UART_IO_HandleTypeDef* uio);
 int 										UART_IO_Close(UART_IO_HandleTypeDef* uio);
 
