@@ -606,8 +606,10 @@ static HAL_StatusTypeDef send_mock_hal_ok(UARTEX_HandleTypeDef *huartex, uint8_t
 //	memset(tx_dma_buffer, 0, UART_IO_BUFFER_SIZE);
 //	memmove(tx_dma_buffer, pData, Size);
 	
-	memset(td->txdma_buf, 0, UART_IO_BUFFER_SIZE);
-	memmove(td->txdma_buf, pData, Size);
+//	memset(td->txdma_buf, 0, UART_IO_BUFFER_SIZE);
+//	memmove(td->txdma_buf, pData, Size);
+	
+	td->txdma_buf = (char*)pData;
 		
 //	m_tx_m0ar = (uint32_t)pData;
 //	m_tx_ndtr = Size;
@@ -730,6 +732,29 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	char s2[UART_IO_BUFFER_SIZE]; 
 	char s3[UART_IO_BUFFER_SIZE*2];
 	int written;
+
+	///////////////////////////
+	UART_IO_HandleTypeDef huio;
+	UARTEX_HandleTypeDef hue;
+	uio_testdata_t td;
+	UARTEX_Operations uart_ops;
+	
+	char txbuf0[64];
+	char txbuf1[64];
+	
+	memset(&huio, 0, sizeof(huio));
+	memset(&hue, 0, sizeof(hue));
+	hue.huart.State = HAL_UART_STATE_RESET;
+	huio.handle = &hue;
+	huio.tbuf[0] = txbuf0;
+	huio.tbuf[1] = txbuf1;
+
+	memset(&uart_ops, 0, sizeof(uart_ops));
+	huio.handle->ops = &uart_ops;	
+	
+	memset(&td, 0, sizeof(td));	
+	huio.handle->test_data = &td;	
+	//////////////////////////////	
 	
 	memset(s1, 'a', sizeof(s1));
 	memset(s2, 'b', sizeof(s2));
@@ -737,21 +762,39 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	memset(s3, 'a', sizeof(s1));
 	memset(&s3[sizeof(s1)], 'b', sizeof(s2));
 	
-	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_ok;
-	fill_tx_upper(1, s1, sizeof(s1));
-	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+	uart_ops.send = send_mock_hal_ok;
+	hue.huart.State = HAL_UART_STATE_READY;
+	fill_tx_testdata(&huio, 1, s1, sizeof(s1), 0, 0, 0);
 	
-	written = UART_IO_Write(&m_huio, s2, sizeof(s2));
-
+	written = UART_IO_Write(&huio, s2, sizeof(s2));
+	
 	TEST_ASSERT_EQUAL(sizeof(s2), written);
 	
-	TEST_ASSERT_EQUAL_MEMORY(s3, tx_dma_buffer, UART_IO_BUFFER_SIZE);
-	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[1], (char*)m_tx_m0ar);
-	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE, m_tx_ndtr);
+	/** the dma buffer **/
+	TEST_ASSERT_EQUAL_MEMORY(s3, td.txdma_buf, UART_IO_BUFFER_SIZE);
+	TEST_ASSERT_EQUAL_HEX32(huio.tbuf[1], (char*)td.tx_m0ar);
+	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE, td.tx_ndtr);
 	
-	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[0], m_huio.tx_head);
-	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE - UART_IO_BUFFER_SIZE/2, m_huio.tx_tail-m_huio.tx_head);
-	TEST_ASSERT_EQUAL_MEMORY(&s3[UART_IO_BUFFER_SIZE], m_huio.tx_head, UART_IO_BUFFER_SIZE/2);
+	/** the upper buffer **/
+	TEST_ASSERT_EQUAL_HEX32(huio.tbuf[0], huio.tx_head);
+	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE - UART_IO_BUFFER_SIZE/2, huio.tx_tail - huio.tx_head);
+	TEST_ASSERT_EQUAL_MEMORY(&s3[UART_IO_BUFFER_SIZE], huio.tx_head, UART_IO_BUFFER_SIZE/2);
+	
+//	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_ok;
+//	fill_tx_upper(1, s1, sizeof(s1));
+//	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+//	
+//	written = UART_IO_Write(&m_huio, s2, sizeof(s2));
+
+//	TEST_ASSERT_EQUAL(sizeof(s2), written);
+//	
+//	TEST_ASSERT_EQUAL_MEMORY(s3, tx_dma_buffer, UART_IO_BUFFER_SIZE);
+//	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[1], (char*)m_tx_m0ar);
+//	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE, m_tx_ndtr);
+//	
+//	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[0], m_huio.tx_head);
+//	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE - UART_IO_BUFFER_SIZE/2, m_huio.tx_tail-m_huio.tx_head);
+//	TEST_ASSERT_EQUAL_MEMORY(&s3[UART_IO_BUFFER_SIZE], m_huio.tx_head, UART_IO_BUFFER_SIZE/2);
 }
 
 TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
@@ -767,17 +810,48 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	memset(s3, 'a', sizeof(s1));
 	memset(&s3[sizeof(s1)], 'b', sizeof(s2));
 	
-	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_busy;
-	fill_tx_upper(1, s1, sizeof(s1));
-	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+		///////////////////////////
+	UART_IO_HandleTypeDef huio;
+	UARTEX_HandleTypeDef hue;
+	uio_testdata_t td;
+	UARTEX_Operations uart_ops;
 	
-	written = UART_IO_Write(&m_huio, s2, sizeof(s2));
+	char txbuf0[64];
+	char txbuf1[64];
+	
+	memset(&huio, 0, sizeof(huio));
+	memset(&hue, 0, sizeof(hue));
+	hue.huart.State = HAL_UART_STATE_RESET;
+	huio.handle = &hue;
+	huio.tbuf[0] = txbuf0;
+	huio.tbuf[1] = txbuf1;
+
+	memset(&uart_ops, 0, sizeof(uart_ops));
+	huio.handle->ops = &uart_ops;	
+	
+	memset(&td, 0, sizeof(td));	
+	huio.handle->test_data = &td;	
+	//////////////////////////////	
+	uart_ops.send = send_mock_hal_busy;
+	hue.huart.State = HAL_UART_STATE_READY;
+	fill_tx_testdata(&huio, 1, s1, sizeof(s1), 0, 0, 0);
+	
+	written = UART_IO_Write(&huio, s2, sizeof(s2));	
+	
+//	usart_apis.HAL_UART_Transmit_DMA = m_transmit_hal_busy;
+//	fill_tx_upper(1, s1, sizeof(s1));
+//	m_huio.handle->huart.State = HAL_UART_STATE_READY;	/** otherwise trapped **/
+//	
+//	written = UART_IO_Write(&m_huio, s2, sizeof(s2));
 
 	TEST_ASSERT_EQUAL(UART_IO_BUFFER_SIZE - sizeof(s1), written);
+	TEST_ASSERT_EQUAL_HEX32(huio.tbuf[1], huio.tx_head);
+	TEST_ASSERT_EQUAL_HEX32(&huio.tbuf[1][UART_IO_BUFFER_SIZE], huio.tx_tail);	// full
+	TEST_ASSERT_EQUAL_MEMORY(s3, huio.tx_head, UART_IO_BUFFER_SIZE);						// content
 	
-	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[1], m_huio.tx_head);
-	TEST_ASSERT_EQUAL_HEX32(&m_huio.tbuf[1][UART_IO_BUFFER_SIZE], m_huio.tx_tail);
-	TEST_ASSERT_EQUAL_MEMORY(s3, m_huio.tx_head, UART_IO_BUFFER_SIZE);	
+//	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[1], m_huio.tx_head);
+//	TEST_ASSERT_EQUAL_HEX32(&m_huio.tbuf[1][UART_IO_BUFFER_SIZE], m_huio.tx_tail);
+//	TEST_ASSERT_EQUAL_MEMORY(s3, m_huio.tx_head, UART_IO_BUFFER_SIZE);	
 }
 
 
@@ -817,7 +891,7 @@ TEST_GROUP_RUNNER(UsartIO_DMA)
 	RUN_TEST_CASE(UsartIO_DMA, WriteHalStateTimeoutErrorReset);
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady);
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy);
-//	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady);
-//	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy);
+	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady);
+	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy);
 }
 
