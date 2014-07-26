@@ -7,11 +7,11 @@
 #include "stm32f4xx_hal.h"
 #include "uart_io_private.h"
 
-#ifdef UNIT_TEST
-#define __CALL	usart_apis.
-#else
-#define __CALL
-#endif
+//#ifdef UNIT_TEST
+//#define __CALL	usart_apis.
+//#else
+//#define __CALL
+//#endif
 
 //static UART_HandleTypeDef huart2_default = {
 //  .Instance = USART2,

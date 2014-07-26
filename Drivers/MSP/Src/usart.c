@@ -356,6 +356,7 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle)
 {
 	if (handle) free(handle);
+	
 }
 
 UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,

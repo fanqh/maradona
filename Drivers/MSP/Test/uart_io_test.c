@@ -20,67 +20,15 @@ typedef struct
 } uio_testdata_t;
 
 /*** hal apis that will be mocked ***/
-const usart_api_t usart_apis_default =
-{
-	.HAL_UART_Init = HAL_UART_Init,
-	.HAL_UART_Transmit_DMA = HAL_UART_Transmit_DMA,
-	.HAL_UART_Receive_DMA = HAL_UART_Receive_DMA,	
-	.UART_IO_RxFlipBuffer = UART_IO_RxFlipBuffer
-};
+//const usart_api_t usart_apis_default =
+//{
+//	.HAL_UART_Init = HAL_UART_Init,
+//	.HAL_UART_Transmit_DMA = HAL_UART_Transmit_DMA,
+//	.HAL_UART_Receive_DMA = HAL_UART_Receive_DMA,	
+//	.UART_IO_RxFlipBuffer = UART_IO_RxFlipBuffer
+//};
 
-usart_api_t usart_apis;
-
-/** mock begin **/
-static char rxbuf[2][UART_IO_BUFFER_SIZE];
-static char txbuf[2][UART_IO_BUFFER_SIZE];
-static char tx_dma_buffer[UART_IO_BUFFER_SIZE];
-
-static 	UART_HandleTypeDef			m_huart_default =
-{
-	.State = HAL_UART_STATE_RESET,
-};
-
-static UARTEX_HandleTypeDef			m_huartex_default =
-{
-	.huart = 
-	{
-		.State = HAL_UART_STATE_RESET,
-	}
-};
-		
-static 	UART_HandleTypeDef 			m_huart;
-static	UART_IO_HandleTypeDef 	m_huio_default = 
-{
-	.handle = &m_huartex_default,
-	.rbuf[0] = rxbuf[0],
-	.rbuf[1] = rxbuf[1],
-	.rx_upper = rxbuf[1],
-	.rx_head = &rxbuf[1][UART_IO_BUFFER_SIZE],
-	.rx_tail = &rxbuf[1][UART_IO_BUFFER_SIZE],
-	
-	.tbuf[0] = txbuf[0],
-	.tbuf[1] = txbuf[1],
-
-	.tx_head = &txbuf[1][0],
-	.tx_tail = &txbuf[1][0]
-};
-
-static	UART_IO_HandleTypeDef 	m_huio;
-
-static 	uint32_t								m_tx_m0ar;
-static 	int											m_tx_ndtr;
-
-// extern 	HAL_StatusTypeDef __uart_io_rx_flip_buffer(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_ok(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_error(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_timeout(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-//static 	HAL_StatusTypeDef rx_flip_buffer_mock_hal_busy(UART_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr);
-
-
-/** utils begin **/
-#define			WHATEVER						1234
-#define 		TEST_BUFFER_SIZE 		1024
-static 			char 								test_buffer[TEST_BUFFER_SIZE];
+//usart_api_t usart_apis;
 
 const static char literal[] = 
 	"abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" 
@@ -118,32 +66,6 @@ HAL_StatusTypeDef m_init_hal_err(UART_HandleTypeDef *huart) {
 	return HAL_ERROR;
 }
 
-// HAL_StatusTypeDef (*transmit)(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
-//HAL_StatusTypeDef m_receive_hal_ok(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size) 
-//{
-//	m_rx_m0ar = (uint32_t)pData;
-//	m_rx_ndtr = Size;
-//	
-//	return HAL_OK;
-//}
-
-// HAL_StatusTypeDef HAL_UART_Transmit_DMA(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size);
-static HAL_StatusTypeDef m_transmit_hal_ok(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size)
-{
-	memset(tx_dma_buffer, 0, UART_IO_BUFFER_SIZE);
-	memmove(tx_dma_buffer, pData, Size);
-	
-	m_tx_m0ar = (uint32_t)pData;
-	m_tx_ndtr = Size;
-	return HAL_OK;
-}
-
-static HAL_StatusTypeDef m_transmit_hal_busy(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size)
-{
-	return HAL_BUSY;
-}
-
-
 
 static void fill_rx_testdata(	UART_IO_HandleTypeDef* huio, 	/** handle 								**/
 															int index,										/** upper									**/
@@ -176,15 +98,6 @@ static void fill_rx_testdata(	UART_IO_HandleTypeDef* huio, 	/** handle 								*
 	{
 		memmove(td->rxdma_buf, dma, dma_size);
 	}
-}
-
-static void fill_tx_upper(int index, const char* src, int size)
-{
-	TEST_ASSERT_TRUE(size < UART_IO_BUFFER_SIZE);
-	
-	m_huio.tx_head = m_huio.tbuf[index];
-	memmove(m_huio.tx_head, src, size);
-	m_huio.tx_tail = m_huio.tx_head + size;
 }
 
 static void fill_tx_testdata( UART_IO_HandleTypeDef* huio,
@@ -224,23 +137,6 @@ static void fill_tx_testdata( UART_IO_HandleTypeDef* huio,
 }
 															
 
-/** set and fill dma buffer **/
-/** dst is set as dma buffer **/
-//static void fill_dma_buffer(char* dst, const char* src, int size)
-//{
-//	TEST_ASSERT_NOT_EQUAL(0, dst);
-//	TEST_ASSERT_NOT_EQUAL(0, src);
-//	TEST_ASSERT_NOT_EQUAL(0, size);
-//	TEST_ASSERT_TRUE(size < UART_IO_BUFFER_SIZE);
-//	
-//	m_rx_m0ar = (uint32_t)dst;
-//	m_rx_ndtr = UART_IO_BUFFER_SIZE - size;
-//	
-//	memmove(dst, src, size);
-//}
-
-/** utils end **/
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -249,19 +145,6 @@ static void fill_tx_testdata( UART_IO_HandleTypeDef* huio,
 TEST_GROUP(UsartIO_DMA);
 TEST_SETUP(UsartIO_DMA)
 {
-	memset(test_buffer, 0, TEST_BUFFER_SIZE);
-	memset(&m_huio, 0, sizeof(m_huio));
-	memset(&m_huart, 0, sizeof(m_huart));
-	
-	m_huart = m_huart_default;
-	m_huio = m_huio_default;
-	
-//	m_rx_m0ar = 0;
-//	m_rx_ndtr = 0;
-	
-	usart_apis = usart_apis_default;
-	
-	// UARTEX_HandleTypeDef
 }
 
 TEST_TEAR_DOWN(UsartIO_DMA)
@@ -557,6 +440,8 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
+// Write
+//
 TEST(UsartIO_DMA, WriteInvalidArgs)
 {
 	char c;
@@ -810,7 +695,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	memset(s3, 'a', sizeof(s1));
 	memset(&s3[sizeof(s1)], 'b', sizeof(s2));
 	
-		///////////////////////////
+	///////////////////////////
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;

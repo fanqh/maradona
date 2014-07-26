@@ -217,7 +217,6 @@ bool uart_rxdma_linked(UART_HandleTypeDef* huart, DMA_HandleTypeDef* rx)
 //
 static void CreateTestData(void)
 {
-	
 	UARTEX_Handle_FactoryTypeDef factory;
 	factory.dma_clk = &DMA_ClockProvider;
 	factory.gpio_clk = &GPIO_ClockProvider;
@@ -232,7 +231,6 @@ static void CreateTestData(void)
 	
 	assert_param(HUARTEX_DMA);
 	assert_param(HUARTEX);
-
 }
 
 static void DestroyTestData(void)
