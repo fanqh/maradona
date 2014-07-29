@@ -479,6 +479,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\rtc.c</FilePath>
             </File>
+            <File>
+              <FileName>rtc_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\rtc_test.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -8,6 +8,26 @@
 #define BKUFLAGE  0X32F2
 
 
+RTCEX_HandleTypeDef	RTC_Haldle_File=
+{
+	.rtc =
+	{
+		.Instance = RTC,
+		.Init =
+		{
+				.HourFormat = RTC_HOURFORMAT_24,
+				.AsynchPrediv = 0x7F,		/* LSE as RTC clock */
+				.SynchPrediv = 0x00FF,  /* LSE as RTC clock */
+				.OutPut = RTC_OUTPUT_DISABLE,
+				.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH,
+				.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN,
+		},
+	},
+	.format = RTC_HOURFORMAT_24,
+	
+};
+
+
 
 /**
   * @brief RTC MSP Initialization 
@@ -52,24 +72,6 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 }
 
 
-RTCEX_HandleTypeDef	RTC_Haldle_Default=
-{
-	.rtc =
-	{
-		.Instance = RTC,
-		.Init =
-		{
-				.HourFormat = RTC_HOURFORMAT_24,
-				.AsynchPrediv = 0x7F,		/* LSE as RTC clock */
-				.SynchPrediv = 0x00FF,  /* LSE as RTC clock */
-				.OutPut = RTC_OUTPUT_DISABLE,
-				.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH,
-				.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN,
-		},
-	},
-	.format = RTC_HOURFORMAT_24,
-	
-};
 
 const RTC_CalendarTypeDef InitCalendar =
 {
@@ -111,16 +113,14 @@ HAL_StatusTypeDef RTC_CalendarConfig(RTCEX_HandleTypeDef* hRTChandle, RTC_Calend
 
 RTCEX_HandleTypeDef* RTC_open(unsigned char *name ,int flage)
 {
-		RTCEX_HandleTypeDef*  RTCEX_Handle;
 	
 		if(strcmp((const char*) name, "RTC1")!=0)
 				return NULL;
-		if(HAL_RTC_Init((RTC_HandleTypeDef*) &RTC_Haldle_Default.rtc)!=HAL_OK)
+		if(HAL_RTC_Init((RTC_HandleTypeDef*) &RTC_Haldle_File.rtc)!=HAL_OK)
 					return NULL;
 		else
-		{
-			
-			return 0;		//应该返回描述符，，数据 filehandle
+		{	
+			return &RTC_Haldle_File;		//应该返回描述符，，数据 filehandle
 		}
 }	
 int RTC_write(RTCEX_HandleTypeDef* hRTChandle, void *buff, unsigned int len)
@@ -157,8 +157,7 @@ int RTC_close(RTCEX_HandleTypeDef* hRTChandle)
 		if(state==HAL_OK)
 				return 0;
 		else
-				return -1;
-	
+				return -1;	
 }
 
 
