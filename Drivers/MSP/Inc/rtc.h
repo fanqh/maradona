@@ -11,6 +11,13 @@ typedef struct
 	
 }RTC_CalendarTypeDef;
 
+//typedef enum
+//{
+//		RTC_HOURFORMAT_24,
+//		RTC_HOURFORMAT_12
+//	
+//}RTC_FORMAT_TypeDef;
+
 typedef enum
 {
 	 RTCEX_STATE_RESET,
@@ -23,6 +30,7 @@ typedef struct
 	RTC_HandleTypeDef rtc;
 	RTC_CalendarTypeDef calendar;
 	RTC_State_TypeDef state;
+	uint32_t format;
 }RTCEX_HandleTypeDef; 
 
 typedef struct
