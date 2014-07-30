@@ -204,11 +204,11 @@ TEST(GPIOEX_Type, Ctor)
 	if (ge) free(ge);
 }
 
-extern GPIOEX_ConfigTypeDef PC6_As_Uart6Tx_DefaultConfig;
+extern const GPIO_ConfigTypeDef PC6_As_Uart6Tx_DefaultConfig;
 
 TEST(GPIOEX_Type, CtorByConfig)
 {
-	GPIOEX_ConfigTypeDef config = PC6_As_Uart6Tx_DefaultConfig;
+	GPIO_ConfigTypeDef config = PC6_As_Uart6Tx_DefaultConfig;
 	GPIO_ClockProviderTypeDef clk;
 	
 	GPIOEX_TypeDef* ge = GPIOEX_CtorByConfig(&config, &clk);

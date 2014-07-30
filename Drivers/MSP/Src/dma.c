@@ -210,14 +210,15 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_I
 	return h;
 }
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMAEX_ConfigTypeDef* config, 
+DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
 {
 	return DMAEX_Handle_Ctor(config->Instance, &config->Init, clk, hirq);
 }
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(DMAEX_Handle_FactoryTypeDef* factory, 
-																									const DMA_HandleTypeDef* hdma,
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
+																									// const DMA_HandleTypeDef* hdma,
+																									const DMA_ConfigTypeDef* dma_config,
 																									// const IRQ_HandleTypeDef* hirq)
 																									const IRQ_ConfigTypeDef* irq_config)
 {
@@ -229,7 +230,8 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(DMAEX_Handle_FactoryTypeDef* fac
 	if (irqH == NULL)
 		return NULL;
 	
-	dmaExH = DMAEX_Handle_Ctor(hdma->Instance, &hdma->Init, factory->clk, irqH);
+	// dmaExH = DMAEX_Handle_Ctor(hdma->Instance, &hdma->Init, factory->clk, irqH);
+	dmaExH = DMAEX_Handle_CtorByConfig(dma_config, factory->clk, irqH);
 	if (dmaExH == NULL)
 	{
 		IRQ_Handle_Dtor(irqH);
@@ -300,7 +302,7 @@ void DMA1_Stream6_IRQHandler(void)
 //	.FIFOMode = DMA_FIFOMODE_DISABLE,
 //};
 
-const DMAEX_ConfigTypeDef	DMAEX_Uart2Rx_DefaultConfig =
+const DMA_ConfigTypeDef	DMAEX_Uart2Rx_DefaultConfig =
 {
 	.Instance = DMA1_Stream5,
 	.Init = 
@@ -317,6 +319,23 @@ const DMAEX_ConfigTypeDef	DMAEX_Uart2Rx_DefaultConfig =
 	},	
 };	
 
+const DMA_ConfigTypeDef DMA_Uart2Rx_DefaultConfig = 
+{
+	.Instance = DMA1_Stream5,
+	.Init = 
+	{
+		.Channel = DMA_CHANNEL_4,
+		.Direction = DMA_PERIPH_TO_MEMORY,
+		.PeriphInc = DMA_PINC_DISABLE,
+		.MemInc = DMA_MINC_ENABLE,
+		.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+		.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+		.Mode = DMA_NORMAL,
+		.Priority = DMA_PRIORITY_LOW,
+		.FIFOMode = DMA_FIFOMODE_DISABLE,
+	},		
+};
+
 const DMA_HandleTypeDef	DMA_Handle_Uart2Rx_Default = 
 {
 	.Instance = DMA1_Stream5,
@@ -332,6 +351,23 @@ const DMA_HandleTypeDef	DMA_Handle_Uart2Rx_Default =
 		.Priority = DMA_PRIORITY_LOW,
 		.FIFOMode = DMA_FIFOMODE_DISABLE,
 	},	
+};
+
+const DMA_ConfigTypeDef	DMA_Uart2Tx_DefaultConfig = 
+{
+	.Instance = DMA1_Stream6,
+	.Init = 
+	{
+		.Channel = DMA_CHANNEL_4,
+		.Direction = DMA_MEMORY_TO_PERIPH,
+		.PeriphInc = DMA_PINC_DISABLE,
+		.MemInc = DMA_MINC_ENABLE,
+		.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+		.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+		.Mode = DMA_NORMAL,
+		.Priority = DMA_PRIORITY_LOW,
+		.FIFOMode = DMA_FIFOMODE_DISABLE,
+	},
 };
 
 const DMA_HandleTypeDef	DMA_Handle_Uart2Tx_Default = 

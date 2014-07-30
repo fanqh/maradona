@@ -78,6 +78,12 @@ struct UARTEX_HandleTypeDef
 	void										*test_data;					
 };
 
+typedef struct
+{
+  USART_TypeDef                 *Instance;        /* UART registers base address        */
+  UART_InitTypeDef              Init;             /* UART communication parameters      */
+} UART_ConfigTypeDef;	
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // constructor & destructor
@@ -89,6 +95,14 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
 																					IRQ_HandleTypeDef				*hirq,			// DI
 																					UARTEX_Operations				*ops);
+																					
+UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(UART_ConfigTypeDef* uart_config,	
+																					GPIOEX_TypeDef					*rxpin, 		// DI
+																					GPIOEX_TypeDef					*txpin, 		// DI		
+																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
+																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
+																					IRQ_HandleTypeDef				*hirq,			// DI
+																					UARTEX_Operations				*ops);																					
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					
@@ -127,17 +141,48 @@ struct usart_config {
 //																										const DMA_HandleTypeDef* hdmatx,						// instance + init, optional
 //																										const IRQ_HandleTypeDef* hirq_dmatx,				// instance + init, optional
 //																										const IRQ_HandleTypeDef* hirq_uart);				// instance + init, optional
+//UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
+//																										const UART_HandleTypeDef* huart,			// instance + init
+//																										const GPIOEX_TypeDef*	rxpin,					// instance + init
+//																										const GPIOEX_TypeDef*	txpin,					// instance + init
+//																										const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
+//																										// const IRQ_HandleTypeDef* hirq_dmarx,	//
+//																										const IRQ_ConfigTypeDef* dmarx_irq_config,
+//																										const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
+//																										// const IRQ_HandleTypeDef* hirq_dmatx,	//
+//																										const IRQ_ConfigTypeDef* dmatx_irq_config,
+//																										const IRQ_HandleTypeDef* hirq_uart);		// instance + init, optional;
+																										
+//UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
+//																										const UART_HandleTypeDef* huart,			// instance + init
+//																										const GPIOEX_TypeDef*	rxpin,					// instance + init
+//																										const GPIOEX_TypeDef*	txpin,					// instance + init
+//																										// const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
+//																										const DMA_ConfigTypeDef* dmarx_config,
+//																										// const IRQ_HandleTypeDef* hirq_dmarx,	//
+//																										const IRQ_ConfigTypeDef* dmarx_irq_config,
+//																										// const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
+//																										const DMA_ConfigTypeDef* dmatx_config,
+//																										// const IRQ_HandleTypeDef* hirq_dmatx,	//
+//																										const IRQ_ConfigTypeDef* dmatx_irq_config,
+//																										const IRQ_HandleTypeDef* hirq_uart);		// instance + init, optional		
+
 UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
-																										const UART_HandleTypeDef* huart,			// instance + init
-																										const GPIOEX_TypeDef*	rxpin,					// instance + init
-																										const GPIOEX_TypeDef*	txpin,					// instance + init
-																										const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
-																										// const IRQ_HandleTypeDef* hirq_dmarx,	//
-																										const IRQ_ConfigTypeDef* irq_config_dmarx,
-																										const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
-																										// const IRQ_HandleTypeDef* hirq_dmatx,	//
-																										const IRQ_ConfigTypeDef* irq_config_dmatx,
-																										const IRQ_HandleTypeDef* hirq_uart);		// instance + init, optional;
+																										// const UART_HandleTypeDef* huart,			// instance + init
+																										const UART_ConfigTypeDef* uart_config,	
+																										// const GPIOEX_TypeDef*	rxpin,					// instance + init
+																										const GPIO_ConfigTypeDef* rxpin_config,
+																										// const GPIOEX_TypeDef*	txpin,					// instance + init
+																										const GPIO_ConfigTypeDef* txpin_config,		
+																										
+																										const DMA_ConfigTypeDef* dmarx_config,
+																										const IRQ_ConfigTypeDef* dmarx_irq_config,
+																										const DMA_ConfigTypeDef* dmatx_config,
+																										const IRQ_ConfigTypeDef* dmatx_irq_config,
+																											
+																										// const IRQ_HandleTypeDef* hirq_uart);		// instance + init, optional																							
+																										const IRQ_ConfigTypeDef* uart_irq_config);
+																										
 void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, UARTEX_HandleTypeDef* h);																										
 
 
@@ -155,6 +200,7 @@ int UART_Instance_To_Index(USART_TypeDef* uart);
 									
 /*********************** Defaults *********************************************/
 
+extern const UART_ConfigTypeDef	UART2_DefaultConfig;
 
 const extern UART_HandleTypeDef	UART_Handle_Uart2_Default;
 const extern UARTEX_HandleTypeDef UARTEX_Handle_Uart2_Default;			

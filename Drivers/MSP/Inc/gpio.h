@@ -61,7 +61,7 @@ typedef struct
 	GPIO_TypeDef										*instance;
 	GPIO_InitTypeDef								init;
 	
-} GPIOEX_ConfigTypeDef;
+} GPIO_ConfigTypeDef;
 	 
 typedef struct
 {
@@ -76,7 +76,7 @@ typedef struct
 extern GPIO_ClockProviderTypeDef GPIO_ClockProvider;
 
 GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk);
-GPIOEX_TypeDef* GPIOEX_CtorByConfig(GPIOEX_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);
+GPIOEX_TypeDef* GPIOEX_CtorByConfig(GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);
 void GPIOEX_Dtor(GPIOEX_TypeDef* ge);
 
 void	GPIOEX_Init(GPIOEX_TypeDef* gpioex);
@@ -86,6 +86,10 @@ void 	GPIOEX_DeInit(GPIOEX_TypeDef* gpioex);
 void 	GPIO_Clock_Get(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin);
 void 	GPIO_Clock_Put(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin);
 bool	GPIO_Clock_Status(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint32_t Pin);
+
+const extern GPIO_ConfigTypeDef	PC6_As_Uart6Tx_DefaultConfig;
+const extern GPIO_ConfigTypeDef	PD6_As_Uart2Rx_DefaultConfig;
+const extern GPIO_ConfigTypeDef	PD5_As_Uart2Tx_DefaultConfig;
 
 const extern GPIOEX_TypeDef	PC6_As_Uart6Tx_Default;
 const extern GPIOEX_TypeDef	PD6_As_Uart2Rx_Default;

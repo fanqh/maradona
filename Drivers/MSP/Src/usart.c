@@ -352,6 +352,17 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 	return h;
 }
 
+UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(UART_ConfigTypeDef* config,	
+																					GPIOEX_TypeDef					*rxpin, 		// DI
+																					GPIOEX_TypeDef					*txpin, 		// DI		
+																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
+																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
+																					IRQ_HandleTypeDef				*hirq,			// DI
+																					UARTEX_Operations				*ops)
+{
+	return UARTEX_Handle_Ctor(config->Instance, &config->Init, rxpin, txpin, hdmaex_rx, hdmaex_tx, hirq, ops);
+}
+
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle)
 {
 	if (handle) free(handle);
@@ -359,16 +370,15 @@ void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle)
 }
 
 UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
-																										const UART_HandleTypeDef* huart,			// instance + init
-																										const GPIOEX_TypeDef*	rxpin,					// instance + init
-																										const GPIOEX_TypeDef*	txpin,					// instance + init
-																										const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
-																										// const IRQ_HandleTypeDef* hirq_dmarx,	//
-																										const IRQ_ConfigTypeDef* irq_config_dmarx,
-																										const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
-																										// const IRQ_HandleTypeDef* hirq_dmatx,	//
-																										const IRQ_ConfigTypeDef* irq_config_dmatx,
-																										const IRQ_HandleTypeDef* hirq_uart)		// instance + init, optional
+																										// const UART_HandleTypeDef* huart,			// instance + init
+																										const UART_ConfigTypeDef* uart_config,
+																										const GPIO_ConfigTypeDef* rxpin_config,
+																										const GPIO_ConfigTypeDef* txpin_config,		
+																										const DMA_ConfigTypeDef* dmarx_config,
+																										const IRQ_ConfigTypeDef* dmarx_irq_config,
+																										const DMA_ConfigTypeDef* dmatx_config,
+																										const IRQ_ConfigTypeDef* dmatx_irq_config,
+																										const IRQ_ConfigTypeDef* uart_irq_config)
 {
 	GPIOEX_TypeDef* rxpinH = NULL;
 	GPIOEX_TypeDef* txpinH = NULL;
@@ -388,44 +398,48 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	
 	return NULL;
 	
-	rxpinH = GPIOEX_Ctor(rxpin->instance, &rxpin->init, factory->gpio_clk);
+	rxpinH = GPIOEX_Ctor(rxpin_config->instance, &rxpin_config->init, factory->gpio_clk);
 	if (rxpinH == NULL)
 		goto fail0;
 	
-	txpinH = GPIOEX_Ctor(txpin->instance, &txpin->init, factory->gpio_clk);
+	txpinH = GPIOEX_Ctor(txpin_config->instance, &txpin_config->init, factory->gpio_clk);
 	if (txpinH == NULL)
 		goto fail1;
 	
-	if (hdmarx && irq_config_dmarx)
+	// if (hdmarx && dmarx_irq_config)
+	if (dmarx_config && dmarx_irq_config)
 	{
-		dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmarx, irq_config_dmarx);
+		dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, dmarx_config, /** hdmarx, **/ dmarx_irq_config);
 		if (dmaExRxH == NULL)
 			goto fail2;
 	}
 	
-	if (hdmatx && irq_config_dmatx)
+	// if (hdmatx && dmatx_irq_config)
+	if (dmatx_config && dmatx_irq_config)
 	{
-		dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmatx, irq_config_dmatx);
+		dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, dmatx_config, /** hdmatx, **/ dmatx_irq_config);
 		if (dmaExTxH == NULL)
 			goto fail3;
 	}
 	
-	if (hirq_uart)
+	// if (hirq_uart)
+	if (uart_irq_config)
 	{
-		irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
+		// irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
+		irqH = IRQ_Handle_CtorByConfig(uart_irq_config, factory->registry);
 		if (irqH == NULL)
 			goto fail4;
 	}
 	
-	h = UARTEX_Handle_Ctor(huart->Instance, &huart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, factory->uart_ops);
+	h = UARTEX_Handle_Ctor(uart_config->Instance, &uart_config->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, factory->uart_ops);
 	if (h == NULL)
 		goto fail5;
 	
 	return h;
 	
-	fail5:	if (hirq_uart) IRQ_Handle_Dtor(irqH);
-	fail4:	if (hdmatx && irq_config_dmatx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
-	fail3:	if (hdmarx && irq_config_dmarx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
+	fail5:	if (uart_irq_config) IRQ_Handle_Dtor(irqH);
+	fail4:	if (dmarx_config && dmatx_irq_config) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
+	fail3:	if (dmatx_config && dmarx_irq_config) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
 	fail2: 	GPIOEX_Dtor(txpinH);
 	fail1:	GPIOEX_Dtor(rxpinH);
 	fail0:	return NULL;
@@ -580,6 +594,20 @@ UARTEX_Operations UARTEX_Ops_Default =
 
 ///////////////////////////////////////////////////////////////////////////////
 // Defauts
+const UART_ConfigTypeDef	UART2_DefaultConfig = 
+{
+	.Instance = USART2,
+	.Init = 
+	{
+		.BaudRate = 115200,
+		.WordLength = UART_WORDLENGTH_8B,
+		.StopBits = UART_STOPBITS_1,
+		.Parity = UART_PARITY_NONE,
+		.Mode = UART_MODE_TX_RX,
+		.HwFlowCtl = UART_HWCONTROL_NONE,
+		.OverSampling = UART_OVERSAMPLING_16,
+	},
+};	
 
 const UART_HandleTypeDef	UART_Handle_Uart2_Default =
 {
@@ -619,3 +647,6 @@ const UARTEX_HandleTypeDef UARTEX_Handle_Uart2_Default =
 
 
 /************************ (C) COPYRIGHT Actnova *****END OF FILE****/
+
+
+

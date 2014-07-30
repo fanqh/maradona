@@ -32,7 +32,7 @@ typedef struct {
 	/** see DMA_HandleTypeDef **/
   DMA_Stream_TypeDef         *Instance;		/*!< Register base address                  */
   DMA_InitTypeDef            Init;        /*!< DMA communication parameters           */ 	
-} DMAEX_ConfigTypeDef;
+} DMA_ConfigTypeDef;
 
 typedef struct {
 	
@@ -47,7 +47,7 @@ typedef struct {
 DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMAEX_ConfigTypeDef* config, 
+DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
 void 	DMAEX_Handle_Dtor(DMAEX_HandleTypeDef* handle);
@@ -66,8 +66,9 @@ typedef struct {
 	
 } DMAEX_Handle_FactoryTypeDef;
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(DMAEX_Handle_FactoryTypeDef* factory, 
-																									const DMA_HandleTypeDef* hdma,
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
+																									// const DMA_HandleTypeDef* hdma,
+																									const DMA_ConfigTypeDef* dma_config,
 																									// const IRQ_HandleTypeDef* hirq);
 																									const IRQ_ConfigTypeDef*	irq_config);
 																						
@@ -78,7 +79,8 @@ void DMAEX_Handle_FactoryDestroy(DMAEX_Handle_FactoryTypeDef* factory, DMAEX_Han
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 																									
-const extern DMAEX_ConfigTypeDef	DMAEX_Uart2Rx_DefaultConfig;																									
+extern	const DMA_ConfigTypeDef		DMA_Uart2Rx_DefaultConfig;	
+extern 	const DMA_ConfigTypeDef		DMA_Uart2Tx_DefaultConfig;																									
 																									
 const extern DMA_HandleTypeDef		DMA_Handle_Uart2Rx_Default;
 const extern DMA_HandleTypeDef		DMA_Handle_Uart2Tx_Default;
