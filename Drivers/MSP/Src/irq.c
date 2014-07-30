@@ -85,9 +85,14 @@ IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t su
 	return h;
 }
 
-IRQ_HandleTypeDef *IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandlerObjectRegistryTypeDef* registry)
+IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandlerObjectRegistryTypeDef* registry)
 {
 	return IRQ_Handle_Ctor(hirq->irqn, hirq->preempt_priority, hirq->sub_priority, registry);
+}
+
+IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandlerObjectRegistryTypeDef* registry)
+{
+	return IRQ_Handle_Ctor(config->irqn, config->preempt_priority, config->sub_priority, registry);
 }
 
 void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
@@ -99,6 +104,11 @@ void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+const IRQ_ConfigTypeDef	IRQ_Uart2_DefaultConfig =
+{
+	.irqn = USART2_IRQn,
+};
+
 const IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default =
 {
 	.irqn = USART2_IRQn,
@@ -106,11 +116,21 @@ const IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default =
 	.irqh_obj = 0, // should be override		
 };
 
+const IRQ_ConfigTypeDef	IRQ_Uart2RxDMA_DefaultConfig =
+{
+	.irqn = DMA1_Stream5_IRQn,
+};
+
 const IRQ_HandleTypeDef IRQ_Handle_Uart2RxDMA_Default =
 {
 	.irqn = DMA1_Stream5_IRQn,
 	.registry = &IRQ_HandlerObjectRegistry,
 	.irqh_obj = 0, // THIS ONE should be link to the copied instance.hdma
+};
+
+const IRQ_ConfigTypeDef IRQ_Uart2TxDMA_DefaultConfig = 
+{
+	.irqn = DMA1_Stream6_IRQn,
 };
 
 const IRQ_HandleTypeDef IRQ_Handle_Uart2TxDMA_Default = 

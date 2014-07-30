@@ -188,15 +188,6 @@ TEST_GROUP(GPIOEX_Type);
 TEST_SETUP(GPIOEX_Type){}
 TEST_TEAR_DOWN(GPIOEX_Type){}
 
-//typedef struct
-//{
-//	GPIO_TypeDef  					*instance;
-//	GPIO_InitTypeDef				init;
-//	GPIO_ClockProviderTypeDef				*clk;
-//	
-//	GPIOEX_StateTypeDef			state;
-//	
-//} GPIOEX_TypeDef;		
 TEST(GPIOEX_Type, Ctor)
 {
 	GPIOEX_TypeDef* ge;
@@ -213,6 +204,24 @@ TEST(GPIOEX_Type, Ctor)
 	if (ge) free(ge);
 }
 
+extern GPIOEX_ConfigTypeDef PC6_As_Uart6Tx_DefaultConfig;
+
+TEST(GPIOEX_Type, CtorByConfig)
+{
+	GPIOEX_ConfigTypeDef config = PC6_As_Uart6Tx_DefaultConfig;
+	GPIO_ClockProviderTypeDef clk;
+	
+	GPIOEX_TypeDef* ge = GPIOEX_CtorByConfig(&config, &clk);
+
+	TEST_ASSERT_NOT_NULL(ge);
+	TEST_ASSERT_EQUAL_HEX32(PC6_As_Uart6Tx_Default.instance, ge->instance);
+	TEST_ASSERT_EQUAL_MEMORY(&PC6_As_Uart6Tx_Default.init, &ge->init, sizeof(GPIO_InitTypeDef));
+	TEST_ASSERT_EQUAL_HEX32(&clk, ge->clk);
+	TEST_ASSERT_EQUAL(GPIOEX_STATE_RESET, ge->state);
+	
+	if (ge) free(ge);	
+}
+
 TEST(GPIOEX_Type, Dtor)
 {
 	GPIOEX_TypeDef* ge;
@@ -226,6 +235,7 @@ TEST(GPIOEX_Type, Dtor)
 TEST_GROUP_RUNNER(GPIOEX_Type)
 {
 	RUN_TEST_CASE(GPIOEX_Type, Ctor);
+	RUN_TEST_CASE(GPIOEX_Type, CtorByConfig);
 	RUN_TEST_CASE(GPIOEX_Type, Dtor);
 }
 

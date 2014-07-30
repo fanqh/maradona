@@ -321,7 +321,6 @@ void USART2_IRQHandler(void)
 	}
 }
 
-
 UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					const UART_InitTypeDef	*init,
 																					GPIOEX_TypeDef					*rxpin, 		// DI
@@ -364,9 +363,11 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 																										const GPIOEX_TypeDef*	rxpin,					// instance + init
 																										const GPIOEX_TypeDef*	txpin,					// instance + init
 																										const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_dmarx,	//
+																										// const IRQ_HandleTypeDef* hirq_dmarx,	//
+																										const IRQ_ConfigTypeDef* irq_config_dmarx,
 																										const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_dmatx,	//
+																										// const IRQ_HandleTypeDef* hirq_dmatx,	//
+																										const IRQ_ConfigTypeDef* irq_config_dmatx,
 																										const IRQ_HandleTypeDef* hirq_uart)		// instance + init, optional
 {
 	GPIOEX_TypeDef* rxpinH = NULL;
@@ -395,16 +396,16 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	if (txpinH == NULL)
 		goto fail1;
 	
-	if (hdmarx && hirq_dmarx)
+	if (hdmarx && irq_config_dmarx)
 	{
-		dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmarx, hirq_dmarx);
+		dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmarx, irq_config_dmarx);
 		if (dmaExRxH == NULL)
 			goto fail2;
 	}
 	
-	if (hdmatx && hirq_dmatx)
+	if (hdmatx && irq_config_dmatx)
 	{
-		dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmatx, hirq_dmatx);
+		dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, hdmatx, irq_config_dmatx);
 		if (dmaExTxH == NULL)
 			goto fail3;
 	}
@@ -423,8 +424,8 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	return h;
 	
 	fail5:	if (hirq_uart) IRQ_Handle_Dtor(irqH);
-	fail4:	if (hdmatx && hirq_dmatx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
-	fail3:	if (hdmarx && hirq_dmarx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
+	fail4:	if (hdmatx && irq_config_dmatx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
+	fail3:	if (hdmarx && irq_config_dmarx) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
 	fail2: 	GPIOEX_Dtor(txpinH);
 	fail1:	GPIOEX_Dtor(rxpinH);
 	fail0:	return NULL;

@@ -361,7 +361,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Inc;..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Inc;..\..\..\..\..\..\Drivers\MSP\Inc;..\..\..\..\..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\..\..\..\..\Drivers\CMSIS\Include;..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\..\..\..\..\..\Unity\src;..\..\..\..\..\..\Unity\extras\fixture\src</IncludePath>
+              <IncludePath>..\..\Inc;..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Inc;..\..\..\..\..\..\Drivers\MSP\Inc;..\..\..\..\..\..\Drivers\STM32F4xx_HAL_Driver\Inc;..\..\..\..\..\..\Drivers\CMSIS\Include;..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F4xx\Include;..\..\..\..\..\..\Unity\src;..\..\..\..\..\..\Unity\extras\fixture\src;..\..\..\..\..\..\Middlewares\DeviceFS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -793,6 +793,21 @@
               <FileName>unity_fixture.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Unity\extras\fixture\src\unity_fixture.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Middlewares/DeviceFS</GroupName>
+          <Files>
+            <File>
+              <FileName>devicefs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\..\..\..\..\Middlewares\DeviceFS\devicefs.h</FilePath>
+            </File>
+            <File>
+              <FileName>devicefs_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Middlewares\DeviceFS\devicefs_test.c</FilePath>
             </File>
           </Files>
         </Group>

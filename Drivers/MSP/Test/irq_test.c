@@ -140,6 +140,21 @@ TEST(IRQ_Handle, CtorByTemplate)
 	if (h) free(h);
 }
 
+TEST(IRQ_Handle, CtorByConfig)
+{
+	IRQ_HandlerObjectRegistryTypeDef fake;
+	
+	IRQ_HandleTypeDef* h = IRQ_Handle_CtorByConfig(&IRQ_Uart2_DefaultConfig, &fake);
+	TEST_ASSERT_NOT_NULL(h);
+	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.irqn, h->irqn);
+	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.preempt_priority , h->preempt_priority);
+	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.sub_priority , h->sub_priority);
+	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
+	TEST_ASSERT_NULL(h->irqh_obj);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
+	
+	if (h) free(h);	
+}
 
 TEST_GROUP_RUNNER(IRQ_Handle)
 {

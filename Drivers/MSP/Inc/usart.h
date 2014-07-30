@@ -45,8 +45,7 @@
 #include "gpio.h"
 #include "dma.h"
 	 
-struct UARTEX_HandleStruct;
-typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;	 
+typedef struct UARTEX_HandleTypeDef UARTEX_HandleTypeDef;
 	 
 typedef struct 
 {
@@ -60,7 +59,7 @@ typedef struct
 
 extern UARTEX_Operations UARTEX_Ops_Default;
 
-struct UARTEX_HandleStruct 
+struct UARTEX_HandleTypeDef
 {	
 	GPIOEX_TypeDef					*rxpin;
 	GPIOEX_TypeDef					*txpin;
@@ -79,8 +78,9 @@ struct UARTEX_HandleStruct
 	void										*test_data;					
 };
 
-typedef struct UARTEX_HandleStruct UARTEX_HandleTypeDef;
 
+///////////////////////////////////////////////////////////////////////////////
+// constructor & destructor
 UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					const UART_InitTypeDef	*init,
 																					GPIOEX_TypeDef					*rxpin, 		// DI
@@ -92,9 +92,12 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					
-
+///////////////////////////////////////////////////////////////////////////////
+// uart factory
+																					
 typedef struct 
 {
+	
 	IRQ_HandlerObjectRegistryTypeDef* registry;
 	DMA_ClockProviderTypeDef*					dma_clk;
 	GPIO_ClockProviderTypeDef*				gpio_clk;
@@ -103,18 +106,43 @@ typedef struct
 	
 } UARTEX_Handle_FactoryTypeDef;	
 
-UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
-																										const UART_HandleTypeDef* huart,						// instance + init
-																										const GPIOEX_TypeDef*	rxpin,								// instance + init
-																										const GPIOEX_TypeDef*	txpin,								// instance + init
-																										const DMA_HandleTypeDef* hdmarx, 						// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_dmarx,				// instance + init, optional
-																										const DMA_HandleTypeDef* hdmatx,						// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_dmatx,				// instance + init, optional
-																										const IRQ_HandleTypeDef* hirq_uart);				// instance + init, optional
+struct usart_config {
+	
+	UART_HandleTypeDef* 	huart;
+	GPIOEX_TypeDef*				rxpin;
+	GPIOEX_TypeDef*				txpin;
+	DMA_HandleTypeDef*		hdmarx;
+	IRQ_HandleTypeDef*		hirq_dmarx;
+	DMA_HandleTypeDef*		hdmatx;
+	IRQ_HandleTypeDef*		hirq_dmatx;
+	IRQ_HandleTypeDef*		hirq_uart;
+};
 
+//UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
+//																										const UART_HandleTypeDef* huart,						// instance + init
+//																										const GPIOEX_TypeDef*	rxpin,								// instance + init
+//																										const GPIOEX_TypeDef*	txpin,								// instance + init
+//																										const DMA_HandleTypeDef* hdmarx, 						// instance + init, optional
+//																										const IRQ_HandleTypeDef* hirq_dmarx,				// instance + init, optional
+//																										const DMA_HandleTypeDef* hdmatx,						// instance + init, optional
+//																										const IRQ_HandleTypeDef* hirq_dmatx,				// instance + init, optional
+//																										const IRQ_HandleTypeDef* hirq_uart);				// instance + init, optional
+UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
+																										const UART_HandleTypeDef* huart,			// instance + init
+																										const GPIOEX_TypeDef*	rxpin,					// instance + init
+																										const GPIOEX_TypeDef*	txpin,					// instance + init
+																										const DMA_HandleTypeDef* hdmarx, 			// instance + init, optional
+																										// const IRQ_HandleTypeDef* hirq_dmarx,	//
+																										const IRQ_ConfigTypeDef* irq_config_dmarx,
+																										const DMA_HandleTypeDef* hdmatx,			// instance + init, optional
+																										// const IRQ_HandleTypeDef* hirq_dmatx,	//
+																										const IRQ_ConfigTypeDef* irq_config_dmatx,
+																										const IRQ_HandleTypeDef* hirq_uart);		// instance + init, optional;
 void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, UARTEX_HandleTypeDef* h);																										
-																										
+
+
+
+///////////////////////////////////////////////////////////////////////////////																										
 /** utility **/
 void HAL_UART_ClockEnable(USART_TypeDef* uart);
 void HAL_UART_ClockDisable(USART_TypeDef* uart);

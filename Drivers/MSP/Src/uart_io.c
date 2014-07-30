@@ -204,6 +204,7 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 }
 
 
+
 /**
 UART_IO_HandleTypeDef* UART_IO_Open(int port)
 {
@@ -418,6 +419,12 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 	return count;
 }
 
+int	UART_IO_Open(struct device * dev, struct file * filp)
+{
+	return 0;
+}
+
+
 #if 0
 
 /*
@@ -478,4 +485,18 @@ UART_HandleTypeDef*			UART_IO_GetUartHandleByPort(int num) {
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

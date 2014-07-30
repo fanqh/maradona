@@ -4,6 +4,7 @@
 #include "errno_ex.h"
 #include "uart_io.h"
 #include "uart_io_private.h"
+#include "devicefs.h"
 
 typedef struct 
 {
@@ -737,6 +738,18 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 //	TEST_ASSERT_EQUAL_HEX32(m_huio.tbuf[1], m_huio.tx_head);
 //	TEST_ASSERT_EQUAL_HEX32(&m_huio.tbuf[1][UART_IO_BUFFER_SIZE], m_huio.tx_tail);
 //	TEST_ASSERT_EQUAL_MEMORY(s3, m_huio.tx_head, UART_IO_BUFFER_SIZE);	
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST(UsartIO_DMA, OpenWhenDeviceNotOpened)
+{
+	UART_IO_HandleTypeDef 	uio;
+	struct file 						file;
+	
+	UART_IO_Open(&uio.dev, &file);
+	
+	
 }
 
 

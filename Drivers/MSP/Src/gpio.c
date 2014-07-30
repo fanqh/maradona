@@ -272,12 +272,31 @@ GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, G
 	return ge;
 }
 
+GPIOEX_TypeDef* GPIOEX_CtorByConfig(GPIOEX_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
+{
+	return GPIOEX_Ctor(config->instance, &config->init, clk);
+}
+
 void GPIOEX_Dtor(GPIOEX_TypeDef* ge)
 {
 	if (ge) free(ge);
 }
 
 /************************ Defaults ********************************************/
+
+const GPIOEX_ConfigTypeDef	PC6_As_Uart6Tx_DefaultConfig =
+{
+	.instance = GPIOC,
+	.init = 
+	{
+		.Pin = GPIO_PIN_6,
+		.Mode = GPIO_MODE_AF_PP,
+		.Pull = GPIO_NOPULL,
+		.Speed = GPIO_SPEED_LOW,
+		.Alternate = GPIO_AF8_USART6,					
+	},
+};
+
 
 const GPIOEX_TypeDef	PC6_As_Uart6Tx_Default =
 {

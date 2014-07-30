@@ -55,6 +55,13 @@ typedef enum
 	GPIOEX_STATE_RESET = 0,
 	GPIOEX_STATE_SET,
 } GPIOEX_StateTypeDef;
+
+typedef struct
+{
+	GPIO_TypeDef										*instance;
+	GPIO_InitTypeDef								init;
+	
+} GPIOEX_ConfigTypeDef;
 	 
 typedef struct
 {
@@ -68,8 +75,8 @@ typedef struct
 
 extern GPIO_ClockProviderTypeDef GPIO_ClockProvider;
 
-
 GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk);
+GPIOEX_TypeDef* GPIOEX_CtorByConfig(GPIOEX_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);
 void GPIOEX_Dtor(GPIOEX_TypeDef* ge);
 
 void	GPIOEX_Init(GPIOEX_TypeDef* gpioex);

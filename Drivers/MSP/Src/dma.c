@@ -193,8 +193,6 @@ bool DMA_Clock_Status(DMA_ClockProviderTypeDef* dma_clk, DMA_Stream_TypeDef* str
 }
 
 
-
-
 DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
 {
@@ -212,14 +210,22 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_I
 	return h;
 }
 
+DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMAEX_ConfigTypeDef* config, 
+	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
+{
+	return DMAEX_Handle_Ctor(config->Instance, &config->Init, clk, hirq);
+}
+
 DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(DMAEX_Handle_FactoryTypeDef* factory, 
 																									const DMA_HandleTypeDef* hdma,
-																									const IRQ_HandleTypeDef* hirq)
+																									// const IRQ_HandleTypeDef* hirq)
+																									const IRQ_ConfigTypeDef* irq_config)
 {
 	DMAEX_HandleTypeDef* dmaExH;
 	IRQ_HandleTypeDef* irqH;
 	
-	irqH = IRQ_Handle_Ctor_By_Template(hirq, factory->reg);
+	// irqH = IRQ_Handle_Ctor_By_Template(hirq, factory->reg);
+	irqH = IRQ_Handle_CtorByConfig(irq_config, factory->reg);
 	if (irqH == NULL)
 		return NULL;
 	
@@ -293,6 +299,23 @@ void DMA1_Stream6_IRQHandler(void)
 //	.Priority = DMA_PRIORITY_LOW,
 //	.FIFOMode = DMA_FIFOMODE_DISABLE,
 //};
+
+const DMAEX_ConfigTypeDef	DMAEX_Uart2Rx_DefaultConfig =
+{
+	.Instance = DMA1_Stream5,
+	.Init = 
+	{
+		.Channel = DMA_CHANNEL_4,
+		.Direction = DMA_PERIPH_TO_MEMORY,
+		.PeriphInc = DMA_PINC_DISABLE,
+		.MemInc = DMA_MINC_ENABLE,
+		.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
+		.MemDataAlignment = DMA_MDATAALIGN_BYTE,
+		.Mode = DMA_NORMAL,
+		.Priority = DMA_PRIORITY_LOW,
+		.FIFOMode = DMA_FIFOMODE_DISABLE,
+	},	
+};	
 
 const DMA_HandleTypeDef	DMA_Handle_Uart2Rx_Default = 
 {

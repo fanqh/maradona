@@ -20,24 +20,7 @@ extern usart_api_t usart_apis;
 
 /*** end of hal api interception ***/
 
-/** see public header file for forward declaration **/
-struct UART_IO_HandleStruct {
-	
-	UARTEX_HandleTypeDef		*handle;
-	
-	char								*rbuf[2];		/** two pointers **/
-	int									rbuf_size;
-	
-	char								*rx_upper;
-	char 								*rx_head;
-	char								*rx_tail;	
-	
-	char								*tbuf[2];		/** two pointers **/
-	int 								tbuf_size;
-	
-	char								*tx_head;
-	char								*tx_tail;
-};
+
 
 
 
