@@ -328,7 +328,7 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
 																					IRQ_HandleTypeDef				*hirq,			// DI
-																					UARTEX_Operations				*ops)
+																					struct UARTEX_Operations				*ops)
 {
 	UARTEX_HandleTypeDef* h;
 	
@@ -352,13 +352,13 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 	return h;
 }
 
-UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(UART_ConfigTypeDef* config,	
+UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef* config,	
 																					GPIOEX_TypeDef					*rxpin, 		// DI
 																					GPIOEX_TypeDef					*txpin, 		// DI		
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
 																					IRQ_HandleTypeDef				*hirq,			// DI
-																					UARTEX_Operations				*ops)
+																					struct UARTEX_Operations				*ops)
 {
 	return UARTEX_Handle_Ctor(config->Instance, &config->Init, rxpin, txpin, hdmaex_rx, hdmaex_tx, hirq, ops);
 }
@@ -370,7 +370,6 @@ void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle)
 }
 
 UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
-																										// const UART_HandleTypeDef* huart,			// instance + init
 																										const UART_ConfigTypeDef* uart_config,
 																										const GPIO_ConfigTypeDef* rxpin_config,
 																										const GPIO_ConfigTypeDef* txpin_config,		
@@ -583,7 +582,7 @@ static HAL_StatusTypeDef UARTEX_Swap(UARTEX_HandleTypeDef* hue, uint8_t* buf, si
 	return HAL_UART_SwapRxDMABuffer(&hue->huart, buf, size, m0ar, ndtr);
 }
 
-UARTEX_Operations UARTEX_Ops_Default = 
+struct UARTEX_Operations UARTEX_Ops_Default = 
 {
 	.init = UARTEX_Init,
 	.deinit = UARTEX_DeInit,

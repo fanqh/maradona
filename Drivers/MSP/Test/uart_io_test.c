@@ -217,7 +217,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -269,7 +269,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -327,7 +327,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -522,7 +522,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -569,7 +569,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -623,7 +623,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -700,7 +700,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	UARTEX_Operations uart_ops;
+	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];

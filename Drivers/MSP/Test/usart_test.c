@@ -276,7 +276,7 @@ TEST(UARTEX_Handle, Ctor)
 	DMAEX_HandleTypeDef hdmaex_rx;
 	DMAEX_HandleTypeDef	hdmaex_tx;
 	IRQ_HandleTypeDef	hirq;
-	UARTEX_Operations ops;
+	struct UARTEX_Operations ops;
 	
 	h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
 	
@@ -302,7 +302,7 @@ TEST(UARTEX_Handle, CtorByConfig)
 	DMAEX_HandleTypeDef hdmaex_rx;
 	DMAEX_HandleTypeDef	hdmaex_tx;
 	IRQ_HandleTypeDef	hirq;
-	UARTEX_Operations ops;
+	struct UARTEX_Operations ops;
 	
 	UART_ConfigTypeDef config;
 	memset(&config, 0xA5, sizeof(config));
@@ -332,7 +332,7 @@ TEST(UARTEX_Handle, CtorInvalidArgs)
 	DMAEX_HandleTypeDef hdmaex_rx;
 	DMAEX_HandleTypeDef	hdmaex_tx;
 	IRQ_HandleTypeDef	hirq;
-	UARTEX_Operations ops;
+	struct UARTEX_Operations ops;
 	
 	// h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
 	h = UARTEX_Handle_Ctor(0, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
@@ -542,7 +542,6 @@ TEST(UARTEX_Handle, FactoryDestroy)
 	factory.gpio_clk = &GPIO_ClockProvider;
 	factory.registry = &IRQ_HandlerObjectRegistry;
 	
-	// const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
 	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
 	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
 	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
@@ -550,7 +549,6 @@ TEST(UARTEX_Handle, FactoryDestroy)
 	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
 	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
 	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
-	// const IRQ_HandleTypeDef* hirq_uart = &IRQ_Handle_Uart2_Default;
 	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
 	
 	h = UARTEX_Handle_FactoryCreate(&factory, uart_config, rxpin, txpin, 

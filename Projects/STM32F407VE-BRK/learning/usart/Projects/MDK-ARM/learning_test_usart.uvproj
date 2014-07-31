@@ -474,6 +474,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\uart_io.c</FilePath>
             </File>
+            <File>
+              <FileName>msp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\msp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
