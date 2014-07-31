@@ -56,7 +56,7 @@ struct UARTEX_Operations
 	HAL_StatusTypeDef (*swap)(UARTEX_HandleTypeDef *hue, uint8_t *buf, size_t size, uint32_t* m0ar, int* ndtr);
 };
 
-extern struct UARTEX_Operations UARTEX_Ops_Default;
+extern const struct UARTEX_Operations UARTEX_Ops_DefaultConfig;
 
 struct UARTEX_HandleTypeDef
 {	
@@ -70,7 +70,7 @@ struct UARTEX_HandleTypeDef
 	
 	IRQ_HandleTypeDef					*hirq;
 	
-	struct UARTEX_Operations	*ops;
+	struct UARTEX_Operations	ops;
 	
 	/** This field are used for test/mock					**/
 	/** UART Ex Operations never touch this field **/
@@ -95,7 +95,7 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
 																					IRQ_HandleTypeDef				*hirq,			// DI
-																					struct UARTEX_Operations				*ops);
+																					const struct UARTEX_Operations				*ops);
 																					
 UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef* uart_config,	
 																					GPIOEX_TypeDef					*rxpin, 		// DI
@@ -103,23 +103,24 @@ UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef* uart_
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
 																					IRQ_HandleTypeDef				*hirq,			// DI
-																					struct UARTEX_Operations				*ops);																					
+																					const struct UARTEX_Operations				*ops);																					
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					
 ///////////////////////////////////////////////////////////////////////////////
 // uart factory
 																					
-typedef struct 
-{
-	IRQ_HandleRegistryTypeDef* registry;
-	DMA_ClockProviderTypeDef*					dma_clk;
-	GPIO_ClockProviderTypeDef*				gpio_clk;
-	
-	struct UARTEX_Operations*					uart_ops;
-	
-} UARTEX_Handle_FactoryTypeDef;	
+//typedef struct 
+//{
+//	GPIO_ClockProviderTypeDef*				gpio_clk;
+//	DMA_ClockProviderTypeDef*					dma_clk;
+//	IRQ_HandleRegistryTypeDef* 				registry;	
+//	
+//	struct UARTEX_Operations*					uart_ops;
+//	
+//} UARTEX_Handle_FactoryTypeDef;	
 
+/** an aggregate class **/
 typedef struct
 {
 	const UART_ConfigTypeDef* uart;	
@@ -131,9 +132,14 @@ typedef struct
 	const IRQ_ConfigTypeDef* dmatx_irq;
 	const IRQ_ConfigTypeDef* uart_irq;
 	
+	const struct UARTEX_Operations* uartex_ops;
 } UARTEX_ConfigTypeDef;	
 
-UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTypeDef* factory,
+UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	// const UARTEX_Handle_FactoryTypeDef* factory,
+																										GPIO_ClockProviderTypeDef* 	gpio_clk,
+																										DMA_ClockProviderTypeDef*		dma_clk,
+																										IRQ_HandleRegistryTypeDef*	irq_registry,
+																										
 																										const UART_ConfigTypeDef* uart_config,	
 																										const GPIO_ConfigTypeDef* rxpin_config,
 																										const GPIO_ConfigTypeDef* txpin_config,		
@@ -141,9 +147,11 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 																										const IRQ_ConfigTypeDef* dmarx_irq_config,
 																										const DMA_ConfigTypeDef* dmatx_config,
 																										const IRQ_ConfigTypeDef* dmatx_irq_config,
-																										const IRQ_ConfigTypeDef* uart_irq_config);
+																										const IRQ_ConfigTypeDef* uart_irq_config,
+																										const struct UARTEX_Operations* uartex_ops	
+																										);
 																										
-void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, UARTEX_HandleTypeDef* h);																										
+void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h);																										
 
 
 

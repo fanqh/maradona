@@ -217,7 +217,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -229,9 +229,11 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	huio.rbuf[0] = rxbuf0;
 	huio.rbuf[1] = rxbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	uart_ops.swap = swap_mock_hal_ok;
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	uart_ops.swap = swap_mock_hal_ok;
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(struct UARTEX_Operations));
+	huio.handle->ops.swap = swap_mock_hal_ok;
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;
@@ -269,7 +271,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -281,15 +283,17 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	huio.rbuf[0] = rxbuf0;
 	huio.rbuf[1] = rxbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;
 	
 	// fill and mock
 	fill_rx_testdata(&huio, 0, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
-	uart_ops.swap = swap_mock_hal_error; // swap_mock_hal_ok;
+	// uart_ops.swap = swap_mock_hal_error; // swap_mock_hal_ok;
+	huio.handle->ops.swap = swap_mock_hal_error;
 	
 	memset(buf, 0, sizeof(buf));	
 	read = UART_IO_Read(&huio, buf, sizeof(buf));
@@ -299,7 +303,8 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	
 	// refill and remock
 	fill_rx_testdata(&huio, 1, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
-	uart_ops.swap = swap_mock_hal_busy;
+	// uart_ops.swap = swap_mock_hal_busy;
+	huio.handle->ops.swap = swap_mock_hal_busy;
 	
 	memset(buf, 0, sizeof(buf));	
 	read = UART_IO_Read(&huio, buf, sizeof(buf));
@@ -309,7 +314,8 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	
 	// refill and remock
 	fill_rx_testdata(&huio, 1, 2, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
-	uart_ops.swap = swap_mock_hal_timeout;
+	// uart_ops.swap = swap_mock_hal_timeout;
+	huio.handle->ops.swap = swap_mock_hal_timeout;
 	
 	memset(buf, 0, sizeof(buf));	
 	read = UART_IO_Read(&huio, buf, sizeof(buf));
@@ -327,7 +333,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -339,14 +345,15 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	huio.rbuf[0] = rxbuf0;
 	huio.rbuf[1] = rxbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;
 	
 	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
-	huio.handle->ops->swap = swap_mock_hal_error;
+	huio.handle->ops.swap = swap_mock_hal_error;
 	
 	memset(buf, 0, sizeof(buf));
 	read = UART_IO_Read(&huio, buf, sizeof(buf));
@@ -355,7 +362,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	TEST_ASSERT_EQUAL(EINVAL, errno);	
 	
 	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
-	huio.handle->ops->swap = swap_mock_hal_busy;
+	huio.handle->ops.swap = swap_mock_hal_busy;
 	
 	memset(buf, 0, sizeof(buf));
 	read = UART_IO_Read(&huio, buf, sizeof(buf));
@@ -364,7 +371,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	TEST_ASSERT_EQUAL(EBUSY, errno);	
 
 	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
-	huio.handle->ops->swap = swap_mock_hal_timeout;
+	huio.handle->ops.swap = swap_mock_hal_timeout;
 	
 	memset(buf, 0, sizeof(buf));
 	read = UART_IO_Read(&huio, buf, sizeof(buf));
@@ -522,7 +529,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -534,8 +541,9 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	huio.tbuf[0] = txbuf0;
 	huio.tbuf[1] = txbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;	
@@ -544,7 +552,8 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	// HAL_UART_Transmit_DMA
 
 	fill_tx_testdata(&huio, 1, s1, strlen(s1), 0, 0, 0);
-	uart_ops.send = send_mock_hal_ok;
+	// uart_ops.send = send_mock_hal_ok;
+	huio.handle->ops.send = send_mock_hal_ok;
 	huio.handle->huart.State = HAL_UART_STATE_READY;
 	
 	written = UART_IO_Write(&huio, s2, strlen(s2));
@@ -569,7 +578,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -581,14 +590,16 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	huio.tbuf[0] = txbuf0;
 	huio.tbuf[1] = txbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;	
 	//////////////////////////////
 
-	uart_ops.send = send_mock_hal_busy;
+	// uart_ops.send = send_mock_hal_busy;
+	huio.handle->ops.send = send_mock_hal_busy;
 	hue.huart.State = HAL_UART_STATE_READY;
 	fill_tx_testdata(&huio, 1, s1, strlen(s1), 0, 0, 0);
 	
@@ -623,7 +634,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -635,8 +646,9 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	huio.tbuf[0] = txbuf0;
 	huio.tbuf[1] = txbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;	
@@ -648,7 +660,8 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	memset(s3, 'a', sizeof(s1));
 	memset(&s3[sizeof(s1)], 'b', sizeof(s2));
 	
-	uart_ops.send = send_mock_hal_ok;
+	// uart_ops.send = send_mock_hal_ok;
+	huio.handle->ops.send = send_mock_hal_ok;
 	hue.huart.State = HAL_UART_STATE_READY;
 	fill_tx_testdata(&huio, 1, s1, sizeof(s1), 0, 0, 0);
 	
@@ -700,7 +713,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	UART_IO_HandleTypeDef huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-	struct UARTEX_Operations uart_ops;
+//	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -712,13 +725,15 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	huio.tbuf[0] = txbuf0;
 	huio.tbuf[1] = txbuf1;
 
-	memset(&uart_ops, 0, sizeof(uart_ops));
-	huio.handle->ops = &uart_ops;	
+//	memset(&uart_ops, 0, sizeof(uart_ops));
+//	huio.handle->ops = &uart_ops;	
+	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
 	huio.handle->test_data = &td;	
 	//////////////////////////////	
-	uart_ops.send = send_mock_hal_busy;
+	// uart_ops.send = send_mock_hal_busy;
+	huio.handle->ops.send = send_mock_hal_busy;
 	hue.huart.State = HAL_UART_STATE_READY;
 	fill_tx_testdata(&huio, 1, s1, sizeof(s1), 0, 0, 0);
 	
