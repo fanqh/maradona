@@ -68,7 +68,7 @@ HAL_StatusTypeDef m_init_hal_err(UART_HandleTypeDef *huart) {
 }
 
 
-static void fill_rx_testdata(	UART_IO_HandleTypeDef* huio, 	/** handle 								**/
+static void fill_rx_testdata(	struct uart_device* huio, 	/** handle 								**/
 															int index,										/** upper									**/
 															int offset,										/** upper offset 					**/
 															const char* upper,						/** content for upper 		**/
@@ -101,7 +101,7 @@ static void fill_rx_testdata(	UART_IO_HandleTypeDef* huio, 	/** handle 								*
 	}
 }
 
-static void fill_tx_testdata( UART_IO_HandleTypeDef* huio,
+static void fill_tx_testdata( struct uart_device* huio,
 															int index,
 															const char* src,
 															int upper_size,
@@ -155,7 +155,7 @@ TEST_TEAR_DOWN(UsartIO_DMA)
 TEST(UsartIO_DMA, ReadInvalidArgs)
 {
 	char c;
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	
 	/** These tests are enough, don't validate 'internal state' of opaque struct, pointless. **/
 	TEST_ASSERT_EQUAL(-1, UART_IO_Read(0, &c, 1));					/** null handle **/
@@ -171,7 +171,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer)
 	char buf[64];
 	int read;
 	
-	UART_IO_HandleTypeDef huio;	
+	struct uart_device huio;	
 	UARTEX_HandleTypeDef hue;
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -214,7 +214,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	char buf[64];
 	int read;
 
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -268,7 +268,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	char buf[64];
 	int read;
 
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -330,7 +330,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	char buf[64];
 	int read;
 	
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -453,7 +453,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 TEST(UsartIO_DMA, WriteInvalidArgs)
 {
 	char c;
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	
 	TEST_ASSERT_EQUAL(-1, UART_IO_Write(0, &c, 1));
 	TEST_ASSERT_EQUAL(EINVAL, errno);
@@ -472,7 +472,7 @@ TEST(UsartIO_DMA, WriteHalStateTimeoutErrorReset)
 	// HAL_UART_STATE_ERROR are not used in firmware 1.1
 	char c;
 	UARTEX_HandleTypeDef huartex;
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	huio.handle = &huartex;
 	
 	errno = 0;
@@ -526,7 +526,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	int written;
 	
 	///////////////////////////
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -575,7 +575,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	int written;
 	
 	///////////////////////////
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -631,7 +631,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	int written;
 
 	///////////////////////////
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -710,7 +710,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	memset(&s3[sizeof(s1)], 'b', sizeof(s2));
 	
 	///////////////////////////
-	UART_IO_HandleTypeDef huio;
+	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -759,8 +759,8 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 
 TEST(UsartIO_DMA, OpenWhenDeviceNotOpened)
 {
-	UART_IO_HandleTypeDef 	uio;
-	struct file 						file;
+	struct uart_device 	uio = { .rbuf_size = 64, .tbuf_size = 64, };
+	struct file 				file;
 	
 	UART_IO_Open(&uio.dev, &file);
 	

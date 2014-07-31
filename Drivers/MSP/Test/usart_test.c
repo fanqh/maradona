@@ -217,45 +217,52 @@ bool uart_rxdma_linked(UART_HandleTypeDef* huart, DMA_HandleTypeDef* rx)
 //
 static void CreateTestData(void)
 {
-//	UARTEX_Handle_FactoryTypeDef factory;
-//	factory.dma_clk = &DMA_ClockProvider;
-//	factory.gpio_clk = &GPIO_ClockProvider;
-//	factory.registry = &IRQ_HandlerObjectRegistry;
+
+	UARTEX_ConfigTypeDef	cfg =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};
+	
+	UARTEX_ConfigTypeDef	cfg_nodma_noirq =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};	
 	
 	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(
 		&GPIO_ClockProvider,
 		&DMA_ClockProvider,
 		&IRQ_HandlerObjectRegistry,
+		&cfg);
 	
-		&UART2_DefaultConfig,
-		&PD6_As_Uart2Rx_DefaultConfig, 
-		&PD5_As_Uart2Tx_DefaultConfig, 
-		&DMA_Uart2Rx_DefaultConfig,			// &DMA_Handle_Uart2Rx_Default, 
-		&IRQ_Uart2RxDMA_DefaultConfig,	// &IRQ_Handle_Uart2RxDMA_Default, 
-		&DMA_Uart2Tx_DefaultConfig,			// &DMA_Handle_Uart2Tx_Default, 
-		&IRQ_Uart2TxDMA_DefaultConfig,	// &IRQ_Handle_Uart2TxDMA_Default,
-		&IRQ_Uart2_DefaultConfig, //);			// &IRQ_Handle_Uart2_Default);
+//		&UART2_DefaultConfig,
+//		&PD6_As_Uart2Rx_DefaultConfig, 
+//		&PD5_As_Uart2Tx_DefaultConfig, 
+//		&DMA_Uart2Rx_DefaultConfig,				// &DMA_Handle_Uart2Rx_Default, 
+//		&IRQ_Uart2RxDMA_DefaultConfig,		// &IRQ_Handle_Uart2RxDMA_Default, 
+//		&DMA_Uart2Tx_DefaultConfig,				// &DMA_Handle_Uart2Tx_Default, 
+//		&IRQ_Uart2TxDMA_DefaultConfig,		// &IRQ_Handle_Uart2TxDMA_Default,
+//		&IRQ_Uart2_DefaultConfig, //);		// &IRQ_Handle_Uart2_Default);
 
-		&UARTEX_Ops_DefaultConfig);
+//		&UARTEX_Ops_DefaultConfig);
 	
 		
 	
 	HUARTEX = UARTEX_Handle_FactoryCreate(
-		// &factory, 
 		&GPIO_ClockProvider,
 		&DMA_ClockProvider,
 		&IRQ_HandlerObjectRegistry,
-		
-		&UART2_DefaultConfig,
-		&PD6_As_Uart2Rx_DefaultConfig, 
-		&PD5_As_Uart2Tx_DefaultConfig, 
-		NULL, 
-		NULL, 
-		NULL, 
-		NULL, 
-		NULL,
-		
-		&UARTEX_Ops_DefaultConfig);	
+		&cfg_nodma_noirq);
 	
 	assert_param(HUARTEX_DMA);
 	assert_param(HUARTEX);
@@ -394,29 +401,43 @@ TEST(UARTEX_Handle, FactoryCreate)
 //	dma_factory.reg = factory.registry;
 	
 	// const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
-	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
-	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
-	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
-	const DMA_ConfigTypeDef* dmarx_config = &DMA_Uart2Rx_DefaultConfig;
-	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
-	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
-	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
-	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
-	
+//	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
+//	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
+//	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
+//	const DMA_ConfigTypeDef* dmarx_config = &DMA_Uart2Rx_DefaultConfig;
+//	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
+//	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
+//	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
+//	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
+
+	UARTEX_ConfigTypeDef	cfg =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};
+
 	h = UARTEX_Handle_FactoryCreate( // &factory, 
 		&GPIO_ClockProvider,	
 		&DMA_ClockProvider,
 		&IRQ_HandlerObjectRegistry,
-		
-		uart_config, 
-		rxpin, 
-		txpin, 
-		dmarx_config, 		/**	hdmarx, 		**/
-		dmarx_irq_config,	/** hirq_dmarx, **/
-		dmatx_config, 		/** hdmatx, 		**/
-		dmatx_irq_config, /** hirq_dmatx, **/ 
-		uart_irq_config, //);	/** hirq_uart); **/
-		&UARTEX_Ops_DefaultConfig);
+		&cfg);
+	
+//		uart_config, 
+//		rxpin, 
+//		txpin, 
+//		dmarx_config, 		/**	hdmarx, 		**/
+//		dmarx_irq_config,	/** hirq_dmarx, **/
+//		dmatx_config, 		/** hdmatx, 		**/
+//		dmatx_irq_config, /** hirq_dmatx, **/ 
+//		uart_irq_config, //);	/** hirq_uart); **/
+//		&UARTEX_Ops_DefaultConfig);
 		
 	TEST_ASSERT_NOT_NULL(h);
 	if (h) {
@@ -424,36 +445,36 @@ TEST(UARTEX_Handle, FactoryCreate)
 		TEST_ASSERT_NOT_NULL(h->hdmaex_rx);
 		if (h->hdmaex_rx)
 		{
-			TEST_ASSERT_EQUAL_HEX32(dmarx_config->Instance, h->hdmaex_rx->hdma.Instance);
-			TEST_ASSERT_EQUAL(dmarx_irq_config->irqn, h->hdmaex_rx->hirq->irqn);
+			TEST_ASSERT_EQUAL_HEX32(cfg.dmarx->Instance, h->hdmaex_rx->hdma.Instance);
+			TEST_ASSERT_EQUAL(cfg.dmarx_irq->irqn, h->hdmaex_rx->hirq->irqn);
 		}
 		
 		TEST_ASSERT_NOT_NULL(h->hdmaex_tx);
 		if (h->hdmaex_tx)
 		{
-			TEST_ASSERT_EQUAL_HEX32(dmatx_config->Instance, h->hdmaex_tx->hdma.Instance);
-			TEST_ASSERT_EQUAL(dmatx_irq_config->irqn, h->hdmaex_tx->hirq->irqn);
+			TEST_ASSERT_EQUAL_HEX32(cfg.dmatx->Instance, h->hdmaex_tx->hdma.Instance);
+			TEST_ASSERT_EQUAL(cfg.dmatx_irq->irqn, h->hdmaex_tx->hirq->irqn);
 		}
 		
 		TEST_ASSERT_NOT_NULL(h->rxpin);
 		
 		if (h->rxpin)
 		{
-			TEST_ASSERT_EQUAL(rxpin->instance, h->rxpin->instance);
-			TEST_ASSERT_EQUAL(rxpin->init.Pin, h->rxpin->init.Pin);
+			TEST_ASSERT_EQUAL(cfg.rxpin->instance, h->rxpin->instance);
+			TEST_ASSERT_EQUAL(cfg.rxpin->init.Pin, h->rxpin->init.Pin);
 		}
 		
 		TEST_ASSERT_NOT_NULL(h->txpin);
 		if (h->txpin)
 		{
-			TEST_ASSERT_EQUAL(txpin->instance, h->txpin->instance);
-			TEST_ASSERT_EQUAL(txpin->init.Pin, h->txpin->init.Pin);
+			TEST_ASSERT_EQUAL(cfg.txpin->instance, h->txpin->instance);
+			TEST_ASSERT_EQUAL(cfg.txpin->init.Pin, h->txpin->init.Pin);
 		}
 		
 		TEST_ASSERT_NOT_NULL(h->hirq);
 		if (h->hirq)
 		{
-			TEST_ASSERT_EQUAL(uart_irq_config->irqn, h->hirq->irqn);
+			TEST_ASSERT_EQUAL(cfg.uart_irq->irqn, h->hirq->irqn);
 		}
 		
 //		TEST_ASSERT_NOT_NULL(h->ops);
@@ -463,7 +484,7 @@ TEST(UARTEX_Handle, FactoryCreate)
 //		}
 		TEST_ASSERT_EQUAL_MEMORY(&UARTEX_Ops_DefaultConfig, &h->ops, sizeof(h->ops));
 		
-		TEST_ASSERT_EQUAL(uart_config->Instance, h->huart.Instance);
+		TEST_ASSERT_EQUAL(cfg.uart->Instance, h->huart.Instance);
 		
 	
 		DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
@@ -484,22 +505,35 @@ TEST(UARTEX_Handle, FactoryCreateWithInvalidFactory)
 	DMA_ClockProviderTypeDef* dma_clk = &DMA_ClockProvider;
 	IRQ_HandleRegistryTypeDef* irq_registry =	&IRQ_HandlerObjectRegistry;
 
-	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
-	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
-	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
+	UARTEX_ConfigTypeDef	cfg =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};
+	
+//	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
+//	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
+//	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
 
-	const DMA_ConfigTypeDef* dmarx_config = &DMA_Uart2Rx_DefaultConfig;
-	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
-	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
-	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
-	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
-	const struct UARTEX_Operations* uart_ops = &UARTEX_Ops_DefaultConfig;
+//	const DMA_ConfigTypeDef* dmarx_config = &DMA_Uart2Rx_DefaultConfig;
+//	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
+//	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
+//	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
+//	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
+//	const struct UARTEX_Operations* uart_ops = &UARTEX_Ops_DefaultConfig;
 	
 	// fac.dma_clk = NULL;
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, dmarx_irq_config, hdmatx, dmatx_irq_config, hirq_uart);
-	h = UARTEX_Handle_FactoryCreate(NULL, dma_clk, irq_registry, 
-		uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, uart_ops);
+	h = UARTEX_Handle_FactoryCreate(NULL, dma_clk, irq_registry, &cfg);
+		// uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, uart_ops);
 	TEST_ASSERT_NULL(h);
 	
 //	fac = factory;
@@ -507,8 +541,8 @@ TEST(UARTEX_Handle, FactoryCreateWithInvalidFactory)
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, dmarx_irq_config, hdmatx, dmatx_irq_config, hirq_uart);
 //	h = UARTEX_Handle_FactoryCreate(&fac, uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config);
-	h = UARTEX_Handle_FactoryCreate(gpio_clk, NULL, irq_registry, 
-		uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, uart_ops);
+	h = UARTEX_Handle_FactoryCreate(gpio_clk, NULL, irq_registry, &cfg);
+		// uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, uart_ops);
 
 	TEST_ASSERT_NULL(h);
 
@@ -517,8 +551,8 @@ TEST(UARTEX_Handle, FactoryCreateWithInvalidFactory)
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, dmarx_irq_config, hdmatx, dmatx_irq_config, hirq_uart);
 	// h = UARTEX_Handle_FactoryCreate(&fac, uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config);
-	h = UARTEX_Handle_FactoryCreate(gpio_clk, dma_clk, NULL, 
-		uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, uart_ops);
+	h = UARTEX_Handle_FactoryCreate(gpio_clk, dma_clk, NULL, &cfg);
+		// uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, uart_ops);
 
 	TEST_ASSERT_NULL(h);
 
@@ -527,8 +561,8 @@ TEST(UARTEX_Handle, FactoryCreateWithInvalidFactory)
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, hirq_dmarx, hdmatx, hirq_dmatx, hirq_uart);
 	// h = UARTEX_Handle_FactoryCreate(&fac, huart, rxpin, txpin, hdmarx, dmarx_irq_config, hdmatx, dmatx_irq_config, hirq_uart);
 //	h = UARTEX_Handle_FactoryCreate(&fac, uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config);
-	h = UARTEX_Handle_FactoryCreate(gpio_clk, dma_clk, irq_registry, 
-		uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, NULL);
+	h = UARTEX_Handle_FactoryCreate(gpio_clk, dma_clk, irq_registry, NULL);
+		// uart_config, rxpin, txpin, dmarx_config, dmarx_irq_config, dmatx_config, dmatx_irq_config, uart_irq_config, NULL);
 
 	TEST_ASSERT_NULL(h);
 }
@@ -540,24 +574,24 @@ TEST(UARTEX_Handle, FactoryCreateWithoutDMAIRQ)
 	GPIO_ClockProviderTypeDef* gpio_clk = &GPIO_ClockProvider;
 	DMA_ClockProviderTypeDef* dma_clk = &DMA_ClockProvider;
 	IRQ_HandleRegistryTypeDef* irq_registry =	&IRQ_HandlerObjectRegistry;	
-	
-//	UARTEX_Handle_FactoryTypeDef factory;
+
+	UARTEX_ConfigTypeDef	cfg_nodma_noirq =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};		
+
+//	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
+//	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
+//	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
 //	
-//	factory.dma_clk = &DMA_ClockProvider;
-//	factory.gpio_clk = &GPIO_ClockProvider;
-//	factory.registry = &IRQ_HandlerObjectRegistry;
-//	factory.uart_ops = &UARTEX_Ops_Default;
-	
-	// const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
-	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
-	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
-	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
-	
-	const struct UARTEX_Operations* uart_ops = &UARTEX_Ops_DefaultConfig;
+//	const struct UARTEX_Operations* uart_ops = &UARTEX_Ops_DefaultConfig;
 	
 	h = UARTEX_Handle_FactoryCreate( /** &factory, **/
-		gpio_clk, dma_clk, irq_registry, 
-		uart_config, rxpin, txpin, NULL, NULL, NULL, NULL, NULL, uart_ops);
+		gpio_clk, dma_clk, irq_registry, &cfg_nodma_noirq);
+//	uart_config, rxpin, txpin, NULL, NULL, NULL, NULL, NULL, uart_ops);
 	
 	TEST_ASSERT_NOT_NULL(h);
 	if (h) {
@@ -581,7 +615,20 @@ TEST(UARTEX_Handle, FactoryDestroy)
 	DMA_ClockProviderTypeDef* dma_clk = &DMA_ClockProvider;
 	IRQ_HandleRegistryTypeDef* irq_registry =	&IRQ_HandlerObjectRegistry;	
 	
-	const struct UARTEX_Operations* uart_ops = &UARTEX_Ops_DefaultConfig;
+	UARTEX_ConfigTypeDef	cfg =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};	
+	
+//	const struct UARTEX_Operations* uart_ops = &UARTEX_Ops_DefaultConfig;
 	
 //	UARTEX_Handle_FactoryTypeDef factory;
 //	
@@ -589,24 +636,23 @@ TEST(UARTEX_Handle, FactoryDestroy)
 //	factory.gpio_clk = &GPIO_ClockProvider;
 //	factory.registry = &IRQ_HandlerObjectRegistry;
 	
-	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
-	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
-	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
-	const DMA_ConfigTypeDef* dmarx_config = &DMA_Uart2Rx_DefaultConfig;
-	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
-	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
-	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
-	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
+//	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
+//	const GPIO_ConfigTypeDef* rxpin = &PD6_As_Uart2Rx_DefaultConfig;
+//	const GPIO_ConfigTypeDef* txpin = &PD5_As_Uart2Tx_DefaultConfig;
+//	const DMA_ConfigTypeDef* dmarx_config = &DMA_Uart2Rx_DefaultConfig;
+//	const IRQ_ConfigTypeDef* dmarx_irq_config = &IRQ_Uart2RxDMA_DefaultConfig;
+//	const DMA_ConfigTypeDef* dmatx_config = &DMA_Uart2Tx_DefaultConfig;
+//	const IRQ_ConfigTypeDef* dmatx_irq_config = &IRQ_Uart2TxDMA_DefaultConfig;
+//	const IRQ_ConfigTypeDef* uart_irq_config = &IRQ_Uart2_DefaultConfig;
 	
-	h = UARTEX_Handle_FactoryCreate(
-		gpio_clk, dma_clk, irq_registry, 
-		uart_config, rxpin, txpin, 
-		dmarx_config,			/** hdmarx, 		**/
-		dmarx_irq_config, /** hirq_dmarx, **/
-		dmatx_config, 		/**	hdmatx, 		**/
-		dmatx_irq_config, /** hirq_dmatx, **/
-		uart_irq_config, 
-		uart_ops);
+	h = UARTEX_Handle_FactoryCreate(gpio_clk, dma_clk, irq_registry, &cfg);
+//		uart_config, rxpin, txpin, 
+//		dmarx_config,			/** hdmarx, 		**/
+//		dmarx_irq_config, /** hirq_dmarx, **/
+//		dmatx_config, 		/**	hdmatx, 		**/
+//		dmatx_irq_config, /** hirq_dmatx, **/
+//		uart_irq_config, 
+//		uart_ops);
 	
 	UARTEX_Handle_FactoryDestroy(h);
 }
@@ -635,22 +681,36 @@ TEST_SETUP(UART_DMA_TxRx)
 //	factory.dma_clk = &DMA_ClockProvider;
 //	factory.gpio_clk = &GPIO_ClockProvider;
 //	factory.registry = &IRQ_HandlerObjectRegistry;
+	
+	UARTEX_ConfigTypeDef	cfg =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};	
 
 	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(
 		&GPIO_ClockProvider,
 		&DMA_ClockProvider,
 		&IRQ_HandlerObjectRegistry,
+		&cfg);
 	
-		&UART2_DefaultConfig,						/** &UART_Handle_Uart2_Default, 		**/
-		&PD6_As_Uart2Rx_DefaultConfig, 
-		&PD5_As_Uart2Tx_DefaultConfig, 
-		&DMA_Uart2Rx_DefaultConfig,			/** &DMA_Handle_Uart2Rx_Default, 		**/
-		&IRQ_Uart2RxDMA_DefaultConfig, 	/** &IRQ_Handle_Uart2RxDMA_Default, **/
-		&DMA_Uart2Tx_DefaultConfig,			/** &DMA_Handle_Uart2Tx_Default, 		**/
-		&IRQ_Uart2TxDMA_DefaultConfig, 	/** &IRQ_Handle_Uart2TxDMA_Default, **/
-		&IRQ_Uart2_DefaultConfig,				/**				);												**/
-		
-		&UARTEX_Ops_DefaultConfig);
+//		&UART2_DefaultConfig,						/** &UART_Handle_Uart2_Default, 		**/
+//		&PD6_As_Uart2Rx_DefaultConfig, 
+//		&PD5_As_Uart2Tx_DefaultConfig, 
+//		&DMA_Uart2Rx_DefaultConfig,			/** &DMA_Handle_Uart2Rx_Default, 		**/
+//		&IRQ_Uart2RxDMA_DefaultConfig, 	/** &IRQ_Handle_Uart2RxDMA_Default, **/
+//		&DMA_Uart2Tx_DefaultConfig,			/** &DMA_Handle_Uart2Tx_Default, 		**/
+//		&IRQ_Uart2TxDMA_DefaultConfig, 	/** &IRQ_Handle_Uart2TxDMA_Default, **/
+//		&IRQ_Uart2_DefaultConfig,				/**				);												**/
+//		
+//		&UARTEX_Ops_DefaultConfig);
 	
 	HAL_UART_Init(HUART_DMA);	
 }

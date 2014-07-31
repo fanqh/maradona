@@ -131,25 +131,14 @@ typedef struct
 	const DMA_ConfigTypeDef* dmatx;
 	const IRQ_ConfigTypeDef* dmatx_irq;
 	const IRQ_ConfigTypeDef* uart_irq;
-	
 	const struct UARTEX_Operations* uartex_ops;
+	
 } UARTEX_ConfigTypeDef;	
 
-UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	// const UARTEX_Handle_FactoryTypeDef* factory,
-																										GPIO_ClockProviderTypeDef* 	gpio_clk,
+UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 	gpio_clk,
 																										DMA_ClockProviderTypeDef*		dma_clk,
 																										IRQ_HandleRegistryTypeDef*	irq_registry,
-																										
-																										const UART_ConfigTypeDef* uart_config,	
-																										const GPIO_ConfigTypeDef* rxpin_config,
-																										const GPIO_ConfigTypeDef* txpin_config,		
-																										const DMA_ConfigTypeDef* dmarx_config,
-																										const IRQ_ConfigTypeDef* dmarx_irq_config,
-																										const DMA_ConfigTypeDef* dmatx_config,
-																										const IRQ_ConfigTypeDef* dmatx_irq_config,
-																										const IRQ_ConfigTypeDef* uart_irq_config,
-																										const struct UARTEX_Operations* uartex_ops	
-																										);
+																										const UARTEX_ConfigTypeDef* uartex_configs);
 																										
 void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h);																										
 

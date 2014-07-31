@@ -5,6 +5,7 @@
 #include "configuration.h"
 #include "stm32f4xx_hal.h"
 #include "usart.h"
+#include "msp.h"
 #include "devicefs.h"
 
 /** 
@@ -24,44 +25,46 @@ what is the configuration? is it configured by external file or hard coded?
 Think about yourself as a USER, not an OWNER. Do one thing, Do it well!
 
 **/
-typedef struct {
+struct uart_device {
 	
 	struct device						dev;
 	
+	MSP_TypeDef							*msp;
 	UARTEX_HandleTypeDef		*handle;
 	
 	char										*rbuf[2];		/** two pointers **/
-	int											rbuf_size;
+	const int								rbuf_size;
 	
 	char										*rx_upper;
 	char 										*rx_head;
 	char										*rx_tail;	
 	
 	char										*tbuf[2];		/** two pointers **/
-	int 										tbuf_size;
+	const int 							tbuf_size;
 	
 	char										*tx_head;
 	char										*tx_tail;
 	
-} UART_IO_HandleTypeDef;
+	int											open_count;
+};
 
 /** tested **/
-int 									UART_IO_Read(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
-int 									UART_IO_Write(UART_IO_HandleTypeDef* handle, char* buffer, size_t size);
+int 									UART_IO_Read(struct uart_device * udev, char* buffer, size_t size);
+int 									UART_IO_Write(struct uart_device * udev, char* buffer, size_t size);
 
 /** working **/
-int 									UART_IO_Open(struct device *, struct file *);
+int 									UART_IO_Open(struct device * udev, struct file * file);
 
 /** not tested yet **/
 void									UART_IO_DeInitAll(void);
 void 									UART_IO_Task(void);
 
-int										UART_IO_FlushRx(UART_IO_HandleTypeDef* uio);
+int										UART_IO_FlushRx(struct uart_device* udev);
 
-int										UART_IO_FlushTx(UART_IO_HandleTypeDef* uio);
-int 									UART_IO_Close(UART_IO_HandleTypeDef* uio);
+int										UART_IO_FlushTx(struct uart_device* uio);
+int 									UART_IO_Close(struct uart_device* uio);
 
-//UART_HandleTypeDef*			UART_IO_GetUartHandle(UART_IO_HandleTypeDef* h);
+//UART_HandleTypeDef*			UART_IO_GetUartHandle(uart_device* h);
 //UART_HandleTypeDef*			UART_IO_GetUartHandleByPort(int num);
 
 

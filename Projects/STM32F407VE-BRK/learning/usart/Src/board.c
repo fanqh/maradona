@@ -99,6 +99,8 @@ static void RunAllTests(void)
 	RUN_TEST_GROUP(UART_All_HD);
 
 	RUN_TEST_GROUP(UsartIO_DMA);
+	
+	RUN_TEST_GROUP(MSP);
 }
 
 void board_init(void)

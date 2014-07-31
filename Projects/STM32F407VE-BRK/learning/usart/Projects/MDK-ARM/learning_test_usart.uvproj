@@ -419,6 +419,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Src\main.c</FilePath>
             </File>
+            <File>
+              <FileName>board_config.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\BSP\STM32F407VE-BRK\Src\board_config.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -478,6 +483,11 @@
               <FileName>msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\msp.c</FilePath>
+            </File>
+            <File>
+              <FileName>msp_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\msp_test.c</FilePath>
             </File>
           </Files>
         </Group>
