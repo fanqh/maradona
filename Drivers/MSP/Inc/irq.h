@@ -8,13 +8,13 @@ typedef struct
 {
 	void* irqh_obj[FPU_IRQn + 1];
 	
-} IRQ_HandlerObjectRegistryTypeDef;
+} IRQ_HandleRegistryTypeDef;
 
-extern IRQ_HandlerObjectRegistryTypeDef IRQ_HandlerObjectRegistry;
+extern IRQ_HandleRegistryTypeDef IRQ_HandlerObjectRegistry;
 
-void 	IRQ_HandlerObject_Register(IRQ_HandlerObjectRegistryTypeDef* obj, IRQn_Type irqn, void* p);
-void 	IRQ_HandlerObject_Unregister(IRQ_HandlerObjectRegistryTypeDef* obj, IRQn_Type irqn);
-void*	IRQ_HandlerObject_Get(IRQ_HandlerObjectRegistryTypeDef* obj, IRQn_Type irqn);
+void 	IRQ_HandlerObject_Register(IRQ_HandleRegistryTypeDef* obj, IRQn_Type irqn, void* p);
+void 	IRQ_HandlerObject_Unregister(IRQ_HandleRegistryTypeDef* obj, IRQn_Type irqn);
+void*	IRQ_HandlerObject_Get(IRQ_HandleRegistryTypeDef* obj, IRQn_Type irqn);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ typedef struct
 	uint32_t 														preempt_priority;
 	uint32_t 														sub_priority;
 	
-	IRQ_HandlerObjectRegistryTypeDef*		registry;
+	IRQ_HandleRegistryTypeDef*		registry;
 	
 	/** these are runtime states		**/
 	void*																irqh_obj;
@@ -49,9 +49,9 @@ typedef struct
 } IRQ_HandleTypeDef;	
 
 /** ctor, allocate object on heap **/
-IRQ_HandleTypeDef * IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandlerObjectRegistryTypeDef* registry);
-IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandlerObjectRegistryTypeDef* registry);
-IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandlerObjectRegistryTypeDef* registry);
+IRQ_HandleTypeDef * IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandleRegistryTypeDef* registry);
+IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry);
+IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry);
 void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle);
 
 /** exported functions **/

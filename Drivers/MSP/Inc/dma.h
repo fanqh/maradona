@@ -59,21 +59,21 @@ void	DMAEX_DeInit(DMAEX_HandleTypeDef* dmaex);
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef struct {
-	
-	DMA_ClockProviderTypeDef							*clk;
-	IRQ_HandlerObjectRegistryTypeDef			*reg;
-	
-} DMAEX_Handle_FactoryTypeDef;
+//typedef struct {
+//	
+//	DMA_ClockProviderTypeDef			*clk;
+//	IRQ_HandleRegistryTypeDef			*reg;
+//	
+//} DMAEX_Handle_FactoryTypeDef;
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
-																									// const DMA_HandleTypeDef* hdma,
-																									const DMA_ConfigTypeDef* dma_config,
-																									// const IRQ_HandleTypeDef* hirq);
-																									const IRQ_ConfigTypeDef*	irq_config);
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	// DMAEX_Handle_FactoryTypeDef* factory, 
+																									DMA_ClockProviderTypeDef			*dma_clk,
+																									IRQ_HandleRegistryTypeDef			*irq_registry,
+																									const DMA_ConfigTypeDef				*dma_config,
+																									const IRQ_ConfigTypeDef				*irq_config);
 																						
 /** the factory isn't really required in impl. pass it for user not calling the wrong factory **/																									
-void DMAEX_Handle_FactoryDestroy(DMAEX_Handle_FactoryTypeDef* factory, DMAEX_HandleTypeDef* handle);																									
+void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle);																									
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

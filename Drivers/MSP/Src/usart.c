@@ -386,9 +386,9 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	IRQ_HandleTypeDef* irqH = NULL;
 	UARTEX_HandleTypeDef* h = NULL;
 
-	DMAEX_Handle_FactoryTypeDef dma_factory;
-	dma_factory.clk = factory->dma_clk;
-	dma_factory.reg = factory->registry;
+//	DMAEX_Handle_FactoryTypeDef dma_factory;
+//	dma_factory.clk = factory->dma_clk;
+//	dma_factory.reg = factory->registry;
 
 	if (factory->dma_clk == NULL ||
 			factory->gpio_clk == NULL ||
@@ -408,7 +408,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	// if (hdmarx && dmarx_irq_config)
 	if (dmarx_config && dmarx_irq_config)
 	{
-		dmaExRxH = DMAEX_Handle_FactoryCreate(&dma_factory, dmarx_config, /** hdmarx, **/ dmarx_irq_config);
+		dmaExRxH = DMAEX_Handle_FactoryCreate(factory->dma_clk, factory->registry, dmarx_config, /** hdmarx, **/ dmarx_irq_config);
 		if (dmaExRxH == NULL)
 			goto fail2;
 	}
@@ -416,7 +416,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	// if (hdmatx && dmatx_irq_config)
 	if (dmatx_config && dmatx_irq_config)
 	{
-		dmaExTxH = DMAEX_Handle_FactoryCreate(&dma_factory, dmatx_config, /** hdmatx, **/ dmatx_irq_config);
+		dmaExTxH = DMAEX_Handle_FactoryCreate(factory->dma_clk, factory->registry, dmatx_config, /** hdmatx, **/ dmatx_irq_config);
 		if (dmaExTxH == NULL)
 			goto fail3;
 	}
@@ -437,8 +437,8 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 	return h;
 	
 	fail5:	if (uart_irq_config) IRQ_Handle_Dtor(irqH);
-	fail4:	if (dmarx_config && dmatx_irq_config) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExTxH);
-	fail3:	if (dmatx_config && dmarx_irq_config) DMAEX_Handle_FactoryDestroy(&dma_factory, dmaExRxH);
+	fail4:	if (dmarx_config && dmatx_irq_config) DMAEX_Handle_FactoryDestroy(dmaExTxH);
+	fail3:	if (dmatx_config && dmarx_irq_config) DMAEX_Handle_FactoryDestroy(dmaExRxH);
 	fail2: 	GPIOEX_Dtor(txpinH);
 	fail1:	GPIOEX_Dtor(rxpinH);
 	fail0:	return NULL;
@@ -446,13 +446,13 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	const UARTEX_Handle_FactoryTy
 
 void UARTEX_Handle_FactoryDestroy(const UARTEX_Handle_FactoryTypeDef* factory, UARTEX_HandleTypeDef* h)
 {
-	DMAEX_Handle_FactoryTypeDef	dma_factory;
+//	DMAEX_Handle_FactoryTypeDef	dma_factory;
+//	
+//	dma_factory.clk = factory->dma_clk;
+//	dma_factory.reg = factory->registry;	
 	
-	dma_factory.clk = factory->dma_clk;
-	dma_factory.reg = factory->registry;	
-	
-	DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_rx);
-	DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_tx);
+	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
+	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
 	GPIOEX_Dtor(h->rxpin);
 	GPIOEX_Dtor(h->txpin);
 	IRQ_Handle_Dtor(h->hirq);

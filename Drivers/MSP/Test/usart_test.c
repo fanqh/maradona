@@ -224,7 +224,6 @@ static void CreateTestData(void)
 	
 	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(
 		&factory, 
-		// &UART_Handle_Uart2_Default, 
 		&UART2_DefaultConfig,
 		&PD6_As_Uart2Rx_DefaultConfig, 
 		&PD5_As_Uart2Tx_DefaultConfig, 
@@ -236,7 +235,6 @@ static void CreateTestData(void)
 	
 	HUARTEX = UARTEX_Handle_FactoryCreate(
 		&factory, 
-		// &UART_Handle_Uart2_Default, 
 		&UART2_DefaultConfig,
 		&PD6_As_Uart2Rx_DefaultConfig, 
 		&PD5_As_Uart2Tx_DefaultConfig, 
@@ -307,7 +305,6 @@ TEST(UARTEX_Handle, CtorByConfig)
 	UART_ConfigTypeDef config;
 	memset(&config, 0xA5, sizeof(config));
 	
-	// h = UARTEX_Handle_Ctor(USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
 	h = UARTEX_Handle_CtorByConfig(&config, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
 	
 	TEST_ASSERT_NOT_NULL(h);
@@ -368,15 +365,15 @@ TEST(UARTEX_Handle, FactoryCreate)
 {
 	UARTEX_HandleTypeDef* h;
 	UARTEX_Handle_FactoryTypeDef factory;
-	DMAEX_Handle_FactoryTypeDef	dma_factory;
+//	DMAEX_Handle_FactoryTypeDef	dma_factory;
 	
 	factory.dma_clk = &DMA_ClockProvider;
 	factory.gpio_clk = &GPIO_ClockProvider;
 	factory.registry = &IRQ_HandlerObjectRegistry;
 	factory.uart_ops = &UARTEX_Ops_Default;
 	
-	dma_factory.clk = factory.dma_clk;
-	dma_factory.reg = factory.registry;
+//	dma_factory.clk = factory.dma_clk;
+//	dma_factory.reg = factory.registry;
 	
 	// const UART_HandleTypeDef* huart = &UART_Handle_Uart2_Default;
 	const UART_ConfigTypeDef* uart_config = &UART2_DefaultConfig;
@@ -442,8 +439,8 @@ TEST(UARTEX_Handle, FactoryCreate)
 		TEST_ASSERT_EQUAL(uart_config->Instance, h->huart.Instance);
 		
 	
-		DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_rx);
-		DMAEX_Handle_FactoryDestroy(&dma_factory, h->hdmaex_tx);
+		DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
+		DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
 		GPIOEX_Dtor(h->rxpin);
 		GPIOEX_Dtor(h->txpin);
 		IRQ_Handle_Dtor(h->hirq);

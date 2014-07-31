@@ -112,7 +112,7 @@ void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					
 typedef struct 
 {
-	IRQ_HandlerObjectRegistryTypeDef* registry;
+	IRQ_HandleRegistryTypeDef* registry;
 	DMA_ClockProviderTypeDef*					dma_clk;
 	GPIO_ClockProviderTypeDef*				gpio_clk;
 	

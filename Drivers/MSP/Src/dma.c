@@ -216,22 +216,27 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config,
 	return DMAEX_Handle_Ctor(config->Instance, &config->Init, clk, hirq);
 }
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
-																									// const DMA_HandleTypeDef* hdma,
-																									const DMA_ConfigTypeDef* dma_config,
-																									// const IRQ_HandleTypeDef* hirq)
-																									const IRQ_ConfigTypeDef* irq_config)
+//DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
+//																									// const DMA_HandleTypeDef* hdma,
+//																									const DMA_ConfigTypeDef* dma_config,
+//																									// const IRQ_HandleTypeDef* hirq)
+//																									const IRQ_ConfigTypeDef* irq_config)
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	// DMAEX_Handle_FactoryTypeDef* factory, 
+																									DMA_ClockProviderTypeDef			*dma_clk,
+																									IRQ_HandleRegistryTypeDef			*irq_registry,
+																									const DMA_ConfigTypeDef				*dma_config,
+																									const IRQ_ConfigTypeDef				*irq_config)
 {
 	DMAEX_HandleTypeDef* dmaExH;
 	IRQ_HandleTypeDef* irqH;
 	
 	// irqH = IRQ_Handle_Ctor_By_Template(hirq, factory->reg);
-	irqH = IRQ_Handle_CtorByConfig(irq_config, factory->reg);
+	irqH = IRQ_Handle_CtorByConfig(irq_config, irq_registry);
 	if (irqH == NULL)
 		return NULL;
 	
 	// dmaExH = DMAEX_Handle_Ctor(hdma->Instance, &hdma->Init, factory->clk, irqH);
-	dmaExH = DMAEX_Handle_CtorByConfig(dma_config, factory->clk, irqH);
+	dmaExH = DMAEX_Handle_CtorByConfig(dma_config, dma_clk, irqH);
 	if (dmaExH == NULL)
 	{
 		IRQ_Handle_Dtor(irqH);
@@ -241,7 +246,7 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* fa
 	return dmaExH;
 }
 
-void DMAEX_Handle_FactoryDestroy(DMAEX_Handle_FactoryTypeDef* factory, DMAEX_HandleTypeDef* handle)
+void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle)
 {
 	if (handle)
 	{

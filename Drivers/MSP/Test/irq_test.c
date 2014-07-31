@@ -16,7 +16,7 @@ TEST(IRQ_HandlerObjectRegistry, IRQ_HandlerObject_Register)
 {
 	IRQn_Type irqn = USART2_IRQn;	// 38
 	void* p = (void*)(&irqn);
-	IRQ_HandlerObjectRegistryTypeDef data;
+	IRQ_HandleRegistryTypeDef data;
 	memset(&data, 0, sizeof(data));
 	
 	IRQ_HandlerObject_Register(&data, irqn, p);
@@ -27,7 +27,7 @@ TEST(IRQ_HandlerObjectRegistry, IRQ_HandlerObject_Unregister)
 {
 	IRQn_Type irqn = USART2_IRQn;
 	void* p = (void*)(&irqn);
-	IRQ_HandlerObjectRegistryTypeDef registry;
+	IRQ_HandleRegistryTypeDef registry;
 	memset(&registry, 0, sizeof(registry));
 	IRQ_HandlerObject_Register(&registry, irqn, p);
 	
@@ -65,7 +65,7 @@ TEST_TEAR_DOWN(IRQ_Handle)
 TEST(IRQ_Handle, IRQ_Init)
 {
 	IRQ_HandleTypeDef 									handle;
-	IRQ_HandlerObjectRegistryTypeDef		registry;
+	IRQ_HandleRegistryTypeDef		registry;
 	int																	irqh_obj;
 	
 	memset(&handle, 0, sizeof(handle));
@@ -86,7 +86,7 @@ TEST(IRQ_Handle, IRQ_Init)
 TEST(IRQ_Handle, IRQ_DeInit)
 {
 	IRQ_HandleTypeDef 									handle;
-	IRQ_HandlerObjectRegistryTypeDef		registry;
+	IRQ_HandleRegistryTypeDef		registry;
 	int																	hdata;
 	
 	memset(&handle, 0, sizeof(handle));
@@ -107,7 +107,7 @@ TEST(IRQ_Handle, IRQ_DeInit)
 
 TEST(IRQ_Handle, Ctor)
 {
-	IRQ_HandlerObjectRegistryTypeDef fake;
+	IRQ_HandleRegistryTypeDef fake;
 	IRQ_HandleTypeDef* h = IRQ_Handle_Ctor(USART2_IRQn, 2, 3, &fake);
 	
 	TEST_ASSERT_NOT_NULL(h);
@@ -125,7 +125,7 @@ const extern IRQ_HandleTypeDef IRQ_Handle_Uart2_Default;
 
 TEST(IRQ_Handle, CtorByTemplate)
 {
-	IRQ_HandlerObjectRegistryTypeDef fake;
+	IRQ_HandleRegistryTypeDef fake;
 	const IRQ_HandleTypeDef* dfl = &IRQ_Handle_Uart2_Default;
 	
 	IRQ_HandleTypeDef* h = IRQ_Handle_Ctor_By_Template(dfl, &fake);
@@ -142,7 +142,7 @@ TEST(IRQ_Handle, CtorByTemplate)
 
 TEST(IRQ_Handle, CtorByConfig)
 {
-	IRQ_HandlerObjectRegistryTypeDef fake;
+	IRQ_HandleRegistryTypeDef fake;
 	
 	IRQ_HandleTypeDef* h = IRQ_Handle_CtorByConfig(&IRQ_Uart2_DefaultConfig, &fake);
 	TEST_ASSERT_NOT_NULL(h);

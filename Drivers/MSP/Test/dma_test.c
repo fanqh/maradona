@@ -89,7 +89,7 @@ TEST_GROUP_RUNNER(DMA_Clock)
 //typedef struct {
 //	
 //	DMA_ClockProviderTypeDef							*clk;
-//	IRQ_HandlerObjectRegistryTypeDef			*reg;
+//	IRQ_HandleRegistryTypeDef			*reg;
 //	
 //} DMAEX_Handle_FactoryTypeDef;
 
@@ -186,9 +186,9 @@ TEST(DMAEX_Handle, Dtor)
 
 TEST(DMAEX_Handle, FactoryCreate)
 {
-	DMA_ClockProviderTypeDef					clk;
-	IRQ_HandlerObjectRegistryTypeDef	registry;
-	DMAEX_Handle_FactoryTypeDef 			factory;
+	DMA_ClockProviderTypeDef			clk;
+	IRQ_HandleRegistryTypeDef			registry;
+//	DMAEX_Handle_FactoryTypeDef 			factory;
 	
 // 	DMA_HandleTypeDef									hdma;
 	DMA_ConfigTypeDef									dma_config;
@@ -201,18 +201,18 @@ TEST(DMAEX_Handle, FactoryCreate)
 	// memset(&hirq, 0xB5, sizeof(hirq));
 	memset(&irq_config, 0xB5, sizeof(irq_config));
 	
-	factory.clk = &clk;
-	factory.reg = &registry;
+//	factory.clk = &clk;
+//	factory.reg = &registry;
 	
 	//	hirq.state = IRQ_HANDLE_STATE_RESET;
 	// irq_config.irqn = 0;
 	
 	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &hirq);
 	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &irq_config);
-	h = DMAEX_Handle_FactoryCreate(&factory, &dma_config, &irq_config);
+	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
 	
 	TEST_ASSERT_NOT_NULL(h);
-	TEST_ASSERT_EQUAL_HEX32(factory.clk, h->clk);
+	TEST_ASSERT_EQUAL_HEX32(&clk, h->clk);
 	
 	TEST_ASSERT_EQUAL_HEX32(dma_config.Instance, h->hdma.Instance);
 	TEST_ASSERT_EQUAL_MEMORY(&dma_config.Init, &h->hdma.Init, sizeof(DMA_InitTypeDef));
@@ -220,7 +220,7 @@ TEST(DMAEX_Handle, FactoryCreate)
 	TEST_ASSERT_EQUAL(irq_config.irqn, h->hirq->irqn);
 	TEST_ASSERT_EQUAL(irq_config.preempt_priority, h->hirq->preempt_priority);
 	TEST_ASSERT_EQUAL(irq_config.sub_priority, h->hirq->sub_priority);
-	TEST_ASSERT_EQUAL(factory.reg, h->hirq->registry);
+	TEST_ASSERT_EQUAL(&registry, h->hirq->registry);
 	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->hirq->state);
 	
 	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, h->state);
@@ -232,8 +232,8 @@ TEST(DMAEX_Handle, FactoryCreate)
 TEST(DMAEX_Handle, FactoryDestroy)
 {
 	DMA_ClockProviderTypeDef					clk;
-	IRQ_HandlerObjectRegistryTypeDef	registry;
-	DMAEX_Handle_FactoryTypeDef 			factory;
+	IRQ_HandleRegistryTypeDef	registry;
+//	DMAEX_Handle_FactoryTypeDef 			factory;
 	
 	DMA_HandleTypeDef									hdma;
 	DMA_ConfigTypeDef									dma_config;
@@ -245,15 +245,15 @@ TEST(DMAEX_Handle, FactoryDestroy)
 	memset(&hdma, 0xA5, sizeof(hdma));
 	memset(&hirq, 0xB5, sizeof(hirq));
 	
-	factory.clk = &clk;
-	factory.reg = &registry;
+//	factory.clk = &clk;
+//	factory.reg = &registry;
 	
 	hirq.state = IRQ_HANDLE_STATE_RESET;
 	
 	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &hirq);
 	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &irq_config);
-	h = DMAEX_Handle_FactoryCreate(&factory, &dma_config, &irq_config);
-	DMAEX_Handle_FactoryDestroy(&factory, h);
+	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
+	DMAEX_Handle_FactoryDestroy(h);
 }
 
 
