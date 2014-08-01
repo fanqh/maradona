@@ -162,11 +162,11 @@ void UnityMalloc_MakeMallocFailAfterCount(int countdown)
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct GuardBytes
-{
-    size_t size;
-    char guard[sizeof(size_t)];
-} Guard;
+//typedef struct GuardBytes
+//{
+//    size_t size;
+//    char guard[sizeof(size_t)];
+//} Guard;
 
 
 static const char * end = "END";

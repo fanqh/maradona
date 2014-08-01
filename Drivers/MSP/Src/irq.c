@@ -4,9 +4,9 @@
 #include "irq.h"
 
 
-IRQ_HandlerObjectRegistryTypeDef IRQ_HandlerObjectRegistry = {0};
+IRQ_HandleRegistryTypeDef IRQ_HandlerObjectRegistry = {0};
 
-void IRQ_HandlerObject_Register(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn_Type irqn, void* p)
+void IRQ_HandlerObject_Register(IRQ_HandleRegistryTypeDef* registry, IRQn_Type irqn, void* p)
 {
 	if (irqn > FPU_IRQn || p == NULL)
 		return;
@@ -14,7 +14,7 @@ void IRQ_HandlerObject_Register(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn
 	registry->irqh_obj[irqn] = p;
 }
 
-void IRQ_HandlerObject_Unregister(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn_Type irqn)
+void IRQ_HandlerObject_Unregister(IRQ_HandleRegistryTypeDef* registry, IRQn_Type irqn)
 {
 	if (irqn > FPU_IRQn)
 		return;
@@ -22,7 +22,7 @@ void IRQ_HandlerObject_Unregister(IRQ_HandlerObjectRegistryTypeDef* registry, IR
 	registry->irqh_obj[irqn] = NULL;
 }
 
-void* IRQ_HandlerObject_Get(IRQ_HandlerObjectRegistryTypeDef* registry, IRQn_Type irqn)
+void* IRQ_HandlerObject_Get(IRQ_HandleRegistryTypeDef* registry, IRQn_Type irqn)
 {
 	if (irqn > FPU_IRQn)
 		return NULL;
@@ -70,7 +70,7 @@ void IRQ_DeInit(IRQ_HandleTypeDef* hirq)
 	}
 }
 
-IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandlerObjectRegistryTypeDef* registry)
+IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandleRegistryTypeDef* registry)
 {
 	IRQ_HandleTypeDef* h = (IRQ_HandleTypeDef*)malloc(sizeof(IRQ_HandleTypeDef));
 	if (h == NULL) return NULL;
@@ -85,9 +85,14 @@ IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t su
 	return h;
 }
 
-IRQ_HandleTypeDef *IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandlerObjectRegistryTypeDef* registry)
+IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry)
 {
 	return IRQ_Handle_Ctor(hirq->irqn, hirq->preempt_priority, hirq->sub_priority, registry);
+}
+
+IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry)
+{
+	return IRQ_Handle_Ctor(config->irqn, config->preempt_priority, config->sub_priority, registry);
 }
 
 void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
@@ -99,6 +104,11 @@ void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+const IRQ_ConfigTypeDef	IRQ_Uart2_DefaultConfig =
+{
+	.irqn = USART2_IRQn,
+};
+
 const IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default =
 {
 	.irqn = USART2_IRQn,
@@ -106,11 +116,21 @@ const IRQ_HandleTypeDef	IRQ_Handle_Uart2_Default =
 	.irqh_obj = 0, // should be override		
 };
 
+const IRQ_ConfigTypeDef	IRQ_Uart2RxDMA_DefaultConfig =
+{
+	.irqn = DMA1_Stream5_IRQn,
+};
+
 const IRQ_HandleTypeDef IRQ_Handle_Uart2RxDMA_Default =
 {
 	.irqn = DMA1_Stream5_IRQn,
 	.registry = &IRQ_HandlerObjectRegistry,
 	.irqh_obj = 0, // THIS ONE should be link to the copied instance.hdma
+};
+
+const IRQ_ConfigTypeDef IRQ_Uart2TxDMA_DefaultConfig = 
+{
+	.irqn = DMA1_Stream6_IRQn,
 };
 
 const IRQ_HandleTypeDef IRQ_Handle_Uart2TxDMA_Default = 

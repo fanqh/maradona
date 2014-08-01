@@ -99,6 +99,8 @@ static void RunAllTests(void)
 	RUN_TEST_GROUP(UART_All_HD);
 
 	RUN_TEST_GROUP(UsartIO_DMA);
+	
+	RUN_TEST_GROUP(MSP);
 }
 
 void board_init(void)
@@ -114,8 +116,10 @@ void board_init(void)
 	UnityMain(1, 0, RunAllTests);
 }
 
+size_t size;
+
 void board_main(void)
-{
+{	
 	while(1){};
 }
 
