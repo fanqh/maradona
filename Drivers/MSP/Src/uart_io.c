@@ -421,6 +421,12 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 
 int	UART_IO_Open(struct device * dev, struct file * filp)
 {
+	struct uart_device * udev = container_of(dev, struct uart_device, dev);
+	
+	udev->handle = udev->msp->huartex_create(udev->msp, 2);
+	
+	udev->handle->ops.init(udev->handle);
+	
 	return 0;
 }
 

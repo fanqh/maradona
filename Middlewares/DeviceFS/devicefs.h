@@ -10,9 +10,9 @@
 		the latter looks like char device/drivers in kernel.
 **/
 
-struct device;								// simulate cdev & inode in kernel
-struct file;									// simulate file in kernel
-struct file_operations;				// simulate file_operations in kernel
+struct device;										// simulate cdev & inode in kernel
+struct file;											// simulate file in kernel
+struct file_operations;						// simulate file_operations in kernel
 
 struct device
 {

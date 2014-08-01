@@ -756,14 +756,94 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/**
+struct uart_device {
+	
+	struct device						dev;
+	
+	msp_factory							*msp;
+	UARTEX_HandleTypeDef		*handle;
+	
+	char										*rbuf[2];		
+	const int								rbuf_size;
+	
+	char										*rx_upper;
+	char 										*rx_head;
+	char										*rx_tail;	
+	
+	char										*tbuf[2];		
+	const int 							tbuf_size;
+	
+	char										*tx_head;
+	char										*tx_tail;
+	
+	int											open_count;
+};**/
+
+
+
+HAL_StatusTypeDef mock_uartex_init_success(UARTEX_HandleTypeDef *hue)
+{
+	uint32_t* magic = (uint32_t*)hue;
+	TEST_ASSERT_EQUAL_HEX32(0xA5B6C7D8, *magic);
+	*magic = 0xDEADBEEF;
+	return HAL_OK;
+}
+
+UARTEX_HandleTypeDef* mock_huartex_create_success(struct msp_factory * msp, int num)
+{
+	TEST_ASSERT_EQUAL(2, num);
+	TEST_ASSERT_EQUAL_HEX32(mock_huartex_create_success, msp->huartex_create);
+	uint32_t* magic = malloc(sizeof(uint32_t));
+	*magic = 0xA5B6C7D8;
+	return (UARTEX_HandleTypeDef*)magic;
+}
 
 TEST(UsartIO_DMA, OpenWhenDeviceNotOpened)
 {
-	struct uart_device 	uio = { .rbuf_size = 64, .tbuf_size = 64, };
-	struct file 				file;
+	int ret;
+	struct file file;
+	struct msp_factory msp;
+	struct UARTEX_HandleTypeDef huartex;
+	struct uart_device 	udev = 
+	{ 
+		.dev = { .name = "UART2", },
+		.msp = &msp,
+		.rbuf_size = 64, 
+		.tbuf_size = 64, 
+	};
 	
-	UART_IO_Open(&uio.dev, &file);
+	msp.huartex_create = mock_huartex_create_success;
+	huartex.ops.init = mock_uartex_init_success;
 	
+	ret = UART_IO_Open(&udev.dev, &file);
+		
+	/////////////////////////////////////////////////////////////////////////////
+	// udev initialized.
+	//	
+	TEST_ASSERT_EQUAL(0, ret);
+	TEST_ASSERT_EQUAL_HEX32(&msp, udev.msp);
+	TEST_ASSERT_NOT_NULL(udev.handle);
+	TEST_ASSERT_EQUAL_HEX32(0xDEADBEEF, *((uint32_t*)udev.handle));		// see mock code
+		
+	TEST_ASSERT_MEMSIZE(udev.rbuf_size, udev.rbuf[0]);
+	TEST_ASSERT_MEMSIZE(udev.rbuf_size, udev.rbuf[1]);
+		
+	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_upper);
+	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_head);
+	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_tail);	
+	
+	TEST_ASSERT_MEMSIZE(udev.tbuf_size, udev.tbuf[0]);
+	TEST_ASSERT_MEMSIZE(udev.tbuf_size, udev.tbuf[1]);	
+	
+	TEST_ASSERT_EQUAL_HEX32(udev.tbuf[1], udev.tx_head);
+	TEST_ASSERT_EQUAL_HEX32(udev.tbuf[1], udev.tx_tail);
+	
+	TEST_ASSERT_EQUAL(1, udev.open_count);
+	
+	/////////////////////////////////////////////////////////////////////////////
+	// file initialized
+	//
 	
 }
 
@@ -806,5 +886,7 @@ TEST_GROUP_RUNNER(UsartIO_DMA)
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy);
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady);
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy);
+	
+	RUN_TEST_CASE(UsartIO_DMA, OpenWhenDeviceNotOpened);
 }
 

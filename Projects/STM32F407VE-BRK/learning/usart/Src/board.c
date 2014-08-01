@@ -116,8 +116,10 @@ void board_init(void)
 	UnityMain(1, 0, RunAllTests);
 }
 
+size_t size;
+
 void board_main(void)
-{
+{	
 	while(1){};
 }
 

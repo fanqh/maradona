@@ -9,13 +9,14 @@ TEST_SETUP(MSP)
 	
 TEST_TEAR_DOWN(MSP)
 {}
-	
-UARTEX_HandleTypeDef* mock_ll_huartex_create(GPIO_ClockProviderTypeDef* 	gpio_clk,
-																					DMA_ClockProviderTypeDef*		dma_clk,
-																					IRQ_HandleRegistryTypeDef*	irq_registry,
-																					const UARTEX_ConfigTypeDef* uartex_configs)
+
+/** this test is problematic **/	
+UARTEX_HandleTypeDef* mock_ll_huartex_create(	GPIO_ClockProviderTypeDef* 	gpio_clk,
+																							DMA_ClockProviderTypeDef*		dma_clk,
+																							IRQ_HandleRegistryTypeDef*	irq_registry,
+																							const UARTEX_ConfigTypeDef* uartex_configs)
 {
-	MSP_TypeDef* msp = (MSP_TypeDef*)passby;
+	struct msp_factory* msp = (struct msp_factory*)passby;
 	assert_param(msp);
 	
 	TEST_ASSERT_EQUAL_HEX32(msp->gpio_clk, gpio_clk);
@@ -25,16 +26,17 @@ UARTEX_HandleTypeDef* mock_ll_huartex_create(GPIO_ClockProviderTypeDef* 	gpio_cl
 	
 	return (UARTEX_HandleTypeDef*)(0xDEADBEEF);
 };
-	
-TEST(MSP, CreateUARTEX2Handle)
+
+
+TEST(MSP, CreateUARTEXHandle)
 {
 	UARTEX_ConfigTypeDef uart_cfg;
 	Board_ConfigTypeDef board = { .uart2 = &uart_cfg, };
-	MSP_TypeDef msp = { .board_config = &board, .ll_huartex_create = mock_ll_huartex_create, };
+	struct msp_factory msp = { .board_config = &board, .ll_huartex_create = mock_ll_huartex_create, };
 	
 	passby = &msp;
 	
-	UARTEX_HandleTypeDef* h = MSP_Create_UART2EX_Handle(&msp);
+	UARTEX_HandleTypeDef* h = MSP_Create_UARTEX_Handle(&msp, 2);
 	TEST_ASSERT_EQUAL_HEX32(0xDEADBEEF, h);
 	
 	passby = 0;
@@ -42,7 +44,7 @@ TEST(MSP, CreateUARTEX2Handle)
 
 TEST_GROUP_RUNNER(MSP)
 {
-	RUN_TEST_CASE(MSP, CreateUARTEX2Handle);
+	RUN_TEST_CASE(MSP, CreateUARTEXHandle);
 }
 
 

@@ -559,7 +559,6 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 
 ///////////////////////////////////////////////////////////////////////////////
 // thin wrappers, no test cases 
-
 static HAL_StatusTypeDef UARTEX_Init(UARTEX_HandleTypeDef *hue)
 {
 	return HAL_UART_Init(&hue->huart);

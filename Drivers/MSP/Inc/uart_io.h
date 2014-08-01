@@ -29,7 +29,7 @@ struct uart_device {
 	
 	struct device						dev;
 	
-	MSP_TypeDef							*msp;
+	struct msp_factory			*msp;
 	UARTEX_HandleTypeDef		*handle;
 	
 	char										*rbuf[2];		/** two pointers **/
@@ -46,6 +46,10 @@ struct uart_device {
 	char										*tx_tail;
 	
 	int											open_count;
+	
+	/////////////////////////////////////////////////////////////////////////////
+	// test data
+	void										*testdata;								
 };
 
 /** tested **/
