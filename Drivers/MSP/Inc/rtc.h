@@ -35,6 +35,10 @@ typedef struct
 	RTC_CalendarTypeDef calendar;
 	RTC_State_TypeDef state;
 	uint32_t format;
+
+	HAL_StatusTypeDef (*get_time)(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format);
+	HAL_StatusTypeDef (*get_date)(RTC_HandleTypeDef *hrtc, RTC_DateTypeDef *sDate, uint32_t Format);	
+	
 }RTCEX_HandleTypeDef; 
 
 typedef struct
