@@ -7,11 +7,11 @@
 #include "stm32f4xx_hal.h"
 #include "uart_io_private.h"
 
-#ifdef UNIT_TEST
-#define __CALL	usart_apis.
-#else
-#define __CALL
-#endif
+//#ifdef UNIT_TEST
+//#define __CALL	usart_apis.
+//#else
+//#define __CALL
+//#endif
 
 //static UART_HandleTypeDef huart2_default = {
 //  .Instance = USART2,
@@ -34,7 +34,7 @@
 //extern UART_HandleTypeDef huart2;
 //static char uart2_rbuf[2][UART_IO_BUFFER_SIZE];
 //static char uart2_tbuf[2][UART_IO_BUFFER_SIZE];
-//static UART_IO_HandleTypeDef huio2 =
+//static uart_device huio2 =
 //{
 //	.handle = &huart2,
 //	.rbuf[0] = uart2_rbuf[0],
@@ -55,7 +55,7 @@
 //#if (UART_IO_USE_USART3)
 //extern UART_HandleTypeDef huart3;
 //static char uart3_rbuf[2][UART_IO_BUFFER_SIZE];
-//static UART_IO_HandleTypeDef huio3 =
+//static uart_device huio3 =
 //{
 //	.handle = &huart3,
 //	.rbuf[0] = uart3_rbuf[0],
@@ -82,7 +82,7 @@
  *	This globals are required for UART_IO_Task, which starts Tx transmission
  *	if hardware ready.
  */
-//static UART_IO_HandleTypeDef* uart_io_handles[7] = 
+//static uart_device* uart_io_handles[7] = 
 //{
 //#if (UART_IO_USE_USART1)
 //&huio1,
@@ -121,7 +121,7 @@
 //#endif
 //};
 
-//UART_IO_HandleTypeDef* UART_IO_GetHandle(int port) 
+//uart_device* UART_IO_GetHandle(int port) 
 //{
 //	
 //	if (port < 1 || port > 6)
@@ -130,7 +130,7 @@
 //	return uart_io_handles[port];
 //}
 
-//int UART_IO_SetHandle(int port, UART_IO_HandleTypeDef* handle)
+//int UART_IO_SetHandle(int port, uart_device* handle)
 //{
 //	if (port < 1 || port > 6)
 //		return -1;
@@ -204,11 +204,12 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 }
 
 
+
 /**
-UART_IO_HandleTypeDef* UART_IO_Open(int port)
+uart_device* UART_IO_Open(int port)
 {
 //	HAL_StatusTypeDef status;
-	UART_IO_HandleTypeDef* huio;
+	uart_device* huio;
 	
 	if (port < 1 || port > 6)
 	{
@@ -253,7 +254,7 @@ UART_IO_HandleTypeDef* UART_IO_Open(int port)
 
 
 /*
- * This function read out of upper buffer first, then flip and read again.
+ * This function read out of upper buffer first, then flip (fetch DMA buffer) and read again.
  * Flip at most once. The assumption is if there are data in either buffers, 
  * this function should not return 0
  *
@@ -262,7 +263,7 @@ UART_IO_HandleTypeDef* UART_IO_Open(int port)
  * When the function is called again, that is, the buffer is empty, 
  * it return -1 and set errno correspondingly..
  */
-int UART_IO_Read(UART_IO_HandleTypeDef* h, char* buffer, size_t buffer_size)
+int UART_IO_Read(struct uart_device* h, char* buffer, size_t buffer_size)
 {
 
 	HAL_StatusTypeDef status;
@@ -291,7 +292,7 @@ int UART_IO_Read(UART_IO_HandleTypeDef* h, char* buffer, size_t buffer_size)
 		}
 	}
 	
-	status = (h->handle->ops->swap)(h->handle, (uint8_t*)h->rx_upper, UART_IO_BUFFER_SIZE, &m0ar, &ndtr);
+	status = (h->handle->ops.swap)(h->handle, (uint8_t*)h->rx_upper, UART_IO_BUFFER_SIZE, &m0ar, &ndtr);
 	
 	if (status == HAL_ERROR) {
 		
@@ -341,7 +342,7 @@ int UART_IO_Read(UART_IO_HandleTypeDef* h, char* buffer, size_t buffer_size)
  * upper buffers. ALL-OR-NONE is not acceptable for user must slice the long
  * string by themselves.
  */
-int UART_IO_Write(UART_IO_HandleTypeDef* h, char* buffer, size_t size) {
+int UART_IO_Write(struct uart_device* h, char* buffer, size_t size) {
 	
 	HAL_StatusTypeDef status;
 	char* tx_end;
@@ -383,7 +384,8 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 		
 		if (count == size) {
 			
-			status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+			// status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+			status = h->handle->ops.send(h->handle, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
 			if (status == HAL_OK) {
 				
 				h->tx_head = (h->tx_head == h->tbuf[0]) ? h->tbuf[1] : h->tbuf[0];
@@ -395,7 +397,8 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 		}
 	}
 	
-	status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+	// status = __CALL HAL_UART_Transmit_DMA(&h->handle->huart, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
+	status = h->handle->ops.send(h->handle, (uint8_t*)h->tx_head, h->tx_tail - h->tx_head);
 	if (status == HAL_OK)
 	{
 		h->tx_tail = h->tx_head = (h->tx_head == h->tbuf[0]) ? h->tbuf[1] : h->tbuf[0];
@@ -416,12 +419,24 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 	return count;
 }
 
+int	UART_IO_Open(struct device * dev, struct file * filp)
+{
+	struct uart_device * udev = container_of(dev, struct uart_device, dev);
+	
+	udev->handle = udev->msp->huartex_create(udev->msp, 2);
+	
+	udev->handle->ops.init(udev->handle);
+	
+	return 0;
+}
+
+
 #if 0
 
 /*
  * Close
  */
-int UART_IO_Close(UART_IO_HandleTypeDef* h) {
+int UART_IO_Close(uart_device* h) {
 	
 	if (0 == h) {
 		return -1;
@@ -460,7 +475,7 @@ void UART_IO_DeInitAll(void) {
 	}
 }
 
-UART_HandleTypeDef*			UART_IO_GetUartHandle(UART_IO_HandleTypeDef* h) {
+UART_HandleTypeDef*			UART_IO_GetUartHandle(uart_device* h) {
 	
 	if (h == 0) return 0;
 	
@@ -476,4 +491,18 @@ UART_HandleTypeDef*			UART_IO_GetUartHandleByPort(int num) {
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
