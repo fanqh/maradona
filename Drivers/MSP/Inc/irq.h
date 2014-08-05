@@ -51,7 +51,7 @@ typedef struct
 int	IRQ_Handle_Init(IRQ_HandleTypeDef* h, IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandleRegistryTypeDef* registry);
 int	IRQ_Handle_InitByConfig(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry);
 
-void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle);
+// void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle);
 
 /** exported functions **/
 void 	IRQ_HAL_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj);

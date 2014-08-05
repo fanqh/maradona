@@ -145,7 +145,7 @@ TEST_TEAR_DOWN(UsartIO_DMA)
 TEST(UsartIO_DMA, ReadInvalidArgs)
 {
 	char c;
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	
 	/** These tests are enough, don't validate 'internal state' of opaque struct, pointless. **/
 	TEST_ASSERT_EQUAL(-1, UART_IO_Read(0, &c, 1));					/** null handle **/
@@ -161,7 +161,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer)
 	char buf[64];
 	int read;
 	
-	struct uart_device huio;	
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };	
 	UARTEX_HandleTypeDef hue;
 	char rxbuf0[64];
 	char rxbuf1[64];
@@ -204,7 +204,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	char buf[64];
 	int read;
 
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -258,7 +258,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	char buf[64];
 	int read;
 
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -320,7 +320,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	char buf[64];
 	int read;
 	
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -443,7 +443,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 TEST(UsartIO_DMA, WriteInvalidArgs)
 {
 	char c;
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	
 	TEST_ASSERT_EQUAL(-1, UART_IO_Write(0, &c, 1));
 	TEST_ASSERT_EQUAL(EINVAL, errno);
@@ -462,7 +462,7 @@ TEST(UsartIO_DMA, WriteHalStateTimeoutErrorReset)
 	// HAL_UART_STATE_ERROR are not used in firmware 1.1
 	char c;
 	UARTEX_HandleTypeDef huartex;
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	huio.handle = &huartex;
 	
 	errno = 0;
@@ -516,7 +516,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	int written;
 	
 	///////////////////////////
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -565,7 +565,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	int written;
 	
 	///////////////////////////
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -621,7 +621,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	int written;
 
 	///////////////////////////
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 //	struct UARTEX_Operations uart_ops;
@@ -700,7 +700,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	memset(&s3[sizeof(s1)], 'b', sizeof(s2));
 	
 	///////////////////////////
-	struct uart_device huio;
+	struct uart_device huio = { .rbuf_size = 64, .tbuf_size = 64, };
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
 	
@@ -981,7 +981,7 @@ TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedMallocFail)
 
 TEST(UsartIO_DMA, Release)
 {
-	int 												ret;
+//	int 												ret;
 	struct file									file;
 	struct msp_factory 					msp = {0};
 	struct UARTEX_HandleTypeDef huartex = {0};

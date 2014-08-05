@@ -456,7 +456,7 @@ TEST(UARTEX_Handle, FactoryCreate)
 		DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
 		free(h->rxpin);
 		free(h->txpin);
-		IRQ_Handle_Dtor(h->hirq);
+		free(h->hirq);
 		
 		free(h);
 	}

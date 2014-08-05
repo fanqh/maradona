@@ -114,10 +114,10 @@ int	IRQ_Handle_InitByConfig(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* confi
 	return IRQ_Handle_Init(h, config->irqn, config->preempt_priority, config->sub_priority, registry);
 }
 
-void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
-{
-	if (handle) free(handle);
-}
+//void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
+//{
+//	if (handle) free(handle);
+//}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

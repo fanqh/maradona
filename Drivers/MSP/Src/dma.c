@@ -245,11 +245,11 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	// DMAEX_Handle_FactoryTypeDef*
 		return NULL;
 	}
 	
-	// dmaExH = DMAEX_Handle_Ctor(hdma->Instance, &hdma->Init, factory->clk, irqH);
 	dmaExH = DMAEX_Handle_CtorByConfig(dma_config, dma_clk, irqH);
 	if (dmaExH == NULL)
 	{
-		IRQ_Handle_Dtor(irqH);
+		// IRQ_Handle_Dtor(irqH);
+		free(irqH);
 		return NULL;
 	}
 

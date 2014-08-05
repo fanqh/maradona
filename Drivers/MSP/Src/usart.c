@@ -462,7 +462,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	
 	return h;
 	
-	fail5:	if (cfg->uart_irq) IRQ_Handle_Dtor(irqH);
+	fail5:	if (cfg->uart_irq) free(irqH);
 	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
 	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
 	fail2: 	free(txpinH);
@@ -472,16 +472,14 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 
 void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h)
 {
-//	DMAEX_Handle_FactoryTypeDef	dma_factory;
-//	
-//	dma_factory.clk = factory->dma_clk;
-//	dma_factory.reg = factory->registry;	
 	
 	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
 	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
 	free(h->rxpin);
 	free(h->txpin);
-	IRQ_Handle_Dtor(h->hirq);
+
+	/** is this problematic ??? undefined combination ??? **/
+	if (h->hirq) free(h->hirq);
 		
 	free(h);
 }

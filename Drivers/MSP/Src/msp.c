@@ -156,10 +156,6 @@ UARTEX_HandleTypeDef* msp_create_huartex(struct msp_factory* msp, int port)
 			errno = -ret;
 			goto fail5;
 		}
-		
-//		irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, msp->irq_registry);
-//		if (irqH == NULL)
-//			goto fail4;
 	}
 	
 	h = UARTEX_Handle_Ctor(cfg->uart->Instance, &cfg->uart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
@@ -168,7 +164,7 @@ UARTEX_HandleTypeDef* msp_create_huartex(struct msp_factory* msp, int port)
 	
 	return h;
 	
-	fail5:	if (cfg->uart_irq) IRQ_Handle_Dtor(irqH);
+	fail5:	if (cfg->uart_irq) free(irqH);
 	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
 	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
 	fail2: 	free(txpinH);
