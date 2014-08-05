@@ -53,7 +53,7 @@ int DMA_Stream_Instance_To_Index(DMA_Stream_TypeDef* stream)
 	return -1;
 }
 
-void 	DMAEX_Init(DMAEX_HandleTypeDef* dmaex)
+void 	DMAEX_HAL_Init(DMAEX_HandleTypeDef* dmaex)
 {
 	DMA_Clock_Get(dmaex->clk, dmaex->hdma.Instance);
 	HAL_DMA_Init(&dmaex->hdma);
@@ -61,7 +61,7 @@ void 	DMAEX_Init(DMAEX_HandleTypeDef* dmaex)
 	dmaex->state = DMAEX_HANDLE_STATE_SET;
 }
 
-void	DMAEX_DeInit(DMAEX_HandleTypeDef* dmaex)
+void	DMAEX_HAL_DeInit(DMAEX_HandleTypeDef* dmaex)
 {
 	IRQ_HAL_DeInit(dmaex->hirq);
 	HAL_DMA_DeInit(&dmaex->hdma);

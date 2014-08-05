@@ -45,23 +45,14 @@ typedef struct {
 	
 } DMAEX_HandleTypeDef;
 
-//DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
-//	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
-
 int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
-
-/** not really used!!! **/
-//DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
-//	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
 int 	DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
 		DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
-//void 	DMAEX_Handle_Dtor(DMAEX_HandleTypeDef* handle);
-
-void 	DMAEX_Init(DMAEX_HandleTypeDef* dmaex);
-void	DMAEX_DeInit(DMAEX_HandleTypeDef* dmaex);
+void 	DMAEX_HAL_Init(DMAEX_HandleTypeDef* dmaex);
+void	DMAEX_HAL_DeInit(DMAEX_HandleTypeDef* dmaex);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

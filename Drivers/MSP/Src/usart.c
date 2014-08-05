@@ -128,7 +128,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 		assert_param(hue->hdmaex_rx->clk);
 		// assert_param(false == DMA_Clock_Status(hue->hdmaex_rx->clk, hue->hdmaex_rx->hdma.Instance));
 		__HAL_LINKDMA(&hue->huart,hdmarx,hue->hdmaex_rx->hdma);
-		DMAEX_Init(hue->hdmaex_rx);
+		DMAEX_HAL_Init(hue->hdmaex_rx);
 	}
 
 	GPIOEX_HAL_Init(hue->txpin);
@@ -137,7 +137,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 		assert_param(hue->hdmaex_tx->clk);
 		// assert_param(false == DMA_Clock_Status(hue->hdmaex_tx->clk, hue->hdmaex_tx->hdma.Instance));
 		__HAL_LINKDMA(&hue->huart,hdmatx,hue->hdmaex_tx->hdma);
-		DMAEX_Init(hue->hdmaex_tx);		
+		DMAEX_HAL_Init(hue->hdmaex_tx);		
 	}
 		
 	if (hue->hirq)
@@ -178,14 +178,14 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 	
 	if (hue->hdmaex_tx)
 	{
-		DMAEX_DeInit(hue->hdmaex_tx);
+		DMAEX_HAL_DeInit(hue->hdmaex_tx);
 		hue->hdmaex_tx->hdma.Parent = 0;	// unlink
 		hue->huart.hdmatx = 0;
 	}	
 
 	if (hue->hdmaex_rx)
 	{
-		DMAEX_DeInit(hue->hdmaex_rx);
+		DMAEX_HAL_DeInit(hue->hdmaex_rx);
 		hue->hdmaex_rx->hdma.Parent = 0;	// unlink
 		hue->huart.hdmarx = 0;
 	}

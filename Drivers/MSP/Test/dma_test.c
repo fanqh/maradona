@@ -320,7 +320,7 @@ TEST(DMAEX_Handle, FactoryDestroy)
 
 
 
-TEST(DMAEX_Handle, DMAEX_Init)
+TEST(DMAEX_Handle, DMAEX_HAL_Init)
 {
 	DMAEX_HandleTypeDef hdmaex;
 	IRQ_HandleTypeDef irq;
@@ -333,7 +333,7 @@ TEST(DMAEX_Handle, DMAEX_Init)
 	IRQ_Handle_InitByConfig(&irq, irqcfg, registry);
 	DMAEX_Handle_InitByConfig(&hdmaex, dmacfg, clk_provider, &irq);
 	
-	DMAEX_Init(&hdmaex);
+	DMAEX_HAL_Init(&hdmaex);
 	
 	TEST_ASSERT_TRUE(DMA_Clock_Status(hdmaex.clk, hdmaex.hdma.Instance));
 	TEST_ASSERT_EQUAL(HAL_DMA_STATE_READY, hdmaex.hdma.State);
@@ -344,15 +344,15 @@ TEST(DMAEX_Handle, DMAEX_Init)
 	// DMAEX_Handle_Dtor(hdmaex);
 }
 
-TEST(DMAEX_Handle, DMAEX_DeInit)
+TEST(DMAEX_Handle, DMAEX_HAL_DeInit)
 {
 //	IRQ_HandleTypeDef irq;
 //	IRQ_Handle_Init(&irq, DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
 //	
 //	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, &irq);
 //	
-//	DMAEX_Init(hdmaex);
-//	DMAEX_DeInit(hdmaex);
+//	DMAEX_HAL_Init(hdmaex);
+//	DMAEX_HAL_DeInit(hdmaex);
 	DMAEX_HandleTypeDef hdmaex;
 	IRQ_HandleTypeDef irq;
 	
@@ -364,8 +364,8 @@ TEST(DMAEX_Handle, DMAEX_DeInit)
 	IRQ_Handle_InitByConfig(&irq, irqcfg, registry);
 	DMAEX_Handle_InitByConfig(&hdmaex, dmacfg, clk_provider, &irq);
 	
-	DMAEX_Init(&hdmaex);
-	DMAEX_DeInit(&hdmaex);
+	DMAEX_HAL_Init(&hdmaex);
+	DMAEX_HAL_DeInit(&hdmaex);
 	
 	TEST_ASSERT_FALSE(DMA_Clock_Status(hdmaex.clk, hdmaex.hdma.Instance));
 	TEST_ASSERT_EQUAL(HAL_DMA_STATE_RESET, hdmaex.hdma.State);
@@ -388,8 +388,8 @@ TEST_GROUP_RUNNER(DMAEX_Handle)
 	// RUN_TEST_CASE(DMAEX_Handle, Dtor);
 	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);
 	RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
-	RUN_TEST_CASE(DMAEX_Handle, DMAEX_Init);
-	RUN_TEST_CASE(DMAEX_Handle, DMAEX_DeInit);
+	RUN_TEST_CASE(DMAEX_Handle, DMAEX_HAL_Init);
+	RUN_TEST_CASE(DMAEX_Handle, DMAEX_HAL_DeInit);
 }
 
 TEST_GROUP_RUNNER(DMA_All)
