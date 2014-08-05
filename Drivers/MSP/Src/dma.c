@@ -245,13 +245,7 @@ int DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* c
 	return DMAEX_Handle_Init(h, config->Instance, &config->Init, clk, hirq);
 }
 
-//DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
-//																									// const DMA_HandleTypeDef* hdma,
-//																									const DMA_ConfigTypeDef* dma_config,
-//																									// const IRQ_HandleTypeDef* hirq)
-//																									const IRQ_ConfigTypeDef* irq_config)
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	// DMAEX_Handle_FactoryTypeDef* factory, 
-																									DMA_ClockProviderTypeDef			*dma_clk,
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma_clk,
 																									IRQ_HandleRegistryTypeDef			*irq_registry,
 																									const DMA_ConfigTypeDef				*dma_config,
 																									const IRQ_ConfigTypeDef				*irq_config)
@@ -331,19 +325,6 @@ void DMA1_Stream6_IRQHandler(void)
 // Defaults
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-//const DMA_InitTypeDef DMA_Init_Uart2Rx_Default =
-//{
-//	.Channel = DMA_CHANNEL_4,
-//	.Direction = DMA_PERIPH_TO_MEMORY,
-//	.PeriphInc = DMA_PINC_DISABLE,
-//	.MemInc = DMA_MINC_ENABLE,
-//	.PeriphDataAlignment = DMA_PDATAALIGN_BYTE,
-//	.MemDataAlignment = DMA_MDATAALIGN_BYTE,
-//	.Mode = DMA_NORMAL,
-//	.Priority = DMA_PRIORITY_LOW,
-//	.FIFOMode = DMA_FIFOMODE_DISABLE,
-//};
 
 const DMA_ConfigTypeDef	DMAEX_Uart2Rx_DefaultConfig =
 {

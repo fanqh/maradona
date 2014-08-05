@@ -55,8 +55,8 @@ int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *stream, const 
 //DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
 //	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
-int DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
-	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
+int 	DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
+		DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
 void 	DMAEX_Handle_Dtor(DMAEX_HandleTypeDef* handle);
 
@@ -67,15 +67,8 @@ void	DMAEX_DeInit(DMAEX_HandleTypeDef* dmaex);
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//typedef struct {
-//	
-//	DMA_ClockProviderTypeDef			*clk;
-//	IRQ_HandleRegistryTypeDef			*reg;
-//	
-//} DMAEX_Handle_FactoryTypeDef;
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	// DMAEX_Handle_FactoryTypeDef* factory, 
-																									DMA_ClockProviderTypeDef			*dma_clk,
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma_clk,
 																									IRQ_HandleRegistryTypeDef			*irq_registry,
 																									const DMA_ConfigTypeDef				*dma_config,
 																									const IRQ_ConfigTypeDef				*irq_config);
