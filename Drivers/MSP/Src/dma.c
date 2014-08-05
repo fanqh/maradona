@@ -63,7 +63,7 @@ void 	DMAEX_Init(DMAEX_HandleTypeDef* dmaex)
 
 void	DMAEX_DeInit(DMAEX_HandleTypeDef* dmaex)
 {
-	IRQ_DeInit(dmaex->hirq);
+	IRQ_HAL_DeInit(dmaex->hirq);
 	HAL_DMA_DeInit(&dmaex->hdma);
 	DMA_Clock_Put(dmaex->clk, dmaex->hdma.Instance);
 	dmaex->state = DMAEX_HANDLE_STATE_RESET;

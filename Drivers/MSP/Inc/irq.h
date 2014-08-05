@@ -55,7 +55,7 @@ int	IRQ_Handle_InitByConfig(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* confi
 
 /** exported functions **/
 void 	IRQ_HAL_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj);
-void 	IRQ_DeInit(IRQ_HandleTypeDef* hirq);
+void 	IRQ_HAL_DeInit(IRQ_HandleTypeDef* hirq);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

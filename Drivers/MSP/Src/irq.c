@@ -54,7 +54,7 @@ void IRQ_HAL_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj)
 	HAL_NVIC_EnableIRQ(hirq->irqn);
 }
 
-void IRQ_DeInit(IRQ_HandleTypeDef* hirq)
+void IRQ_HAL_DeInit(IRQ_HandleTypeDef* hirq)
 {
 	assert_param(hirq);
 	assert_param(hirq->irqn <= FPU_IRQn);
@@ -113,11 +113,6 @@ int	IRQ_Handle_InitByConfig(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* confi
 	
 	return IRQ_Handle_Init(h, config->irqn, config->preempt_priority, config->sub_priority, registry);
 }
-
-//void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)
-//{
-//	if (handle) free(handle);
-//}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

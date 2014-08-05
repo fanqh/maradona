@@ -84,7 +84,7 @@ TEST(IRQ_Handle, IRQ_HAL_Init)
 	HAL_NVIC_DisableIRQ(USART2_IRQn);
 }
 
-TEST(IRQ_Handle, IRQ_DeInit)
+TEST(IRQ_Handle, IRQ_HAL_DeInit)
 {
 	IRQ_HandleTypeDef 					handle;
 	IRQ_HandleRegistryTypeDef		registry;
@@ -97,7 +97,7 @@ TEST(IRQ_Handle, IRQ_DeInit)
 	HAL_NVIC_DisableIRQ(USART2_IRQn);
 	
 	IRQ_HAL_Init(&handle, &hdata);
-	IRQ_DeInit(&handle);
+	IRQ_HAL_DeInit(&handle);
 	
 	TEST_ASSERT_FALSE(irq_enabled(USART2_IRQn));
 	TEST_ASSERT_NULL(IRQ_HandlerObject_Get(handle.registry, USART2_IRQn));
@@ -234,7 +234,7 @@ TEST(IRQ_Handle, HandleInitByConfigSuccess)
 TEST_GROUP_RUNNER(IRQ_Handle)
 {
 	RUN_TEST_CASE(IRQ_Handle, IRQ_HAL_Init);
-	RUN_TEST_CASE(IRQ_Handle, IRQ_DeInit);
+	RUN_TEST_CASE(IRQ_Handle, IRQ_HAL_DeInit);
 	RUN_TEST_CASE(IRQ_Handle, HandleInitInvalidArgs);
 	RUN_TEST_CASE(IRQ_Handle, HandleInitSuccess);
 	RUN_TEST_CASE(IRQ_Handle, HandleInitByConfigInvalidArgs);

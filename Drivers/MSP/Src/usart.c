@@ -173,7 +173,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 	
 	if (hue->hirq)
 	{
-    IRQ_DeInit(hue->hirq);
+    IRQ_HAL_DeInit(hue->hirq);
 	}	
 	
 	if (hue->hdmaex_tx)
