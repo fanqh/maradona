@@ -120,32 +120,32 @@ TEST_TEAR_DOWN(DMAEX_Handle)
 {	
 }
 
-TEST(DMAEX_Handle, Ctor)
-{
-	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
-	DMA_ClockProviderTypeDef clk;
-	IRQ_HandleTypeDef	irq;
+//TEST(DMAEX_Handle, Ctor)
+//{
+//	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
+//	DMA_ClockProviderTypeDef clk;
+//	IRQ_HandleTypeDef	irq;
 
-	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
-	TEST_ASSERT_NOT_NULL(h);
-	TEST_ASSERT_EQUAL_HEX32(&clk, h->clk);
-	TEST_ASSERT_EQUAL_HEX32(dfl->Instance, h->hdma.Instance);
-	TEST_ASSERT_EQUAL_MEMORY(&dfl->Init, &h->hdma.Init, sizeof(dfl->Init));
-	TEST_ASSERT_EQUAL_HEX32(&irq, h->hirq);
-	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, h->state);
-	
-	// all other field should be zero
-	TEST_ASSERT_EQUAL(0, h->hdma.ErrorCode);
-	TEST_ASSERT_EQUAL(0, h->hdma.Lock);
-	TEST_ASSERT_EQUAL(0, h->hdma.Parent);
-	TEST_ASSERT_EQUAL(0, h->hdma.State);
-	TEST_ASSERT_EQUAL(0, h->hdma.XferCpltCallback);
-	TEST_ASSERT_EQUAL(0, h->hdma.XferErrorCallback);
-	TEST_ASSERT_EQUAL(0, h->hdma.XferHalfCpltCallback);
-	TEST_ASSERT_EQUAL(0, h->hdma.XferM1CpltCallback);
-	
-	if (h) free(h);
-}
+//	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
+//	TEST_ASSERT_NOT_NULL(h);
+//	TEST_ASSERT_EQUAL_HEX32(&clk, h->clk);
+//	TEST_ASSERT_EQUAL_HEX32(dfl->Instance, h->hdma.Instance);
+//	TEST_ASSERT_EQUAL_MEMORY(&dfl->Init, &h->hdma.Init, sizeof(dfl->Init));
+//	TEST_ASSERT_EQUAL_HEX32(&irq, h->hirq);
+//	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, h->state);
+//	
+//	// all other field should be zero
+//	TEST_ASSERT_EQUAL(0, h->hdma.ErrorCode);
+//	TEST_ASSERT_EQUAL(0, h->hdma.Lock);
+//	TEST_ASSERT_EQUAL(0, h->hdma.Parent);
+//	TEST_ASSERT_EQUAL(0, h->hdma.State);
+//	TEST_ASSERT_EQUAL(0, h->hdma.XferCpltCallback);
+//	TEST_ASSERT_EQUAL(0, h->hdma.XferErrorCallback);
+//	TEST_ASSERT_EQUAL(0, h->hdma.XferHalfCpltCallback);
+//	TEST_ASSERT_EQUAL(0, h->hdma.XferM1CpltCallback);
+//	
+//	if (h) free(h);
+//}
 
 /** int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq); **/
@@ -249,15 +249,15 @@ TEST(DMAEX_Handle, HandleInitByConfigSuccess)
 	TEST_ASSERT_EQUAL(0, h.hdma.XferM1CpltCallback);
 }
 
-TEST(DMAEX_Handle, Dtor)
-{
-	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
-	DMA_ClockProviderTypeDef clk;
-	IRQ_HandleTypeDef	irq;
+//TEST(DMAEX_Handle, Dtor)
+//{
+//	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
+//	DMA_ClockProviderTypeDef clk;
+//	IRQ_HandleTypeDef	irq;
 
-	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
-	DMAEX_Handle_Dtor(h);
-}
+//	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
+//	DMAEX_Handle_Dtor(h);
+//}
 
 TEST(DMAEX_Handle, FactoryCreate)
 {
@@ -383,9 +383,9 @@ TEST_GROUP_RUNNER(DMAEX_Handle)
 	RUN_TEST_CASE(DMAEX_Handle, InitByConfigInvalidArgs);
 	RUN_TEST_CASE(DMAEX_Handle, HandleInitByConfigSuccess);
 	
-	RUN_TEST_CASE(DMAEX_Handle, Ctor);	
+	// RUN_TEST_CASE(DMAEX_Handle, Ctor);	
 	// RUN_TEST_CASE(DMAEX_Handle, CtorByConfig);
-	RUN_TEST_CASE(DMAEX_Handle, Dtor);
+	// RUN_TEST_CASE(DMAEX_Handle, Dtor);
 	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);
 	RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_Init);
