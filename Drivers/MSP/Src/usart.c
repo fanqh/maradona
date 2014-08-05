@@ -352,6 +352,33 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef										*uart,
 	return h;
 }
 
+int	UARTEX_Handle_Init( UARTEX_HandleTypeDef						*h,
+												USART_TypeDef										*uart,
+												const UART_InitTypeDef					*init,
+												GPIOEX_TypeDef									*rxpin, 		// DI
+												GPIOEX_TypeDef									*txpin, 		// DI		
+												DMAEX_HandleTypeDef							*hdmaex_rx,	// DI
+												DMAEX_HandleTypeDef							*hdmaex_tx,	// DI
+												IRQ_HandleTypeDef								*hirq,			// DI
+												const struct UARTEX_Operations	*ops)
+{	
+	if (h == NULL || uart == NULL || init == NULL || rxpin == NULL || txpin == NULL || ops == NULL)
+		return -EINVAL;
+	
+	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
+	
+	h->rxpin = rxpin;
+	h->txpin = txpin;
+	h->huart.Instance = uart;
+	memmove(&h->huart.Init, init, sizeof(UART_InitTypeDef));
+	h->hdmaex_rx = hdmaex_rx;
+	h->hdmaex_tx = hdmaex_tx;
+	h->hirq = hirq;
+	h->ops = *ops;
+
+	return 0;
+}
+
 UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef		*config,	
 																					GPIOEX_TypeDef										*rxpin, 				// DI
 																					GPIOEX_TypeDef										*txpin, 				// DI		

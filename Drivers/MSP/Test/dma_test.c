@@ -249,16 +249,6 @@ TEST(DMAEX_Handle, HandleInitByConfigSuccess)
 	TEST_ASSERT_EQUAL(0, h.hdma.XferM1CpltCallback);
 }
 
-//TEST(DMAEX_Handle, Dtor)
-//{
-//	const DMA_HandleTypeDef* dfl = &DMA_Handle_Uart2Rx_Default;
-//	DMA_ClockProviderTypeDef clk;
-//	IRQ_HandleTypeDef	irq;
-
-//	DMAEX_HandleTypeDef* h = DMAEX_Handle_Ctor(dfl->Instance, &dfl->Init, &clk, &irq);
-//	DMAEX_Handle_Dtor(h);
-//}
-
 TEST(DMAEX_Handle, FactoryCreate)
 {
 	DMA_ClockProviderTypeDef			clk;
@@ -307,14 +297,9 @@ TEST(DMAEX_Handle, FactoryDestroy)
 	
 	memset(&hdma, 0xA5, sizeof(hdma));
 	memset(&hirq, 0xB5, sizeof(hirq));
-	
-//	factory.clk = &clk;
-//	factory.reg = &registry;
-	
+
 	hirq.state = IRQ_HANDLE_STATE_RESET;
-	
-	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &hirq);
-	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &irq_config);
+
 	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
 	DMAEX_Handle_FactoryDestroy(h);
 }

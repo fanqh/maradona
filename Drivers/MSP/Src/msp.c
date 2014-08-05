@@ -3,7 +3,7 @@
 #include "msp.h"
 #include "unity_fixture.h"
 
-UARTEX_HandleTypeDef* MSP_Create_UARTEX_Handle(struct msp_factory * msp, int port) {
+UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp, int port) {
 	
 	if (msp == NULL || msp->board_config == NULL) 
 			return NULL;
@@ -47,7 +47,7 @@ UARTEX_HandleTypeDef* MSP_Create_UARTEX_Handle(struct msp_factory * msp, int por
 	return NULL;
 }
 
-UARTEX_HandleTypeDef* msp_create_huartex(struct msp_factory* msp, int port)																							
+UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UARTEX_ConfigTypeDef* cfg)															
 {
 	int ret;
 	GPIOEX_TypeDef* rxpinH = NULL;
@@ -56,47 +56,11 @@ UARTEX_HandleTypeDef* msp_create_huartex(struct msp_factory* msp, int port)
 	DMAEX_HandleTypeDef* dmaExTxH = NULL;
 	IRQ_HandleTypeDef* irqH = NULL;
 	UARTEX_HandleTypeDef* h = NULL;
-	UARTEX_ConfigTypeDef* cfg = NULL;
 
 	/** validate object **/
-	if (msp == NULL || msp->board_config == NULL || msp->dma_clk == NULL || msp->gpio_clk == NULL || msp->irq_registry == NULL)
+	if (msp == NULL || msp->dma_clk == NULL || msp->gpio_clk == NULL || msp->irq_registry == NULL || msp->create_dmaex_handle == NULL
+			|| cfg == NULL)
 		return NULL;
-	
-	switch(port)
-	{
-		case 1:
-			if (msp->board_config->uart1 != NULL)	
-				cfg = msp->board_config->uart1;
-			break;
-			
-		case 2:
-			if (msp->board_config->uart2 != NULL)	
-				cfg = msp->board_config->uart2;
-			break;
-			
-		case 3:
-			if (msp->board_config->uart3 != NULL)	
-				cfg = msp->board_config->uart3;
-			break;
-
-		case 4:
-			if (msp->board_config->uart4 != NULL)	
-				cfg = msp->board_config->uart4;
-			break;			
-
-		case 5:
-			if (msp->board_config->uart5 != NULL)	
-				cfg = msp->board_config->uart5;
-			break;
-
-		case 6:
-			if (msp->board_config->uart6 != NULL)	
-				cfg = msp->board_config->uart6;
-			break;			
-		
-		default:
-			return NULL;
-	}	
 	
 	rxpinH = malloc(sizeof(*rxpinH));
 	if (rxpinH == NULL) { 
@@ -124,23 +88,20 @@ UARTEX_HandleTypeDef* msp_create_huartex(struct msp_factory* msp, int port)
 		goto fail2;
 	}
 	
-	// if (hdmarx && dmarx_irq_config)
 	if (cfg->dmarx && cfg->dmarx_irq)
 	{
-		dmaExRxH = DMAEX_Handle_FactoryCreate(msp->dma_clk, msp->irq_registry, cfg->dmarx, cfg->dmarx_irq);
+		dmaExRxH = msp->create_dmaex_handle(msp, cfg->dmarx, cfg->dmarx_irq);
 		if (dmaExRxH == NULL)
 			goto fail2;
 	}
 	
-	// if (hdmatx && dmatx_irq_config)
 	if (cfg->dmatx && cfg->dmatx_irq)
 	{
-		dmaExTxH = DMAEX_Handle_FactoryCreate(msp->dma_clk, msp->irq_registry, cfg->dmatx, cfg->dmatx_irq);
+		dmaExTxH = msp->create_dmaex_handle(msp, cfg->dmatx, cfg->dmatx_irq);
 		if (dmaExTxH == NULL)
 			goto fail3;
 	}
 	
-	// if (hirq_uart)
 	if (cfg->uart_irq)
 	{
 		irqH = malloc(sizeof(*irqH));
