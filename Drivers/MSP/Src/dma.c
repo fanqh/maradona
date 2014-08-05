@@ -211,6 +211,25 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_I
 	return h;
 }
 
+int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *instance, const DMA_InitTypeDef *init,
+	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
+{
+	if (h == NULL || (!IS_DMA_STREAM_ALL_INSTANCE(instance)) || init == NULL || clk == NULL || hirq == NULL)
+	{
+		return -EINVAL;
+	}
+	
+	memset(h, 0, sizeof(DMAEX_HandleTypeDef));
+	
+	h->clk = clk;
+	h->hdma.Instance = instance;
+	memmove(&h->hdma.Init, init, sizeof(DMA_InitTypeDef));
+	h->hirq = hirq;
+	h->state = DMAEX_HANDLE_STATE_RESET;
+	
+	return 0;
+}
+
 DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
 {

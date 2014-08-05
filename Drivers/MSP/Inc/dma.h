@@ -37,6 +37,7 @@ typedef struct {
 typedef struct {
 	
 	DMA_HandleTypeDef					hdma;			// dma handle
+	
 	DMA_ClockProviderTypeDef	*clk;			// reference to dma clock resource manager
 	IRQ_HandleTypeDef					*hirq;		// IRQ handle
 	
@@ -45,6 +46,9 @@ typedef struct {
 } DMAEX_HandleTypeDef;
 
 DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
+	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
+
+int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
 DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
