@@ -236,6 +236,15 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config,
 	return DMAEX_Handle_Ctor(config->Instance, &config->Init, clk, hirq);
 }
 
+int DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
+	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
+{
+	if (config == NULL)
+		return -EINVAL;
+	
+	return DMAEX_Handle_Init(h, config->Instance, &config->Init, clk, hirq);
+}
+
 //DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMAEX_Handle_FactoryTypeDef* factory, 
 //																									// const DMA_HandleTypeDef* hdma,
 //																									const DMA_ConfigTypeDef* dma_config,
