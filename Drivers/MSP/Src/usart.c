@@ -142,7 +142,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 		
 	if (hue->hirq)
 	{
-		IRQ_Init(hue->hirq, &hue->huart);
+		IRQ_HAL_Init(hue->hirq, &hue->huart);
 	}
 }
 

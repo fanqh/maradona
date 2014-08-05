@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "errno_ex.h"
 #include "stm32f4xx_hal.h"
 #include "irq.h"
 
@@ -62,10 +63,10 @@ TEST_TEAR_DOWN(IRQ_Handle)
 {
 }
 
-TEST(IRQ_Handle, IRQ_Init)
+TEST(IRQ_Handle, IRQ_HAL_Init)
 {
 	IRQ_HandleTypeDef 									handle;
-	IRQ_HandleRegistryTypeDef		registry;
+	IRQ_HandleRegistryTypeDef						registry;
 	int																	irqh_obj;
 	
 	memset(&handle, 0, sizeof(handle));
@@ -74,7 +75,7 @@ TEST(IRQ_Handle, IRQ_Init)
 	
 	HAL_NVIC_DisableIRQ(USART2_IRQn);
 	
-	IRQ_Init(&handle, &irqh_obj);
+	IRQ_HAL_Init(&handle, &irqh_obj);
 	
 	TEST_ASSERT_TRUE(irq_enabled(USART2_IRQn));
 	TEST_ASSERT_EQUAL_HEX32(&irqh_obj, IRQ_HandlerObject_Get(handle.registry, USART2_IRQn));
@@ -85,9 +86,9 @@ TEST(IRQ_Handle, IRQ_Init)
 
 TEST(IRQ_Handle, IRQ_DeInit)
 {
-	IRQ_HandleTypeDef 									handle;
+	IRQ_HandleTypeDef 					handle;
 	IRQ_HandleRegistryTypeDef		registry;
-	int																	hdata;
+	int													hdata;
 	
 	memset(&handle, 0, sizeof(handle));
 	handle.irqn = USART2_IRQn;
@@ -95,7 +96,7 @@ TEST(IRQ_Handle, IRQ_DeInit)
 	
 	HAL_NVIC_DisableIRQ(USART2_IRQn);
 	
-	IRQ_Init(&handle, &hdata);
+	IRQ_HAL_Init(&handle, &hdata);
 	IRQ_DeInit(&handle);
 	
 	TEST_ASSERT_FALSE(irq_enabled(USART2_IRQn));
@@ -105,20 +106,63 @@ TEST(IRQ_Handle, IRQ_DeInit)
 	HAL_NVIC_DisableIRQ(USART2_IRQn);
 }
 
-TEST(IRQ_Handle, Ctor)
+//TEST(IRQ_Handle, Ctor)
+//{
+//	IRQ_HandleRegistryTypeDef fake;
+//	IRQ_HandleTypeDef* h = NULL;
+//	
+//	h = IRQ_Handle_Ctor(USART2_IRQn, 2, 3, &fake);
+//	
+//	TEST_ASSERT_NOT_NULL(h);
+//	TEST_ASSERT_EQUAL(USART2_IRQn, h->irqn);
+//	TEST_ASSERT_EQUAL(2, h->preempt_priority);
+//	TEST_ASSERT_EQUAL(3, h->sub_priority);
+//	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
+//	TEST_ASSERT_NULL(h->irqh_obj);
+//	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
+//	
+//	if (h) free(h);
+//}
+
+TEST(IRQ_Handle, HandleInitInvalidArgs)
 {
+	int ret;
+	
 	IRQ_HandleRegistryTypeDef fake;
-	IRQ_HandleTypeDef* h = IRQ_Handle_Ctor(USART2_IRQn, 2, 3, &fake);
+	IRQ_HandleTypeDef h;
 	
-	TEST_ASSERT_NOT_NULL(h);
-	TEST_ASSERT_EQUAL(USART2_IRQn, h->irqn);
-	TEST_ASSERT_EQUAL(2, h->preempt_priority);
-	TEST_ASSERT_EQUAL(3, h->sub_priority);
-	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
-	TEST_ASSERT_NULL(h->irqh_obj);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
+	ret = IRQ_Handle_Init(0, USART2_IRQn, 2, 3, &fake);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
 	
-	if (h) free(h);
+	// low bound
+	ret = IRQ_Handle_Init(&h, SysTick_IRQn, 2, 3, &fake);	// SysTick_IRQn = -1
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	// high bound
+	ret = IRQ_Handle_Init(&h, (IRQn_Type)(FPU_IRQn+1), 2, 3, &fake);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = IRQ_Handle_Init(&h, USART2_IRQn, 2, 3, NULL);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+}
+
+TEST(IRQ_Handle, HandleInitSuccess)
+{
+	// int	IRQ_Handle_Init(IRQ_HandleTypeDef* h, IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandleRegistryTypeDef* registry);
+	int ret;
+	IRQ_HandleRegistryTypeDef fake;
+	IRQ_HandleTypeDef h;
+	
+	ret = IRQ_Handle_Init(&h, USART2_IRQn, 2, 3, &fake);
+	
+	TEST_ASSERT_EQUAL(0, ret);
+	
+	TEST_ASSERT_EQUAL(USART2_IRQn, h.irqn);
+	TEST_ASSERT_EQUAL(2, h.preempt_priority);
+	TEST_ASSERT_EQUAL(3, h.sub_priority);
+	TEST_ASSERT_EQUAL_HEX32(&fake, h.registry);
+	TEST_ASSERT_NULL(h.irqh_obj);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h.state);
 }
 
 const extern IRQ_HandleTypeDef IRQ_Handle_Uart2_Default;
@@ -158,9 +202,12 @@ TEST(IRQ_Handle, CtorByConfig)
 
 TEST_GROUP_RUNNER(IRQ_Handle)
 {
-	RUN_TEST_CASE(IRQ_Handle, IRQ_Init);
+	RUN_TEST_CASE(IRQ_Handle, IRQ_HAL_Init);
 	RUN_TEST_CASE(IRQ_Handle, IRQ_DeInit);
-	RUN_TEST_CASE(IRQ_Handle, Ctor);
+	RUN_TEST_CASE(IRQ_Handle, HandleInitInvalidArgs);
+	RUN_TEST_CASE(IRQ_Handle, HandleInitSuccess);
+	
+	// RUN_TEST_CASE(IRQ_Handle, Ctor);
 	// RUN_TEST_CASE(IRQ_Handle, CtorByTemplate);
 	RUN_TEST_CASE(IRQ_Handle, CtorByConfig);
 }

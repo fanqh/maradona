@@ -56,7 +56,7 @@ void 	DMAEX_Init(DMAEX_HandleTypeDef* dmaex)
 {
 	DMA_Clock_Get(dmaex->clk, dmaex->hdma.Instance);
 	HAL_DMA_Init(&dmaex->hdma);
-	IRQ_Init(dmaex->hirq, &dmaex->hdma);				/** make the link **/
+	IRQ_HAL_Init(dmaex->hirq, &dmaex->hdma);				/** make the link **/
 	dmaex->state = DMAEX_HANDLE_STATE_SET;
 }
 

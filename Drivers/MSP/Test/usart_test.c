@@ -803,7 +803,7 @@ TEST(UART_DMA_TxRx, ReceiveMultipleBytesInSuspendResumeManner)
 	timestamp = HAL_GetTick();
 	for (;;) {
 		
-		if (HAL_GetTick() - timestamp > 100) {	// fail occasionally, don't know why. change this value and
+		if (HAL_GetTick() - timestamp > 150) {	// fail occasionally, don't know why. change this value and
 																						// recompile probably fix the problem.
 			TEST_FAIL_MESSAGE(fill);
 			return;

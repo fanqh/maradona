@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "errno_ex.h"
 #include "stm32f4xx_hal.h"
 #include "irq.h"
 
@@ -32,7 +33,7 @@ void* IRQ_HandlerObject_Get(IRQ_HandleRegistryTypeDef* registry, IRQn_Type irqn)
 
 
 
-void IRQ_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj)
+void IRQ_HAL_Init(IRQ_HandleTypeDef* hirq, void* irqh_obj)
 {
 	assert_param(hirq);
 	assert_param(hirq->irqn <= FPU_IRQn);
@@ -83,6 +84,21 @@ IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t su
 	h->sub_priority = sub;
 	
 	return h;
+}
+
+int	IRQ_Handle_Init(IRQ_HandleTypeDef* h, IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandleRegistryTypeDef* registry)
+{	
+	if (h == NULL || irqn < 0 || irqn > FPU_IRQn || registry == NULL)
+		return -EINVAL;
+	
+	h->irqh_obj = 0;
+	h->registry = registry;
+	h->irqn = irqn;
+	h->preempt_priority = preempt;
+	h->state = IRQ_HANDLE_STATE_RESET;
+	h->sub_priority = sub;
+	
+	return 0;
 }
 
 //IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry)
