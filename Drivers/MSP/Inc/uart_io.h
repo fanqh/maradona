@@ -55,9 +55,9 @@ struct uart_device {
 /** tested **/
 int 									UART_IO_Read(struct uart_device * udev, char* buffer, size_t size);
 int 									UART_IO_Write(struct uart_device * udev, char* buffer, size_t size);
+int 									UART_IO_Open(struct device * dev, struct file * filp);
+int										uart_device_release(struct device * dev, struct file * filp);
 
-/** working **/
-int 									UART_IO_Open(struct device * udev, struct file * file);
 
 /** not tested yet **/
 void									UART_IO_DeInitAll(void);

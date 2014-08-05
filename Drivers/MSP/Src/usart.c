@@ -122,27 +122,27 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 	
 	enable_usart_clock(huart->Instance);
 
-	GPIOEX_Init(hue->rxpin);
+	GPIOEX_HAL_Init(hue->rxpin);
 	if (hue->hdmaex_rx)
 	{
 		assert_param(hue->hdmaex_rx->clk);
 		// assert_param(false == DMA_Clock_Status(hue->hdmaex_rx->clk, hue->hdmaex_rx->hdma.Instance));
 		__HAL_LINKDMA(&hue->huart,hdmarx,hue->hdmaex_rx->hdma);
-		DMAEX_Init(hue->hdmaex_rx);
+		DMAEX_HAL_Init(hue->hdmaex_rx);
 	}
 
-	GPIOEX_Init(hue->txpin);
+	GPIOEX_HAL_Init(hue->txpin);
 	if (hue->hdmaex_tx)
 	{
 		assert_param(hue->hdmaex_tx->clk);
 		// assert_param(false == DMA_Clock_Status(hue->hdmaex_tx->clk, hue->hdmaex_tx->hdma.Instance));
 		__HAL_LINKDMA(&hue->huart,hdmatx,hue->hdmaex_tx->hdma);
-		DMAEX_Init(hue->hdmaex_tx);		
+		DMAEX_HAL_Init(hue->hdmaex_tx);		
 	}
 		
 	if (hue->hirq)
 	{
-		IRQ_Init(hue->hirq, &hue->huart);
+		IRQ_HAL_Init(hue->hirq, &hue->huart);
 	}
 }
 
@@ -173,25 +173,25 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 	
 	if (hue->hirq)
 	{
-    IRQ_DeInit(hue->hirq);
+    IRQ_HAL_DeInit(hue->hirq);
 	}	
 	
 	if (hue->hdmaex_tx)
 	{
-		DMAEX_DeInit(hue->hdmaex_tx);
+		DMAEX_HAL_DeInit(hue->hdmaex_tx);
 		hue->hdmaex_tx->hdma.Parent = 0;	// unlink
 		hue->huart.hdmatx = 0;
 	}	
 
 	if (hue->hdmaex_rx)
 	{
-		DMAEX_DeInit(hue->hdmaex_rx);
+		DMAEX_HAL_DeInit(hue->hdmaex_rx);
 		hue->hdmaex_rx->hdma.Parent = 0;	// unlink
 		hue->huart.hdmarx = 0;
 	}
 
-	GPIOEX_DeInit(hue->rxpin);
-	GPIOEX_DeInit(hue->txpin);
+	GPIOEX_HAL_DeInit(hue->rxpin);
+	GPIOEX_HAL_DeInit(hue->txpin);
 	
 	disable_usart_clock(huart->Instance);
 } 
@@ -352,6 +352,33 @@ UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef										*uart,
 	return h;
 }
 
+int	UARTEX_Handle_Init( UARTEX_HandleTypeDef						*h,
+												USART_TypeDef										*uart,
+												const UART_InitTypeDef					*init,
+												GPIOEX_TypeDef									*rxpin, 		// DI
+												GPIOEX_TypeDef									*txpin, 		// DI		
+												DMAEX_HandleTypeDef							*hdmaex_rx,	// DI
+												DMAEX_HandleTypeDef							*hdmaex_tx,	// DI
+												IRQ_HandleTypeDef								*hirq,			// DI
+												const struct UARTEX_Operations	*ops)
+{	
+	if (h == NULL || uart == NULL || init == NULL || rxpin == NULL || txpin == NULL || ops == NULL)
+		return -EINVAL;
+	
+	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
+	
+	h->rxpin = rxpin;
+	h->txpin = txpin;
+	h->huart.Instance = uart;
+	memmove(&h->huart.Init, init, sizeof(UART_InitTypeDef));
+	h->hdmaex_rx = hdmaex_rx;
+	h->hdmaex_tx = hdmaex_tx;
+	h->hirq = hirq;
+	h->ops = *ops;
+
+	return 0;
+}
+
 UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef		*config,	
 																					GPIOEX_TypeDef										*rxpin, 				// DI
 																					GPIOEX_TypeDef										*txpin, 				// DI		
@@ -390,6 +417,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 																										IRQ_HandleRegistryTypeDef*		irq_registry,
 																										const UARTEX_ConfigTypeDef*		cfg)																										
 {
+	int ret;
 	GPIOEX_TypeDef* rxpinH = NULL;
 	GPIOEX_TypeDef* txpinH = NULL;
 	DMAEX_HandleTypeDef* dmaExRxH = NULL;
@@ -400,13 +428,29 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	if (dma_clk == NULL || gpio_clk == NULL || irq_registry == NULL || cfg == NULL)
 		return NULL;
 	
-	rxpinH = GPIOEX_Ctor(cfg->rxpin->instance, &cfg->rxpin->init, gpio_clk);
-	if (rxpinH == NULL)
+	rxpinH = malloc(sizeof(*rxpinH));
+	if (rxpinH == NULL) {
+		errno = ENOMEM;
 		goto fail0;
+	}
 	
-	txpinH = GPIOEX_Ctor(cfg->txpin->instance, &cfg->txpin->init, gpio_clk);
-	if (txpinH == NULL)
+	ret = GPIOEX_Init(rxpinH, cfg->rxpin->instance, &cfg->rxpin->init, gpio_clk);
+	if (ret != 0) {
+		errno = -ret;
 		goto fail1;
+	}
+	
+	txpinH = malloc(sizeof(*txpinH));
+	if (txpinH == NULL) {
+		errno = ENOMEM;
+		goto fail1;
+	}
+	
+	ret = GPIOEX_Init(txpinH, cfg->txpin->instance, &cfg->txpin->init, gpio_clk);
+	if (ret != 0) {
+		errno = -ret;
+		goto fail2;
+	}
 	
 	// if (hdmarx && dmarx_irq_config)
 	if (cfg->dmarx && cfg->dmarx_irq)
@@ -424,13 +468,19 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 			goto fail3;
 	}
 	
-	// if (hirq_uart)
 	if (cfg->uart_irq)
 	{
-		// irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
-		irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, irq_registry);
+		// irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, irq_registry);
+		irqH = malloc(sizeof(*irqH));
 		if (irqH == NULL)
 			goto fail4;
+		
+		ret = IRQ_Handle_InitByConfig(irqH, cfg->uart_irq, irq_registry);
+		if (ret != 0)
+		{
+			errno = -ret;
+			goto fail5;
+		}
 	}
 	
 	h = UARTEX_Handle_Ctor(cfg->uart->Instance, &cfg->uart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
@@ -439,26 +489,24 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	
 	return h;
 	
-	fail5:	if (cfg->uart_irq) IRQ_Handle_Dtor(irqH);
+	fail5:	if (cfg->uart_irq) free(irqH);
 	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
 	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
-	fail2: 	GPIOEX_Dtor(txpinH);
-	fail1:	GPIOEX_Dtor(rxpinH);
+	fail2: 	free(txpinH);
+	fail1:	free(rxpinH);
 	fail0:	return NULL;
 }
 
 void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h)
 {
-//	DMAEX_Handle_FactoryTypeDef	dma_factory;
-//	
-//	dma_factory.clk = factory->dma_clk;
-//	dma_factory.reg = factory->registry;	
 	
 	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
 	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
-	GPIOEX_Dtor(h->rxpin);
-	GPIOEX_Dtor(h->txpin);
-	IRQ_Handle_Dtor(h->hirq);
+	free(h->rxpin);
+	free(h->txpin);
+
+	/** is this problematic ??? undefined combination ??? **/
+	if (h->hirq) free(h->hirq);
 		
 	free(h);
 }
@@ -566,6 +614,7 @@ static HAL_StatusTypeDef UARTEX_Init(UARTEX_HandleTypeDef *hue)
 
 static HAL_StatusTypeDef UARTEX_DeInit(UARTEX_HandleTypeDef *hue) 
 {
+	HAL_UART_DMAStop(&hue->huart);
 	return HAL_UART_DeInit(&hue->huart);
 }
 

@@ -21,22 +21,42 @@ struct msp_factory
 	/////////////////////////////////////////////////////////////////////////////
 	// these are provided methods (called by user)
 	UARTEX_HandleTypeDef* (*huartex_create)(struct msp_factory * msp, int num);
+	void (*huratex_destroy)(UARTEX_HandleTypeDef* huartex);
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// these are required methods (called by me, myself)
 	// ll_ prefix for low level, sorry that i didn't find a better name
-	UARTEX_HandleTypeDef* (*ll_huartex_create)(GPIO_ClockProviderTypeDef* 	gpio_clk,
-																					DMA_ClockProviderTypeDef*		dma_clk,
-																					IRQ_HandleRegistryTypeDef*	irq_registry,
-																					const UARTEX_ConfigTypeDef* uartex_configs);
-																										
+	UARTEX_HandleTypeDef* (*ll_huartex_create)(	GPIO_ClockProviderTypeDef* 	gpio_clk,
+																							DMA_ClockProviderTypeDef*		dma_clk,
+																							IRQ_HandleRegistryTypeDef*	irq_registry,
+																							const UARTEX_ConfigTypeDef* uartex_configs);
+	
+	
 	void (*ll_huartex_destroy)(UARTEX_HandleTypeDef* h);	
+	
+	DMAEX_HandleTypeDef*	(*create_dmaex_handle)(struct msp_factory * msp, 
+		const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
+	
+	
 	/////////////////////////////////////////////////////////////////////////////
 	// test data
 	void * testdata;
 };
 
-UARTEX_HandleTypeDef* MSP_Create_UARTEX_Handle(struct msp_factory * msp, int port);
+UARTEX_HandleTypeDef*	msp_create_huartex(struct msp_factory * msp, int port);
+
+UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory * msp, const UARTEX_ConfigTypeDef * cfg);
+UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp, int port);
+
+void MSP_Destroy_UARTEX_Handle(UARTEX_HandleTypeDef* huartex);
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
+	const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
+
+
 
 extern struct msp_factory MSP;
 
