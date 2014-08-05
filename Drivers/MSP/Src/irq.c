@@ -85,10 +85,10 @@ IRQ_HandleTypeDef *IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t su
 	return h;
 }
 
-IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry)
-{
-	return IRQ_Handle_Ctor(hirq->irqn, hirq->preempt_priority, hirq->sub_priority, registry);
-}
+//IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry)
+//{
+//	return IRQ_Handle_Ctor(hirq->irqn, hirq->preempt_priority, hirq->sub_priority, registry);
+//}
 
 IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry)
 {

@@ -123,22 +123,22 @@ TEST(IRQ_Handle, Ctor)
 
 const extern IRQ_HandleTypeDef IRQ_Handle_Uart2_Default;
 
-TEST(IRQ_Handle, CtorByTemplate)
-{
-	IRQ_HandleRegistryTypeDef fake;
-	const IRQ_HandleTypeDef* dfl = &IRQ_Handle_Uart2_Default;
-	
-	IRQ_HandleTypeDef* h = IRQ_Handle_Ctor_By_Template(dfl, &fake);
-	TEST_ASSERT_NOT_NULL(h);
-	TEST_ASSERT_EQUAL(dfl->irqn, h->irqn);
-	TEST_ASSERT_EQUAL(dfl->preempt_priority , h->preempt_priority);
-	TEST_ASSERT_EQUAL(dfl->sub_priority , h->sub_priority);
-	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
-	TEST_ASSERT_NULL(h->irqh_obj);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
-	
-	if (h) free(h);
-}
+//TEST(IRQ_Handle, CtorByTemplate)
+//{
+//	IRQ_HandleRegistryTypeDef fake;
+//	const IRQ_HandleTypeDef* dfl = &IRQ_Handle_Uart2_Default;
+//	
+//	IRQ_HandleTypeDef* h = IRQ_Handle_Ctor_By_Template(dfl, &fake);
+//	TEST_ASSERT_NOT_NULL(h);
+//	TEST_ASSERT_EQUAL(dfl->irqn, h->irqn);
+//	TEST_ASSERT_EQUAL(dfl->preempt_priority , h->preempt_priority);
+//	TEST_ASSERT_EQUAL(dfl->sub_priority , h->sub_priority);
+//	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
+//	TEST_ASSERT_NULL(h->irqh_obj);
+//	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
+//	
+//	if (h) free(h);
+//}
 
 TEST(IRQ_Handle, CtorByConfig)
 {
@@ -161,7 +161,8 @@ TEST_GROUP_RUNNER(IRQ_Handle)
 	RUN_TEST_CASE(IRQ_Handle, IRQ_Init);
 	RUN_TEST_CASE(IRQ_Handle, IRQ_DeInit);
 	RUN_TEST_CASE(IRQ_Handle, Ctor);
-	RUN_TEST_CASE(IRQ_Handle, CtorByTemplate);
+	// RUN_TEST_CASE(IRQ_Handle, CtorByTemplate);
+	RUN_TEST_CASE(IRQ_Handle, CtorByConfig);
 }
 
 TEST_GROUP_RUNNER(IRQ_All)
