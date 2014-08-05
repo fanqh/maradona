@@ -74,7 +74,7 @@ struct UARTEX_HandleTypeDef
 	
 	/** This field are used for test/mock					**/
 	/** UART Ex Operations never touch this field **/
-	void											*test_data;					
+	void											*testdata;					
 };
 
 typedef struct

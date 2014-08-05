@@ -6,6 +6,8 @@
 #include "uart_io_private.h"
 #include "devicefs.h"
 
+static int countdown;
+
 typedef struct 
 {
 	/** simulated registers **/
@@ -19,17 +21,6 @@ typedef struct
 	char*										txdma_buf;
 	
 } uio_testdata_t;
-
-/*** hal apis that will be mocked ***/
-//const usart_api_t usart_apis_default =
-//{
-//	.HAL_UART_Init = HAL_UART_Init,
-//	.HAL_UART_Transmit_DMA = HAL_UART_Transmit_DMA,
-//	.HAL_UART_Receive_DMA = HAL_UART_Receive_DMA,	
-//	.UART_IO_RxFlipBuffer = UART_IO_RxFlipBuffer
-//};
-
-//usart_api_t usart_apis;
 
 const static char literal[] = 
 	"abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" 
@@ -55,7 +46,6 @@ const static char literal[] =
 
 const char* literal_end = literal + sizeof(literal);
 
-
 HAL_StatusTypeDef m_init_hal_ok(UART_HandleTypeDef *huart) {
 	
 	TEST_ASSERT_EQUAL(HAL_UART_STATE_RESET, huart->State);
@@ -78,7 +68,7 @@ static void fill_rx_testdata(	struct uart_device* huio, 	/** handle 								**/
 															int rx_size)									/** previously set dma recv size **/
 {
 	int other;
-	uio_testdata_t* td = huio->handle->test_data;
+	uio_testdata_t* td = huio->handle->testdata;
 	
 	huio->rx_upper = huio->rbuf[index];
 	huio->rx_head = &huio->rx_upper[offset];
@@ -114,7 +104,7 @@ static void fill_tx_testdata( struct uart_device* huio,
 			already sent. **/
 	
 	int other;
-	uio_testdata_t* td = huio->handle->test_data;
+	uio_testdata_t* td = huio->handle->testdata;
 	
 	huio->tx_head = huio->tbuf[index];
 	huio->tx_tail = huio->tx_head + upper_size;
@@ -196,13 +186,13 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer)
 
 HAL_StatusTypeDef swap_mock_hal_ok(UARTEX_HandleTypeDef* h, uint8_t* buf, size_t size, uint32_t* m0ar, int* ndtr) 
 {
-	uio_testdata_t* test_data = (uio_testdata_t*)h->test_data;
+	uio_testdata_t* testdata = (uio_testdata_t*)h->testdata;
 	
-	if (m0ar) *m0ar = test_data->rx_m0ar;
-	if (ndtr) *ndtr = test_data->rx_ndtr;
+	if (m0ar) *m0ar = testdata->rx_m0ar;
+	if (ndtr) *ndtr = testdata->rx_ndtr;
 	
-	test_data->rx_m0ar = (uint32_t)buf;
-	test_data->rx_ndtr = size;
+	testdata->rx_m0ar = (uint32_t)buf;
+	testdata->rx_ndtr = size;
 	
 	return HAL_OK;
 }
@@ -236,7 +226,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady)
 	huio.handle->ops.swap = swap_mock_hal_ok;
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;
+	huio.handle->testdata = &td;
 	fill_rx_testdata(&huio, 0, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);
 	
 	memset(buf, 0, sizeof(buf));
@@ -288,7 +278,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;
+	huio.handle->testdata = &td;
 	
 	// fill and mock
 	fill_rx_testdata(&huio, 0, 1, soft, strlen(soft), hard, strlen(hard), UART_IO_BUFFER_SIZE);	
@@ -350,7 +340,7 @@ TEST(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeout
 	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;
+	huio.handle->testdata = &td;
 	
 	fill_rx_testdata(&huio, 1, 1, 0, 0, 0, 0, 0);
 	huio.handle->ops.swap = swap_mock_hal_error;
@@ -494,7 +484,7 @@ TEST(UsartIO_DMA, WriteHalStateTimeoutErrorReset)
 
 static HAL_StatusTypeDef send_mock_hal_ok(UARTEX_HandleTypeDef *huartex, uint8_t *pData, uint16_t Size)
 {
-	uio_testdata_t* td = huartex->test_data;
+	uio_testdata_t* td = huartex->testdata;
 	
 //	memset(tx_dma_buffer, 0, UART_IO_BUFFER_SIZE);
 //	memmove(tx_dma_buffer, pData, Size);
@@ -546,7 +536,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalReady)	// write
 	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;	
+	huio.handle->testdata = &td;	
 	//////////////////////////////
 	
 	// HAL_UART_Transmit_DMA
@@ -595,7 +585,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceAdequateAndHalBusy)
 	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;	
+	huio.handle->testdata = &td;	
 	//////////////////////////////
 
 	// uart_ops.send = send_mock_hal_busy;
@@ -651,7 +641,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady)
 	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;	
+	huio.handle->testdata = &td;	
 	//////////////////////////////	
 	
 	memset(s1, 'a', sizeof(s1));
@@ -713,7 +703,6 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	struct uart_device huio;
 	UARTEX_HandleTypeDef hue;
 	uio_testdata_t td;
-//	struct UARTEX_Operations uart_ops;
 	
 	char txbuf0[64];
 	char txbuf1[64];
@@ -730,7 +719,7 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 	memset(&huio.handle->ops, 0, sizeof(huio.handle->ops));
 	
 	memset(&td, 0, sizeof(td));	
-	huio.handle->test_data = &td;	
+	huio.handle->testdata = &td;	
 	//////////////////////////////	
 	// uart_ops.send = send_mock_hal_busy;
 	huio.handle->ops.send = send_mock_hal_busy;
@@ -756,80 +745,118 @@ TEST(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/**
-struct uart_device {
-	
-	struct device						dev;
-	
-	msp_factory							*msp;
-	UARTEX_HandleTypeDef		*handle;
-	
-	char										*rbuf[2];		
-	const int								rbuf_size;
-	
-	char										*rx_upper;
-	char 										*rx_head;
-	char										*rx_tail;	
-	
-	char										*tbuf[2];		
-	const int 							tbuf_size;
-	
-	char										*tx_head;
-	char										*tx_tail;
-	
-	int											open_count;
-};**/
-
-
-
-HAL_StatusTypeDef mock_uartex_init_success(UARTEX_HandleTypeDef *hue)
+// Open Test
+// 1. all success
+// 2. create uartex handle failed
+// 3. uartex init failed (NO this case !)
+// 4. malloc failed x 4
+// 5. recv failed (NO this case !)
+//
+UARTEX_HandleTypeDef* mock_huartex_create_success(struct msp_factory * msp, int num)
 {
-	uint32_t* magic = (uint32_t*)hue;
-	TEST_ASSERT_EQUAL_HEX32(0xA5B6C7D8, *magic);
-	*magic = 0xDEADBEEF;
+	struct uart_device * udev;
+	
+	countdown--;
+	TEST_ASSERT_NOT_NULL(msp);
+	udev = (struct uart_device*)msp->testdata;	
+	TEST_ASSERT_EQUAL(udev->dev.number, num);
+	
+	return (UARTEX_HandleTypeDef*)udev->testdata;	// the fake handle
+}
+
+UARTEX_HandleTypeDef* mock_huartex_create_fail(struct msp_factory * msp, int num)
+{
+	struct uart_device * udev;
+	
+	countdown--;
+	TEST_ASSERT_NOT_NULL(msp);
+	udev = (struct uart_device*)msp->testdata;	
+	TEST_ASSERT_EQUAL(udev->dev.number, num);
+	
+	return NULL;
+}
+
+HAL_StatusTypeDef mock_uartex_init_success(UARTEX_HandleTypeDef * hue)
+{
+	countdown--;
+	TEST_ASSERT_EQUAL(HAL_UART_STATE_RESET, hue->huart.State);
+	hue->huart.State = HAL_UART_STATE_READY;
 	return HAL_OK;
 }
 
-UARTEX_HandleTypeDef* mock_huartex_create_success(struct msp_factory * msp, int num)
+// HAL_UART_Init 
+HAL_StatusTypeDef mock_uartex_deinit_success(UARTEX_HandleTypeDef * hue)
 {
-	TEST_ASSERT_EQUAL(2, num);
-	TEST_ASSERT_EQUAL_HEX32(mock_huartex_create_success, msp->huartex_create);
-	uint32_t* magic = malloc(sizeof(uint32_t));
-	*magic = 0xA5B6C7D8;
-	return (UARTEX_HandleTypeDef*)magic;
+	countdown--;
+	TEST_ASSERT_EQUAL(HAL_UART_STATE_READY, hue->huart.State);
+	hue->huart.State = HAL_UART_STATE_RESET;
+	return HAL_OK;
 }
 
-TEST(UsartIO_DMA, OpenWhenDeviceNotOpened)
+HAL_StatusTypeDef mock_uartex_recv_success(UARTEX_HandleTypeDef * hue, uint8_t *pData, uint16_t Size)
 {
-	int ret;
-	struct file file;
-	struct msp_factory msp;
-	struct UARTEX_HandleTypeDef huartex;
-	struct uart_device 	udev = 
-	{ 
-		.dev = { .name = "UART2", },
-		.msp = &msp,
-		.rbuf_size = 64, 
-		.tbuf_size = 64, 
-	};
+	struct uart_device * udev;
 	
-	msp.huartex_create = mock_huartex_create_success;
-	huartex.ops.init = mock_uartex_init_success;
+	countdown--;
+	TEST_ASSERT_NOT_NULL(hue);
+	udev = (struct uart_device*)hue->testdata;
+	
+	TEST_ASSERT_EQUAL_HEX32(udev->rbuf[0], pData);
+	TEST_ASSERT_EQUAL(udev->rbuf_size, Size);
+	
+	return HAL_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// The func should 
+// 1) create uartex handle
+// 2) init uart with the handle
+// 3) if OK, allocate and init buffer
+// 4) start to receive
+// 5) init file 
+TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedAllSuccess)
+{
+	int 												ret;
+	struct file 								file = {0};
+	struct msp_factory 					msp = {0};
+	struct UARTEX_HandleTypeDef huartex = {0};
+	struct uart_device 					udev = 
+		{ 
+			.dev = { .name = "UART2", .number = 2, },
+			.msp = &msp,
+			.rbuf_size = 13, 
+			.tbuf_size = 17, 
+		};
+	
+	udev.testdata = &huartex;
+	huartex.testdata = &udev;															// 
+	msp.testdata = &udev;
+	
+	msp.huartex_create = mock_huartex_create_success;			// create uartex handle
+	huartex.ops.init = mock_uartex_init_success;					// init uart (hardware)
+	huartex.ops.recv = mock_uartex_recv_success;					// start recv 
+	countdown = 3;
 	
 	ret = UART_IO_Open(&udev.dev, &file);
-		
+	
+	TEST_ASSERT_EQUAL(0, countdown);												// all three func called
+
 	/////////////////////////////////////////////////////////////////////////////
-	// udev initialized.
-	//	
-	TEST_ASSERT_EQUAL(0, ret);
-	TEST_ASSERT_EQUAL_HEX32(&msp, udev.msp);
-	TEST_ASSERT_NOT_NULL(udev.handle);
-	TEST_ASSERT_EQUAL_HEX32(0xDEADBEEF, *((uint32_t*)udev.handle));		// see mock code
-		
+	// handle created.
+	TEST_ASSERT_EQUAL(0, ret);															// return success
+	TEST_ASSERT_NOT_NULL(udev.handle);											// udev handle set
+	TEST_ASSERT_EQUAL_HEX32(&huartex, udev.handle);					// udev handle mocked
+	
+	/////////////////////////////////////////////////////////////////////////////
+	// hal inited.
+	TEST_ASSERT_EQUAL(HAL_UART_STATE_READY, udev.handle->huart.State);
+	
+	/////////////////////////////////////////////////////////////////////////////
+	// device internals
 	TEST_ASSERT_MEMSIZE(udev.rbuf_size, udev.rbuf[0]);
 	TEST_ASSERT_MEMSIZE(udev.rbuf_size, udev.rbuf[1]);
 		
-	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_upper);
+	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_upper);		// rbuf 1 as upper, 0 as dma
 	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_head);
 	TEST_ASSERT_EQUAL_HEX32(udev.rbuf[1], udev.rx_tail);	
 	
@@ -843,10 +870,142 @@ TEST(UsartIO_DMA, OpenWhenDeviceNotOpened)
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// file initialized
-	//
+	TEST_ASSERT_EQUAL(&udev, file.private_data);
+	TEST_ASSERT_EQUAL(udev.dev.f_ops, file.f_ops);
 	
+	/////////////////////////////////////////////////////////////////////////////
+	// clean up
+	free(udev.rbuf[0]);
+	free(udev.rbuf[1]);
+	free(udev.tbuf[0]);
+	free(udev.tbuf[1]);
 }
 
+TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedCreateHandleFail)
+{
+	int 												ret;
+	struct file 								file = 		{0};
+	struct msp_factory 					msp = 		{0};
+	struct UARTEX_HandleTypeDef huartex = {0};
+	struct uart_device 					udev = 
+		{ 
+			.dev = { .name = "UART2", .number = 2, },
+			.msp = &msp,
+			.rbuf_size = 13,
+			.tbuf_size = 17,
+		};
+	
+	udev.testdata = &huartex;
+	huartex.testdata = &udev;															// 
+	msp.testdata = &udev;
+	
+	msp.huartex_create = mock_huartex_create_fail;				// create uartex handle
+	huartex.ops.init = mock_uartex_init_success;					// init uart (hardware)
+	huartex.ops.recv = mock_uartex_recv_success;					// start recv 
+	countdown = 1;
+	
+	ret = UART_IO_Open(&udev.dev, &file);
+	
+	TEST_ASSERT_EQUAL(0, countdown);											// only one func called
+	TEST_ASSERT_EQUAL(-EFATAL, ret);
+}
+
+static void assert_device_and_file_intact(struct uart_device * udev, struct file * filp)
+{
+	TEST_ASSERT_NULL(udev->handle);
+	TEST_ASSERT_NULL(udev->rbuf[0]);
+	TEST_ASSERT_NULL(udev->rbuf[1]);
+	TEST_ASSERT_NULL(udev->rx_upper);
+	TEST_ASSERT_NULL(udev->rx_head);
+	TEST_ASSERT_NULL(udev->rx_tail);
+	TEST_ASSERT_NULL(udev->tbuf[0]);
+	TEST_ASSERT_NULL(udev->tbuf[1]);
+	TEST_ASSERT_NULL(udev->tx_head);
+	TEST_ASSERT_NULL(udev->tx_tail);
+	TEST_ASSERT_EQUAL(0, udev->open_count);
+	TEST_ASSERT_NULL(filp->private_data);
+	TEST_ASSERT_NULL(filp->f_ops);
+}
+
+TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedMallocFail)
+{
+	int 												ret;
+	struct file 								file = {0};
+	struct msp_factory 					msp = {0};
+	struct UARTEX_HandleTypeDef huartex = {0};
+	struct uart_device 					udev = 
+		{ 
+			.dev = { .name = "UART2", .number = 2, },
+			.msp = &msp,
+			.rbuf_size = 13, 
+			.tbuf_size = 17, 
+		};
+	
+	udev.testdata = &huartex;
+	huartex.testdata = &udev;															// 
+	msp.testdata = &udev;
+	
+	msp.huartex_create = mock_huartex_create_success;			// create uartex handle
+	huartex.ops.init = mock_uartex_init_success;					// init uart (hardware)
+	huartex.ops.deinit = mock_uartex_deinit_success;			// deinit uart	
+	huartex.ops.recv = mock_uartex_recv_success;					// start recv 
+		
+	countdown = 4;
+	UnityMalloc_MakeMallocFailAfterCount(0);
+	ret = UART_IO_Open(&udev.dev, &file);
+	TEST_ASSERT_EQUAL(4, countdown);											// nothing should be called	
+	TEST_ASSERT_EQUAL(-ENOMEM, ret);											// return ENOMEM
+	assert_device_and_file_intact(&udev, &file);
+
+	countdown = 4;
+	UnityMalloc_MakeMallocFailAfterCount(1);
+	ret = UART_IO_Open(&udev.dev, &file);
+	TEST_ASSERT_EQUAL(4, countdown);											// nothing should be called	
+	TEST_ASSERT_EQUAL(-ENOMEM, ret);											// return ENOMEM
+	assert_device_and_file_intact(&udev, &file);		
+	
+	countdown = 4;
+	UnityMalloc_MakeMallocFailAfterCount(2);
+	ret = UART_IO_Open(&udev.dev, &file);
+	TEST_ASSERT_EQUAL(4, countdown);											// nothing should be called	
+	TEST_ASSERT_EQUAL(-ENOMEM, ret);											// return ENOMEM
+	assert_device_and_file_intact(&udev, &file);	
+	
+	countdown = 4;
+	UnityMalloc_MakeMallocFailAfterCount(3);
+	ret = UART_IO_Open(&udev.dev, &file);
+	TEST_ASSERT_EQUAL(4, countdown);											// nothing should be called	
+	TEST_ASSERT_EQUAL(-ENOMEM, ret);											// return ENOMEM
+	assert_device_and_file_intact(&udev, &file);	
+}
+
+TEST(UsartIO_DMA, Release)
+{
+	int 												ret;
+	struct file									file;
+	struct msp_factory 					msp = {0};
+	struct UARTEX_HandleTypeDef huartex = {0};
+	struct uart_device 					udev = 
+		{ 
+			.dev = { .name = "UART2", .number = 2, },
+			.msp = &msp,
+			.rbuf_size = 13, 
+			.tbuf_size = 17, 
+		};
+		
+	// ret = uart_device_release(&udev.dev, &file);
+	
+	udev.handle = &huartex;
+	udev.testdata = &huartex;
+	huartex.testdata = &udev;															// 
+	msp.testdata = &udev;
+	
+	huartex.ops.deinit = mock_uartex_deinit_success;
+		
+	assert_device_and_file_intact(&udev, &file);
+}
+
+// int uart_device_release(struct device * dev, struct file * filp);
 
 /******************************************************************************
  *
@@ -864,13 +1023,7 @@ TEST_GROUP_RUNNER(UsartIO_DMA)
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadLessThanOrEqualToBytesInBuffer);
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalReady);
 	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferNotEmpty);	
-	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferEmpty);
-	
-//	RUN_TEST_CASE(UsartIO_DMA, OpenInvalidArgs);
-//	RUN_TEST_CASE(UsartIO_DMA, OpenPortUnavailable);
-//	RUN_TEST_CASE(UsartIO_DMA, OpenHalNotResetState);
-//	RUN_TEST_CASE(UsartIO_DMA, OpenHalInitOkReceiveOk);
-//	
+	RUN_TEST_CASE(UsartIO_DMA, ReadWhenBytesToReadMoreThanBytesInBufferAndHalErrorBusyTimeoutAndBufferEmpty);	
 	
 	// args invalid
 	// args valid, hal state not continuable
@@ -887,6 +1040,9 @@ TEST_GROUP_RUNNER(UsartIO_DMA)
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalReady);
 	RUN_TEST_CASE(UsartIO_DMA, WriteBufferSpaceInadequateAndHalBusy);
 	
-	RUN_TEST_CASE(UsartIO_DMA, OpenWhenDeviceNotOpened);
+	// open test
+	RUN_TEST_CASE(UsartIO_DMA, OpenWhenDeviceNotOpenedAllSuccess);
+	RUN_TEST_CASE(UsartIO_DMA, OpenWhenDeviceNotOpenedCreateHandleFail);
+	RUN_TEST_CASE(UsartIO_DMA, OpenWhenDeviceNotOpenedMallocFail);
 }
 

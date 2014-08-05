@@ -122,7 +122,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 	
 	enable_usart_clock(huart->Instance);
 
-	GPIOEX_Init(hue->rxpin);
+	GPIOEX_HAL_Init(hue->rxpin);
 	if (hue->hdmaex_rx)
 	{
 		assert_param(hue->hdmaex_rx->clk);
@@ -131,7 +131,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 		DMAEX_Init(hue->hdmaex_rx);
 	}
 
-	GPIOEX_Init(hue->txpin);
+	GPIOEX_HAL_Init(hue->txpin);
 	if (hue->hdmaex_tx)
 	{
 		assert_param(hue->hdmaex_tx->clk);
@@ -190,8 +190,8 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 		hue->huart.hdmarx = 0;
 	}
 
-	GPIOEX_DeInit(hue->rxpin);
-	GPIOEX_DeInit(hue->txpin);
+	GPIOEX_HAL_DeInit(hue->rxpin);
+	GPIOEX_HAL_DeInit(hue->txpin);
 	
 	disable_usart_clock(huart->Instance);
 } 
@@ -390,6 +390,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 																										IRQ_HandleRegistryTypeDef*		irq_registry,
 																										const UARTEX_ConfigTypeDef*		cfg)																										
 {
+	int ret;
 	GPIOEX_TypeDef* rxpinH = NULL;
 	GPIOEX_TypeDef* txpinH = NULL;
 	DMAEX_HandleTypeDef* dmaExRxH = NULL;
@@ -400,13 +401,29 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	if (dma_clk == NULL || gpio_clk == NULL || irq_registry == NULL || cfg == NULL)
 		return NULL;
 	
-	rxpinH = GPIOEX_Ctor(cfg->rxpin->instance, &cfg->rxpin->init, gpio_clk);
-	if (rxpinH == NULL)
+	rxpinH = malloc(sizeof(*rxpinH));
+	if (rxpinH == NULL) {
+		errno = ENOMEM;
 		goto fail0;
+	}
 	
-	txpinH = GPIOEX_Ctor(cfg->txpin->instance, &cfg->txpin->init, gpio_clk);
-	if (txpinH == NULL)
+	ret = GPIOEX_Init(rxpinH, cfg->rxpin->instance, &cfg->rxpin->init, gpio_clk);
+	if (ret != 0) {
+		errno = -ret;
 		goto fail1;
+	}
+	
+	txpinH = malloc(sizeof(*txpinH));
+	if (txpinH == NULL) {
+		errno = ENOMEM;
+		goto fail1;
+	}
+	
+	ret = GPIOEX_Init(txpinH, cfg->txpin->instance, &cfg->txpin->init, gpio_clk);
+	if (ret != 0) {
+		errno = -ret;
+		goto fail2;
+	}
 	
 	// if (hdmarx && dmarx_irq_config)
 	if (cfg->dmarx && cfg->dmarx_irq)
@@ -442,8 +459,8 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	fail5:	if (cfg->uart_irq) IRQ_Handle_Dtor(irqH);
 	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
 	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
-	fail2: 	GPIOEX_Dtor(txpinH);
-	fail1:	GPIOEX_Dtor(rxpinH);
+	fail2: 	free(txpinH);
+	fail1:	free(rxpinH);
 	fail0:	return NULL;
 }
 
@@ -456,8 +473,8 @@ void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h)
 	
 	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
 	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
-	GPIOEX_Dtor(h->rxpin);
-	GPIOEX_Dtor(h->txpin);
+	free(h->rxpin);
+	free(h->txpin);
 	IRQ_Handle_Dtor(h->hirq);
 		
 	free(h);
@@ -566,6 +583,7 @@ static HAL_StatusTypeDef UARTEX_Init(UARTEX_HandleTypeDef *hue)
 
 static HAL_StatusTypeDef UARTEX_DeInit(UARTEX_HandleTypeDef *hue) 
 {
+	HAL_UART_DMAStop(&hue->huart);
 	return HAL_UART_DeInit(&hue->huart);
 }
 

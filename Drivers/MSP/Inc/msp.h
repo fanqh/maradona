@@ -21,6 +21,7 @@ struct msp_factory
 	/////////////////////////////////////////////////////////////////////////////
 	// these are provided methods (called by user)
 	UARTEX_HandleTypeDef* (*huartex_create)(struct msp_factory * msp, int num);
+	void (*huratex_destroy)(UARTEX_HandleTypeDef* huartex);
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// these are required methods (called by me, myself)
@@ -36,7 +37,10 @@ struct msp_factory
 	void * testdata;
 };
 
+UARTEX_HandleTypeDef*	msp_create_huartex(struct msp_factory * msp, int port);
+
 UARTEX_HandleTypeDef* MSP_Create_UARTEX_Handle(struct msp_factory * msp, int port);
+void MSP_Destroy_UARTEX_Handle(UARTEX_HandleTypeDef* huartex);
 
 extern struct msp_factory MSP;
 
