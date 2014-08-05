@@ -266,11 +266,12 @@ TEST(DMAEX_Handle, FactoryCreate)
 	DMA_ConfigTypeDef							dma_config;
 	IRQ_ConfigTypeDef							irq_config;
 
-	DMAEX_HandleTypeDef*							h;
+	DMAEX_HandleTypeDef*					h;
 	
 	memset(&dma_config, 0xA5, sizeof(dma_config));
 	memset(&irq_config, 0xB5, sizeof(irq_config));
-	irq_config.irqn = USART2_IRQn;	/** must be something valid **/
+	irq_config.irqn = USART2_IRQn;				/** must be something valid **/
+	dma_config.Instance = DMA1_Stream5; 	/** must be something valid **/
 	
 	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
 	
@@ -383,11 +384,9 @@ TEST_GROUP_RUNNER(DMAEX_Handle)
 	RUN_TEST_CASE(DMAEX_Handle, InitByConfigInvalidArgs);
 	RUN_TEST_CASE(DMAEX_Handle, HandleInitByConfigSuccess);
 	
-	// RUN_TEST_CASE(DMAEX_Handle, Ctor);	
-	// RUN_TEST_CASE(DMAEX_Handle, CtorByConfig);
-	// RUN_TEST_CASE(DMAEX_Handle, Dtor);
 	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);
 	RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
+	
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_HAL_Init);
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_HAL_DeInit);
 }

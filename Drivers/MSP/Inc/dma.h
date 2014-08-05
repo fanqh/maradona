@@ -48,8 +48,8 @@ typedef struct {
 int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *stream, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
-int 	DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
-		DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
+int DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
+	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
 void 	DMAEX_HAL_Init(DMAEX_HandleTypeDef* dmaex);
 void	DMAEX_HAL_DeInit(DMAEX_HandleTypeDef* dmaex);
@@ -57,8 +57,6 @@ void	DMAEX_HAL_DeInit(DMAEX_HandleTypeDef* dmaex);
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-
-
 DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma_clk,
 																									IRQ_HandleRegistryTypeDef			*irq_registry,
 																									const DMA_ConfigTypeDef				*dma_config,

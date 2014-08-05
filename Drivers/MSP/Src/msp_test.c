@@ -1,4 +1,6 @@
+#include <string.h>
 #include "msp.h"
+
 
 static void* passby = 0;
 
@@ -124,10 +126,57 @@ TEST(MSP, DestroyUARTEXHandle)
 	
 }
 
+TEST(MSP, CreateDMAEXHandle)
+{
+	GPIO_ClockProviderTypeDef			gpio_clk;
+	DMA_ClockProviderTypeDef			dma_clk;
+	IRQ_HandleRegistryTypeDef			registry;
+	DMA_ConfigTypeDef							dma_config;
+	IRQ_ConfigTypeDef							irq_config;
+	struct msp_factory						msp;
+
+	DMAEX_HandleTypeDef*					h;
+	
+	memset(&dma_config, 0xA5, sizeof(dma_config));
+	memset(&irq_config, 0xB5, sizeof(irq_config));
+	irq_config.irqn = USART2_IRQn;			/** must be something valid **/
+	dma_config.Instance = DMA1_Stream5; /** must be something valid **/
+	
+	memset(&msp, 0, sizeof(msp));
+	msp.dma_clk = &dma_clk;
+	msp.gpio_clk = &gpio_clk;
+	msp.irq_registry = &registry;
+	
+	
+	// h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
+	/** DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
+	const DMA_ConfigTypeDef dmacfg, const IRQ_ConfigTypeDef irqcfg); **/
+	h = msp_create_dmaex_handle(&msp, &dma_config, &irq_config);
+	
+	TEST_ASSERT_NOT_NULL(h);
+	TEST_ASSERT_EQUAL_HEX32(&dma_clk, h->clk);
+	
+	TEST_ASSERT_EQUAL_HEX32(dma_config.Instance, h->hdma.Instance);
+	TEST_ASSERT_EQUAL_MEMORY(&dma_config.Init, &h->hdma.Init, sizeof(DMA_InitTypeDef));
+
+	TEST_ASSERT_EQUAL(irq_config.irqn, h->hirq->irqn);
+	TEST_ASSERT_EQUAL(irq_config.preempt_priority, h->hirq->preempt_priority);
+	TEST_ASSERT_EQUAL(irq_config.sub_priority, h->hirq->sub_priority);
+	TEST_ASSERT_EQUAL(&registry, h->hirq->registry);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->hirq->state);
+	
+	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, h->state);
+	
+	if (h->hirq) free(h->hirq);
+	if (h) free(h);
+}
+
 TEST_GROUP_RUNNER(MSP)
 {
 	RUN_TEST_CASE(MSP, CreateUARTEXHandle);
 	RUN_TEST_CASE(MSP, CreateHuartEx);
+	
+	RUN_TEST_CASE(MSP, CreateDMAEXHandle);
 }
 
 

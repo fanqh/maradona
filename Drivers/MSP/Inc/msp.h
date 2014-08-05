@@ -42,6 +42,17 @@ UARTEX_HandleTypeDef*	msp_create_huartex(struct msp_factory * msp, int port);
 UARTEX_HandleTypeDef* MSP_Create_UARTEX_Handle(struct msp_factory * msp, int port);
 void MSP_Destroy_UARTEX_Handle(UARTEX_HandleTypeDef* huartex);
 
+/**
+DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma_clk,
+																									IRQ_HandleRegistryTypeDef			*irq_registry,
+																									const DMA_ConfigTypeDef				*dma_config,
+																									const IRQ_ConfigTypeDef				*irq_config); **/
+
+DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
+	const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
+
+
+
 extern struct msp_factory MSP;
 
 #endif

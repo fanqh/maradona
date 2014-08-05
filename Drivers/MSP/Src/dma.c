@@ -194,22 +194,22 @@ bool DMA_Clock_Status(DMA_ClockProviderTypeDef* dma_clk, DMA_Stream_TypeDef* str
 }
 
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_InitTypeDef *init,
-	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
-{
-	DMAEX_HandleTypeDef* h = (DMAEX_HandleTypeDef*)malloc(sizeof(DMAEX_HandleTypeDef));
-	if (!h) return NULL;
-	
-	memset(h, 0, sizeof(DMAEX_HandleTypeDef));
-	
-	h->clk = clk;
-	h->hdma.Instance = instance;
-	memmove(&h->hdma.Init, init, sizeof(DMA_InitTypeDef));
-	h->hirq = hirq;
-	h->state = DMAEX_HANDLE_STATE_RESET;
-	
-	return h;
-}
+//DMAEX_HandleTypeDef*	DMAEX_Handle_Ctor(DMA_Stream_TypeDef *instance, const DMA_InitTypeDef *init,
+//	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
+//{
+//	DMAEX_HandleTypeDef* h = (DMAEX_HandleTypeDef*)malloc(sizeof(DMAEX_HandleTypeDef));
+//	if (!h) return NULL;
+//	
+//	memset(h, 0, sizeof(DMAEX_HandleTypeDef));
+//	
+//	h->clk = clk;
+//	h->hdma.Instance = instance;
+//	memmove(&h->hdma.Init, init, sizeof(DMA_InitTypeDef));
+//	h->hirq = hirq;
+//	h->state = DMAEX_HANDLE_STATE_RESET;
+//	
+//	return h;
+//}
 
 int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *instance, const DMA_InitTypeDef *init,
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
@@ -230,11 +230,11 @@ int DMAEX_Handle_Init(DMAEX_HandleTypeDef* h, DMA_Stream_TypeDef *instance, cons
 	return 0;
 }
 
-DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
-	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
-{
-	return DMAEX_Handle_Ctor(config->Instance, &config->Init, clk, hirq);
-}
+//DMAEX_HandleTypeDef*	DMAEX_Handle_CtorByConfig(const DMA_ConfigTypeDef* config, 
+//	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
+//{
+//	return DMAEX_Handle_Ctor(config->Instance, &config->Init, clk, hirq);
+//}
 
 int DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* config, 
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq)
@@ -251,13 +251,15 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma
 																									const IRQ_ConfigTypeDef				*irq_config)
 {
 	int ret;
+	
 	DMAEX_HandleTypeDef* dmaExH;
 	IRQ_HandleTypeDef* irqH;
 	
 	irqH = malloc(sizeof(*irqH));
-	// irqH = IRQ_Handle_CtorByConfig(irq_config, irq_registry);
-	if (irqH == NULL)
+	if (irqH == NULL) {
+		errno = ENOMEM;
 		return NULL;
+	}
 	
 	ret = IRQ_Handle_InitByConfig(irqH, irq_config, irq_registry);
 	if (ret != 0)
@@ -267,11 +269,20 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma
 		return NULL;
 	}
 	
-	dmaExH = DMAEX_Handle_CtorByConfig(dma_config, dma_clk, irqH);
+	dmaExH = malloc(sizeof(*dmaExH));
 	if (dmaExH == NULL)
 	{
-		// IRQ_Handle_Dtor(irqH);
 		free(irqH);
+		errno = ENOMEM;
+		return NULL;
+	}
+	
+	ret = DMAEX_Handle_InitByConfig(dmaExH, dma_config, dma_clk, irqH);
+	if (ret != 0)
+	{
+		free(irqH);
+		free(dmaExH);
+		errno = -ret;
 		return NULL;
 	}
 
