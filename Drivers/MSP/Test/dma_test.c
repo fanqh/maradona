@@ -248,8 +248,10 @@ TEST(DMAEX_Handle, FactoryDestroy)
 
 TEST(DMAEX_Handle, DMAEX_Init)
 {
-	IRQ_HandleTypeDef* irq = IRQ_Handle_Ctor(DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
-	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, irq);
+	IRQ_HandleTypeDef irq;
+	IRQ_Handle_Init(&irq, DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
+	
+	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, &irq);
 	
 	DMAEX_Init(hdmaex);
 	
@@ -260,13 +262,14 @@ TEST(DMAEX_Handle, DMAEX_Init)
 	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_SET, hdmaex->state);
 	
 	DMAEX_Handle_Dtor(hdmaex);
-	IRQ_Handle_Dtor(irq);
 }
 
 TEST(DMAEX_Handle, DMAEX_DeInit)
 {
-	IRQ_HandleTypeDef* irq = IRQ_Handle_Ctor(DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
-	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, irq);
+	IRQ_HandleTypeDef irq;
+	IRQ_Handle_Init(&irq, DMA1_Stream5_IRQn, 0, 0, &IRQ_HandlerObjectRegistry);
+	
+	DMAEX_HandleTypeDef* hdmaex = DMAEX_Handle_Ctor(DMAEX_Handle_Uart2Rx_Default.hdma.Instance, &DMAEX_Handle_Uart2Rx_Default.hdma.Init, &DMA_ClockProvider, &irq);
 	
 	DMAEX_Init(hdmaex);
 	DMAEX_DeInit(hdmaex);
@@ -278,7 +281,6 @@ TEST(DMAEX_Handle, DMAEX_DeInit)
 	TEST_ASSERT_EQUAL(DMAEX_HANDLE_STATE_RESET, hdmaex->state);
 	
 	DMAEX_Handle_Dtor(hdmaex);
-	IRQ_Handle_Dtor(irq);
 }
 
 TEST_GROUP_RUNNER(DMAEX_Handle)
