@@ -54,7 +54,7 @@ IRQ_HandleTypeDef * IRQ_Handle_Ctor(IRQn_Type irqn, uint32_t preempt, uint32_t s
 int	IRQ_Handle_Init(IRQ_HandleTypeDef* h, IRQn_Type irqn, uint32_t preempt, uint32_t sub, IRQ_HandleRegistryTypeDef* registry);
 
 // IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry);
-IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry);
+// IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry);
 
 int	IRQ_Handle_InitByConfig(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry);
 

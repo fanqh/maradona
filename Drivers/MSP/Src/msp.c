@@ -143,10 +143,23 @@ UARTEX_HandleTypeDef* msp_create_huartex(struct msp_factory* msp, int port)
 	// if (hirq_uart)
 	if (cfg->uart_irq)
 	{
-		// irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
-		irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, msp->irq_registry);
+		irqH = malloc(sizeof(*irqH));
 		if (irqH == NULL)
+		{
+			errno = ENOMEM;
 			goto fail4;
+		}
+		
+		ret = IRQ_Handle_InitByConfig(irqH, cfg->uart_irq, msp->irq_registry);
+		if (ret != 0)
+		{
+			errno = -ret;
+			goto fail5;
+		}
+		
+//		irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, msp->irq_registry);
+//		if (irqH == NULL)
+//			goto fail4;
 	}
 	
 	h = UARTEX_Handle_Ctor(cfg->uart->Instance, &cfg->uart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);

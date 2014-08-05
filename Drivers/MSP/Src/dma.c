@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "errno_ex.h"
 #include "stm32f4xx_hal.h"
 #include "irq.h"
 #include "dma.h"
@@ -227,13 +228,22 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	// DMAEX_Handle_FactoryTypeDef*
 																									const DMA_ConfigTypeDef				*dma_config,
 																									const IRQ_ConfigTypeDef				*irq_config)
 {
+	int ret;
 	DMAEX_HandleTypeDef* dmaExH;
 	IRQ_HandleTypeDef* irqH;
 	
-	// irqH = IRQ_Handle_Ctor_By_Template(hirq, factory->reg);
-	irqH = IRQ_Handle_CtorByConfig(irq_config, irq_registry);
+	irqH = malloc(sizeof(*irqH));
+	// irqH = IRQ_Handle_CtorByConfig(irq_config, irq_registry);
 	if (irqH == NULL)
 		return NULL;
+	
+	ret = IRQ_Handle_InitByConfig(irqH, irq_config, irq_registry);
+	if (ret != 0)
+	{
+		errno = -ret;
+		free(irqH);
+		return NULL;
+	}
 	
 	// dmaExH = DMAEX_Handle_Ctor(hdma->Instance, &hdma->Init, factory->clk, irqH);
 	dmaExH = DMAEX_Handle_CtorByConfig(dma_config, dma_clk, irqH);

@@ -441,13 +441,19 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 			goto fail3;
 	}
 	
-	// if (hirq_uart)
 	if (cfg->uart_irq)
 	{
-		// irqH = IRQ_Handle_Ctor(hirq_uart->irqn, hirq_uart->preempt_priority, hirq_uart->sub_priority, factory->registry);
-		irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, irq_registry);
+		// irqH = IRQ_Handle_CtorByConfig(cfg->uart_irq, irq_registry);
+		irqH = malloc(sizeof(*irqH));
 		if (irqH == NULL)
 			goto fail4;
+		
+		ret = IRQ_Handle_InitByConfig(irqH, cfg->uart_irq, irq_registry);
+		if (ret != 0)
+		{
+			errno = -ret;
+			goto fail5;
+		}
 	}
 	
 	h = UARTEX_Handle_Ctor(cfg->uart->Instance, &cfg->uart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);

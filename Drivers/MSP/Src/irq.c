@@ -101,14 +101,17 @@ int	IRQ_Handle_Init(IRQ_HandleTypeDef* h, IRQn_Type irqn, uint32_t preempt, uint
 	return 0;
 }
 
-//IRQ_HandleTypeDef * IRQ_Handle_Ctor_By_Template(const IRQ_HandleTypeDef* hirq, IRQ_HandleRegistryTypeDef* registry)
-//{
-//	return IRQ_Handle_Ctor(hirq->irqn, hirq->preempt_priority, hirq->sub_priority, registry);
-//}
-
 IRQ_HandleTypeDef	* IRQ_Handle_CtorByConfig(const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry)
 {
 	return IRQ_Handle_Ctor(config->irqn, config->preempt_priority, config->sub_priority, registry);
+}
+
+int	IRQ_Handle_InitByConfig(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry)
+{
+	if (config == NULL)
+		return -EINVAL;
+	
+	return IRQ_Handle_Init(h, config->irqn, config->preempt_priority, config->sub_priority, registry);
 }
 
 void	IRQ_Handle_Dtor(IRQ_HandleTypeDef *handle)

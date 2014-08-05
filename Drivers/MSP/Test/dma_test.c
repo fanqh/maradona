@@ -188,27 +188,15 @@ TEST(DMAEX_Handle, FactoryCreate)
 {
 	DMA_ClockProviderTypeDef			clk;
 	IRQ_HandleRegistryTypeDef			registry;
-//	DMAEX_Handle_FactoryTypeDef 			factory;
-	
-// 	DMA_HandleTypeDef									hdma;
-	DMA_ConfigTypeDef									dma_config;
-//	IRQ_HandleTypeDef									hirq;
-	IRQ_ConfigTypeDef									irq_config;
+	DMA_ConfigTypeDef							dma_config;
+	IRQ_ConfigTypeDef							irq_config;
 
 	DMAEX_HandleTypeDef*							h;
 	
 	memset(&dma_config, 0xA5, sizeof(dma_config));
-	// memset(&hirq, 0xB5, sizeof(hirq));
 	memset(&irq_config, 0xB5, sizeof(irq_config));
+	irq_config.irqn = USART2_IRQn;	/** must be something valid **/
 	
-//	factory.clk = &clk;
-//	factory.reg = &registry;
-	
-	//	hirq.state = IRQ_HANDLE_STATE_RESET;
-	// irq_config.irqn = 0;
-	
-	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &hirq);
-	// h = DMAEX_Handle_FactoryCreate(&factory, &hdma, &irq_config);
 	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
 	
 	TEST_ASSERT_NOT_NULL(h);

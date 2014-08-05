@@ -184,20 +184,51 @@ const extern IRQ_HandleTypeDef IRQ_Handle_Uart2_Default;
 //	if (h) free(h);
 //}
 
-TEST(IRQ_Handle, CtorByConfig)
+//TEST(IRQ_Handle, CtorByConfig)
+//{
+//	IRQ_HandleRegistryTypeDef fake;
+//	
+//	IRQ_HandleTypeDef* h = IRQ_Handle_CtorByConfig(&IRQ_Uart2_DefaultConfig, &fake);
+//	TEST_ASSERT_NOT_NULL(h);
+//	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.irqn, h->irqn);
+//	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.preempt_priority , h->preempt_priority);
+//	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.sub_priority , h->sub_priority);
+//	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
+//	TEST_ASSERT_NULL(h->irqh_obj);
+//	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
+//	
+//	if (h) free(h);	
+//}
+
+TEST(IRQ_Handle, HandleInitByConfigInvalidArgs)
 {
+	int ret;
 	IRQ_HandleRegistryTypeDef fake;
+	IRQ_HandleTypeDef h;
+	const IRQ_ConfigTypeDef* cfg = 0;
 	
-	IRQ_HandleTypeDef* h = IRQ_Handle_CtorByConfig(&IRQ_Uart2_DefaultConfig, &fake);
-	TEST_ASSERT_NOT_NULL(h);
-	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.irqn, h->irqn);
-	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.preempt_priority , h->preempt_priority);
-	TEST_ASSERT_EQUAL(IRQ_Uart2_DefaultConfig.sub_priority , h->sub_priority);
-	TEST_ASSERT_EQUAL_HEX32(&fake, h->registry);
-	TEST_ASSERT_NULL(h->irqh_obj);
-	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h->state);
+	/** only invalid config checked. other validation should be done by basic init/ctor **/
+	ret = IRQ_Handle_InitByConfig(&h, cfg, &fake);	
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+}
+
+TEST(IRQ_Handle, HandleInitByConfigSuccess)
+{	
+	int ret;
+	IRQ_HandleRegistryTypeDef fake;
+	IRQ_HandleTypeDef h;
+	const IRQ_ConfigTypeDef* cfg = &IRQ_Uart2_DefaultConfig;
 	
-	if (h) free(h);	
+	ret = IRQ_Handle_InitByConfig(&h, cfg, &fake);
+	
+	TEST_ASSERT_EQUAL(0, ret);	
+	
+	TEST_ASSERT_EQUAL(cfg->irqn, h.irqn);
+	TEST_ASSERT_EQUAL(cfg->preempt_priority , h.preempt_priority);
+	TEST_ASSERT_EQUAL(cfg->sub_priority , h.sub_priority);
+	TEST_ASSERT_EQUAL_HEX32(&fake, h.registry);
+	TEST_ASSERT_NULL(h.irqh_obj);
+	TEST_ASSERT_EQUAL(IRQ_HANDLE_STATE_RESET, h.state);
 }
 
 TEST_GROUP_RUNNER(IRQ_Handle)
@@ -206,10 +237,12 @@ TEST_GROUP_RUNNER(IRQ_Handle)
 	RUN_TEST_CASE(IRQ_Handle, IRQ_DeInit);
 	RUN_TEST_CASE(IRQ_Handle, HandleInitInvalidArgs);
 	RUN_TEST_CASE(IRQ_Handle, HandleInitSuccess);
+	RUN_TEST_CASE(IRQ_Handle, HandleInitByConfigInvalidArgs);
+	RUN_TEST_CASE(IRQ_Handle, HandleInitByConfigSuccess);
 	
 	// RUN_TEST_CASE(IRQ_Handle, Ctor);
 	// RUN_TEST_CASE(IRQ_Handle, CtorByTemplate);
-	RUN_TEST_CASE(IRQ_Handle, CtorByConfig);
+	// RUN_TEST_CASE(IRQ_Handle, CtorByConfig);
 }
 
 TEST_GROUP_RUNNER(IRQ_All)
