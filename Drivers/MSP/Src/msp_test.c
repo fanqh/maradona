@@ -470,8 +470,10 @@ TEST(MSP, CreateUARTEXHandleSuccess)
 	
 	TEST_ASSERT_EQUAL(testdata->config->uart->Instance, h->huart.Instance);
 
-	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
-	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
+	testdata->msp->destroy_dmaex_handle(testdata->msp, h->hdmaex_rx);
+	testdata->msp->destroy_dmaex_handle(testdata->msp, h->hdmaex_tx);
+//	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
+//	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
 	free(h->rxpin);
 	free(h->txpin);
 	free(h->hirq);
@@ -530,6 +532,33 @@ TEST(MSP, CreateDMAEXHandle)
 	if (h) free(h);
 }
 
+TEST(MSP, DestroyDMAEXHandle)
+{
+	GPIO_ClockProviderTypeDef			gpio_clk;
+	DMA_ClockProviderTypeDef			dma_clk;
+	IRQ_HandleRegistryTypeDef			registry;
+	DMA_ConfigTypeDef							dma_config;
+	IRQ_ConfigTypeDef							irq_config;
+	struct msp_factory						msp;
+
+	DMAEX_HandleTypeDef*					h;
+	
+	memset(&dma_config, 0xA5, sizeof(dma_config));
+	memset(&irq_config, 0xB5, sizeof(irq_config));
+	irq_config.irqn = USART2_IRQn;			/** must be something valid **/
+	dma_config.Instance = DMA1_Stream5; /** must be something valid **/
+	
+	memset(&msp, 0, sizeof(msp));
+	msp.dma_clk = &dma_clk;
+	msp.gpio_clk = &gpio_clk;
+	msp.irq_registry = &registry;
+	
+	h = msp_create_dmaex_handle(&msp, &dma_config, &irq_config);
+	TEST_ASSERT_NOT_NULL(h);
+	
+	msp_destroy_dmaex_handle(&msp, h);
+}
+
 TEST_GROUP_RUNNER(MSP)
 {
 	/////////////////////////////////////////////////////////////////////////////
@@ -557,6 +586,8 @@ TEST_GROUP_RUNNER(MSP)
 		.irq_registry = &irq_registry,
 		
 		.create_dmaex_handle = msp_create_dmaex_handle,
+		.destroy_dmaex_handle = msp_destroy_dmaex_handle,
+		
 		.gpioex_init_by_config = GPIOEX_InitByConfig,
 		.irq_handle_init_by_config = IRQ_Handle_InitByConfig,
 	};	
@@ -572,7 +603,7 @@ TEST_GROUP_RUNNER(MSP)
 	
 	// RUN_TEST_CASE(MSP, CreateHuartEx);
 	RUN_TEST_CASE(MSP, CreateDMAEXHandle);
-	
+	RUN_TEST_CASE(MSP, DestroyDMAEXHandle);
 
 	
 	/////////////////////////////////////////////////////////////////////////////

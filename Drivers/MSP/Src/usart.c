@@ -471,7 +471,6 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 		goto fail2;
 	}
 	
-	// if (hdmarx && dmarx_irq_config)
 	if (cfg->dmarx && cfg->dmarx_irq)
 	{
 		dmaExRxH = DMAEX_Handle_FactoryCreate(dma_clk, irq_registry, cfg->dmarx, cfg->dmarx_irq);

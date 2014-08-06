@@ -47,16 +47,6 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp,
 	return NULL;
 }
 
-/** failure analysis 
-1. valid args ( at least the ones used in func)
-2. rxpin init fail
-3. txpin init fail
-
-
-
-**/
-
-
 
 UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UARTEX_ConfigTypeDef* cfg)															
 {
@@ -154,6 +144,9 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 	fail0:	return NULL;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// create dmaex handle
 DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
 	const DMA_ConfigTypeDef * dma_config, const IRQ_ConfigTypeDef * irq_config)
 {
@@ -195,4 +188,18 @@ DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp,
 
 	return dmaExH;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// destroy dmaex handle
+void msp_destroy_dmaex_handle(struct msp_factory * msp, DMAEX_HandleTypeDef* handle)
+{
+	if (handle) {
+		if (handle->hirq) {
+			free(handle->hirq);
+		}
+		
+		free(handle);
+	}
+}
+
 

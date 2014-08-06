@@ -240,42 +240,40 @@ static void CreateTestData(void)
 		.uartex_ops = &UARTEX_Ops_DefaultConfig,
 	};	
 	
-	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(
-		&GPIO_ClockProvider,
-		&DMA_ClockProvider,
-		&IRQ_HandlerObjectRegistry,
-		&cfg);
+//	UARTEX_ConfigTypeDef	cfg =
+//	{
+//		.uart = &UART2_DefaultConfig,
+//		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+//		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+//		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+//		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+//		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+//		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+//		.uart_irq = &IRQ_Uart2_DefaultConfig,
+//		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+//	};	
 	
-//		&UART2_DefaultConfig,
-//		&PD6_As_Uart2Rx_DefaultConfig, 
-//		&PD5_As_Uart2Tx_DefaultConfig, 
-//		&DMA_Uart2Rx_DefaultConfig,				// &DMA_Handle_Uart2Rx_Default, 
-//		&IRQ_Uart2RxDMA_DefaultConfig,		// &IRQ_Handle_Uart2RxDMA_Default, 
-//		&DMA_Uart2Tx_DefaultConfig,				// &DMA_Handle_Uart2Tx_Default, 
-//		&IRQ_Uart2TxDMA_DefaultConfig,		// &IRQ_Handle_Uart2TxDMA_Default,
-//		&IRQ_Uart2_DefaultConfig, //);		// &IRQ_Handle_Uart2_Default);
-
-//		&UARTEX_Ops_DefaultConfig);
-	
+	struct msp_factory msp = {
 		
+		.gpio_clk = &GPIO_ClockProvider,
+		.dma_clk = &DMA_ClockProvider,
+		.irq_registry = &IRQ_HandlerObjectRegistry,
+		
+		.create_dmaex_handle = msp_create_dmaex_handle,
+		.gpioex_init_by_config = GPIOEX_InitByConfig,		
+		.irq_handle_init_by_config = IRQ_Handle_InitByConfig,
+		.uartex_handle_init_by_config = UARTEX_Handle_InitByConfig,
+	};
 	
-	HUARTEX = UARTEX_Handle_FactoryCreate(
-		&GPIO_ClockProvider,
-		&DMA_ClockProvider,
-		&IRQ_HandlerObjectRegistry,
-		&cfg_nodma_noirq);
+	HUARTEX_DMA = msp_create_uartex_handle(&msp, &cfg);		
+	HUARTEX = msp_create_uartex_handle(&msp, &cfg_nodma_noirq);
 	
 	assert_param(HUARTEX_DMA);
 	assert_param(HUARTEX);
 }
 
 static void DestroyTestData(void)
-{
-//	UARTEX_Handle_FactoryTypeDef factory;
-//	factory.dma_clk = &DMA_ClockProvider;
-//	factory.gpio_clk = &GPIO_ClockProvider;
-//	factory.registry = &IRQ_HandlerObjectRegistry;
-	
+{	
 	UARTEX_Handle_FactoryDestroy(huartex_dma);
 	UARTEX_Handle_FactoryDestroy(huartex);	
 }
@@ -812,14 +810,7 @@ TEST_SETUP(UART_DMA_TxRx)
 		.uartex_handle_init_by_config = UARTEX_Handle_InitByConfig,
 	};
 	
-	HUARTEX_DMA = msp_create_uartex_handle(&msp, &cfg);
-
-//	HUARTEX_DMA = UARTEX_Handle_FactoryCreate(
-//		&GPIO_ClockProvider,
-//		&DMA_ClockProvider,
-//		&IRQ_HandlerObjectRegistry,
-//		&cfg);
-	
+	HUARTEX_DMA = msp_create_uartex_handle(&msp, &cfg);	
 	HAL_UART_Init(HUART_DMA);	
 }
 

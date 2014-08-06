@@ -35,6 +35,7 @@ struct msp_factory
 	void (*ll_huartex_destroy)(UARTEX_HandleTypeDef* h);	
 
 	DMAEX_HandleTypeDef*	(*create_dmaex_handle)(struct msp_factory * msp, const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
+	void (*destroy_dmaex_handle)(struct msp_factory * msp, DMAEX_HandleTypeDef* handle);	
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// required functions
@@ -49,6 +50,7 @@ struct msp_factory
 };
 
 UARTEX_HandleTypeDef*	msp_create_huartex(struct msp_factory * msp, int port);
+//void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle);
 
 UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory * msp, const UARTEX_ConfigTypeDef * cfg);
 UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp, int port);
@@ -61,6 +63,7 @@ void MSP_Destroy_UARTEX_Handle(UARTEX_HandleTypeDef* huartex);
 DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
 	const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
 
+void msp_destroy_dmaex_handle(struct msp_factory * msp, DMAEX_HandleTypeDef* handle);
 
 
 extern struct msp_factory MSP;
