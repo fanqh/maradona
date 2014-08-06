@@ -147,6 +147,30 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 	fail0:	return NULL;
 }
 
+void msp_destroy_uartex_handle(struct msp_factory * msp, UARTEX_HandleTypeDef* h)
+{
+	if (h->hdmaex_rx)
+	{
+		if (h->hdmaex_rx->hirq)
+			free(h->hdmaex_rx->hirq);
+		free(h->hdmaex_rx);
+	}
+
+	if (h->hdmaex_tx)
+	{
+		if (h->hdmaex_tx->hirq)
+			free(h->hdmaex_tx->hirq);
+		free(h->hdmaex_tx);
+	}	
+	free(h->rxpin);
+	free(h->txpin);
+
+	/** is this problematic ??? undefined combination ??? **/
+	if (h->hirq) free(h->hirq);
+		
+	free(h);	
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // create dmaex handle

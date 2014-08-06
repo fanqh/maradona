@@ -426,11 +426,18 @@ TEST(MSP, CreateUARTEXHandleSuccess)
 }
 
 
-TEST(MSP, DestroyUARTEXHandle)
+TEST(MSP, DestroyUARTEXHandleFull)
 {
+	UARTEX_HandleTypeDef* h;
 	
+	struct create_uartex_handle_testdata * testdata = 
+		(struct create_uartex_handle_testdata *)get_testdata();
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	msp_destroy_uartex_handle(testdata->msp, h);
 }
-
+///////////////////////////////////////////////////////////////////////////////
+// DMA Handle Factory Methods
 TEST(MSP, CreateDMAEXHandle)
 {
 	GPIO_ClockProviderTypeDef			gpio_clk;
@@ -534,6 +541,10 @@ TEST_GROUP_RUNNER(MSP)
 		.dma_clk = &dma_clk,
 		.irq_registry = &irq_registry,
 		
+		.create_uartex_handle_by_port = msp_create_uartex_handle_by_port,
+		.create_uartex_handle = msp_create_uartex_handle,
+		.destroy_uartex_handle = msp_destroy_uartex_handle,
+		
 		.create_dmaex_handle = msp_create_dmaex_handle,
 		.destroy_dmaex_handle = msp_destroy_dmaex_handle,
 		
@@ -565,6 +576,7 @@ TEST_GROUP_RUNNER(MSP)
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleUARTEXHandleInitFail);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleMallocFail);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleSuccess);
+	RUN_TEST_CASE(MSP, DestroyUARTEXHandleFull);
 	
 	
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleByPortInvalidArgs);
