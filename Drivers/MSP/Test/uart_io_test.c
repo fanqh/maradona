@@ -832,7 +832,7 @@ TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedAllSuccess)
 	huartex.testdata = &udev;															// 
 	msp.testdata = &udev;
 	
-	msp.huartex_create = mock_huartex_create_success;			// create uartex handle
+	msp.create_uartex_handle_by_port = mock_huartex_create_success;			// create uartex handle
 	huartex.ops.init = mock_uartex_init_success;					// init uart (hardware)
 	huartex.ops.recv = mock_uartex_recv_success;					// start recv 
 	countdown = 3;
@@ -899,7 +899,7 @@ TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedCreateHandleFail)
 	huartex.testdata = &udev;															// 
 	msp.testdata = &udev;
 	
-	msp.huartex_create = mock_huartex_create_fail;				// create uartex handle
+	msp.create_uartex_handle_by_port = mock_huartex_create_fail;				// create uartex handle
 	huartex.ops.init = mock_uartex_init_success;					// init uart (hardware)
 	huartex.ops.recv = mock_uartex_recv_success;					// start recv 
 	countdown = 1;
@@ -945,7 +945,7 @@ TEST(UsartIO_DMA, OpenWhenDeviceNotOpenedMallocFail)
 	huartex.testdata = &udev;															// 
 	msp.testdata = &udev;
 	
-	msp.huartex_create = mock_huartex_create_success;			// create uartex handle
+	msp.create_uartex_handle_by_port = mock_huartex_create_success;			// create uartex handle
 	huartex.ops.init = mock_uartex_init_success;					// init uart (hardware)
 	huartex.ops.deinit = mock_uartex_deinit_success;			// deinit uart	
 	huartex.ops.recv = mock_uartex_recv_success;					// start recv 

@@ -5,39 +5,42 @@
 
 UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp, int port) {
 	
-	if (msp == NULL || msp->board_config == NULL) 
+	if (msp == NULL || msp->board_config == NULL || port < 1 || port > 6)  {
+			
+			errno = EINVAL;
 			return NULL;
+	}
 	
 	switch(port)
 	{
 		case 1:
 			if (msp->board_config->uart1 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart1);
+				return msp->create_uartex_handle(msp, msp->board_config->uart1);
 			break;
 			
 		case 2:
 			if (msp->board_config->uart2 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart2);
+				return msp->create_uartex_handle(msp, msp->board_config->uart2);
 			break;
 			
 		case 3:
 			if (msp->board_config->uart3 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart3);
+				return msp->create_uartex_handle(msp, msp->board_config->uart3);
 			break;
 
 		case 4:
 			if (msp->board_config->uart4 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart4);
+				return msp->create_uartex_handle(msp, msp->board_config->uart4);
 			break;			
 
 		case 5:
 			if (msp->board_config->uart5 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart5);
+				return msp->create_uartex_handle(msp, msp->board_config->uart5);
 			break;
 
 		case 6:
 			if (msp->board_config->uart6 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart6);
+				return msp->create_uartex_handle(msp, msp->board_config->uart6);
 			break;			
 		
 		default:

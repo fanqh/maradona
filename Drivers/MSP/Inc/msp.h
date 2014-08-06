@@ -18,21 +18,12 @@ struct msp_factory
 	DMA_ClockProviderTypeDef*						dma_clk;	
 	IRQ_HandleRegistryTypeDef* 					irq_registry;
 	
-	/////////////////////////////////////////////////////////////////////////////
-	// these are provided methods (called by user)
-	UARTEX_HandleTypeDef* (*huartex_create)(struct msp_factory * msp, int num);
-	void (*huratex_destroy)(UARTEX_HandleTypeDef* huartex);
 	
 	/////////////////////////////////////////////////////////////////////////////
-	// these are required methods (called by me, myself)
-	// ll_ prefix for low level, sorry that i didn't find a better name
-	UARTEX_HandleTypeDef* (*ll_huartex_create)(	GPIO_ClockProviderTypeDef* 	gpio_clk,
-																							DMA_ClockProviderTypeDef*		dma_clk,
-																							IRQ_HandleRegistryTypeDef*	irq_registry,
-																							const UARTEX_ConfigTypeDef* uartex_configs);
-	
-	
-	void (*ll_huartex_destroy)(UARTEX_HandleTypeDef* h);	
+	// these are member methods
+	UARTEX_HandleTypeDef* (*create_uartex_handle_by_port)(struct msp_factory * msp, int num);
+	UARTEX_HandleTypeDef* (*create_uartex_handle)(struct msp_factory * msp, const UARTEX_ConfigTypeDef * cfg);	
+	void (*destroy_uartex_handle)(struct msp_factory * msp, UARTEX_HandleTypeDef* );
 
 	DMAEX_HandleTypeDef*	(*create_dmaex_handle)(struct msp_factory * msp, const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
 	void (*destroy_dmaex_handle)(struct msp_factory * msp, DMAEX_HandleTypeDef* handle);	
@@ -49,23 +40,19 @@ struct msp_factory
 	void * testdata;
 };
 
-UARTEX_HandleTypeDef*	msp_create_huartex(struct msp_factory * msp, int port);
-//void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle);
-
+///////////////////////////////////////////////////////////////////////////////
+// factory methods for uartex_handle
 UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory * msp, const UARTEX_ConfigTypeDef * cfg);
+void msp_destroy_uartex_handle(struct msp_factory * msp, UARTEX_HandleTypeDef* );
 UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp, int port);
 
-void MSP_Destroy_UARTEX_Handle(UARTEX_HandleTypeDef* huartex);
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
-DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
-	const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
-
+// factory methods for dmaex_handle
+DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
 void msp_destroy_dmaex_handle(struct msp_factory * msp, DMAEX_HandleTypeDef* handle);
 
-
+///////////////////////////////////////////////////////////////////////////////
+// globals
 extern struct msp_factory MSP;
 
 #endif

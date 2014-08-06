@@ -240,19 +240,6 @@ static void CreateTestData(void)
 		.uartex_ops = &UARTEX_Ops_DefaultConfig,
 	};	
 	
-//	UARTEX_ConfigTypeDef	cfg =
-//	{
-//		.uart = &UART2_DefaultConfig,
-//		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
-//		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
-//		.dmarx = &DMA_Uart2Rx_DefaultConfig,
-//		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
-//		.dmatx = &DMA_Uart2Tx_DefaultConfig,
-//		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
-//		.uart_irq = &IRQ_Uart2_DefaultConfig,
-//		.uartex_ops = &UARTEX_Ops_DefaultConfig,
-//	};	
-	
 	struct msp_factory msp = {
 		
 		.gpio_clk = &GPIO_ClockProvider,
@@ -274,6 +261,19 @@ static void CreateTestData(void)
 
 static void DestroyTestData(void)
 {	
+//	struct msp_factory msp = {
+//		
+//		.gpio_clk = &GPIO_ClockProvider,
+//		.dma_clk = &DMA_ClockProvider,
+//		.irq_registry = &IRQ_HandlerObjectRegistry,
+//		
+//		.create_dmaex_handle = msp_create_dmaex_handle,
+//		.destroy_dmaex_handle = msp_destroy_dmaex_handle,
+//		.gpioex_init_by_config = GPIOEX_InitByConfig,		
+//		.irq_handle_init_by_config = IRQ_Handle_InitByConfig,
+//		.uartex_handle_init_by_config = UARTEX_Handle_InitByConfig,
+//	};
+	
 	UARTEX_Handle_FactoryDestroy(huartex_dma);
 	UARTEX_Handle_FactoryDestroy(huartex);	
 }

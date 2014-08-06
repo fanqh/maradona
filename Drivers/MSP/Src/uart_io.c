@@ -458,7 +458,7 @@ int	UART_IO_Open(struct device * dev, struct file * filp)
 	udev->tbuf[1] = h;	
 	
 	// factory create
-	udev->handle = udev->msp->huartex_create(udev->msp, udev->dev.number);
+	udev->handle = udev->msp->create_uartex_handle_by_port(udev->msp, udev->dev.number);
 	if (udev->handle == NULL) {
 		ret = -EFATAL;
 		goto fail4;
