@@ -1,4 +1,5 @@
 #include <string.h>
+#include "errno_ex.h"
 #include "msp.h"
 
 static void* passby = 0;
@@ -130,13 +131,51 @@ TEST(MSP, CreateUARTEXHandleMallocFail)
 
 struct create_uartex_handle_testdata
 {
+	const UARTEX_ConfigTypeDef* config;
+	struct msp_factory * msp;
+	
 	int gpioex_init_fail_countdown;
+	int gpioex_init_mock_called;
+	
+	int create_dmaex_handle_fail_countdown;
+	int create_dmaex_handle_mock_called;
 };
 
-int mock_gpioex_init_by_config(GPIOEX_TypeDef* gpioex, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
+static int mock_gpioex_init_by_config(GPIOEX_TypeDef* gpioex, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
 {
 	/** assuming this is malloced handle **/
+	struct create_uartex_handle_testdata* td = (struct create_uartex_handle_testdata *)UnityMalloc_GetMemHandleTestData(gpioex);
 	
+	td->gpioex_init_mock_called++;
+	if (td->gpioex_init_fail_countdown == 0) {
+		errno = 0;
+		return -EINVAL;
+	}
+	
+	td->gpioex_init_fail_countdown--;
+	
+	memset(gpioex, 0, sizeof(*gpioex));
+	return 0;
+}
+
+static DMAEX_HandleTypeDef*	mock_create_dmaex_handle(struct msp_factory * msp, 
+	const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg)
+{
+	/** assuming this is malloced handle **/
+	TEST_ASSERT_NOT_NULL(msp);
+	
+	struct create_uartex_handle_testdata* td = (struct create_uartex_handle_testdata *)msp->testdata;
+	td->create_dmaex_handle_mock_called++;
+	
+	if (td->create_dmaex_handle_fail_countdown == 0) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	
+	td->create_dmaex_handle_fail_countdown--;
+	
+	//// fall-back
+	return msp_create_dmaex_handle(msp, dmacfg, irqcfg);
 }
 
 TEST(MSP, CreateUARTEXHandleInnerFuncFail)
@@ -165,14 +204,33 @@ TEST(MSP, CreateUARTEXHandleInnerFuncFail)
 		.irq_registry = &irq_registry,
 		
 		.create_dmaex_handle = msp_create_dmaex_handle,
-		.gpioex_init_by_config = GPIOEX_InitByConfig,
+		.gpioex_init_by_config = mock_gpioex_init_by_config, // GPIOEX_InitByConfig,
 	};
 	
+	struct create_uartex_handle_testdata testdata;
+	UnityMalloc_SetMemHandleTestData(&testdata);
 	
+	/// round 1
+	testdata.gpioex_init_fail_countdown = 0;
+	testdata.gpioex_init_mock_called = 0;
+	errno = 0;
 	
 	h = msp_create_uartex_handle(&msp, &cfg);	
 	
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(EINVAL, errno);
+	TEST_ASSERT_EQUAL(1, testdata.gpioex_init_mock_called);
 	
+	/// round 2
+	testdata.gpioex_init_fail_countdown = 1;
+	testdata.gpioex_init_mock_called = 0;
+	errno = 0;
+
+	h = msp_create_uartex_handle(&msp, &cfg);	
+	
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(EINVAL, errno);
+	TEST_ASSERT_EQUAL(2, testdata.gpioex_init_mock_called);
 }
 
 TEST(MSP, CreateUARTEXHandleSuccess)
@@ -201,6 +259,7 @@ TEST(MSP, CreateUARTEXHandleSuccess)
 		.dma_clk = &dma_clk,
 		.irq_registry = &irq_registry,
 		.create_dmaex_handle = msp_create_dmaex_handle,
+		.gpioex_init_by_config = GPIOEX_InitByConfig,
 	};
 	
 	h = msp_create_uartex_handle(&msp, &cfg);
@@ -310,11 +369,47 @@ TEST(MSP, CreateDMAEXHandle)
 
 TEST_GROUP_RUNNER(MSP)
 {
+	const UARTEX_ConfigTypeDef cfg =
+	{
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};
+	
+	GPIO_ClockProviderTypeDef gpio_clk;
+	DMA_ClockProviderTypeDef dma_clk;
+	IRQ_HandleRegistryTypeDef irq_registry;
+	
+	struct msp_factory msp = {
+		.gpio_clk = &gpio_clk,
+		.dma_clk = &dma_clk,
+		.irq_registry = &irq_registry,
+		
+		.create_dmaex_handle = msp_create_dmaex_handle,
+		.gpioex_init_by_config = GPIOEX_InitByConfig,
+	};	
 
+	struct create_uartex_handle_testdata testdata = {
+		.config = &cfg,
+		.msp = &msp,
+	};
+	
+	// UnityMalloc_SetMemHandleTestData(&testdata);
+	
 	// RUN_TEST_CASE(MSP, CreateHuartEx);
 	
 	RUN_TEST_CASE(MSP, CreateDMAEXHandle);
+	
+	RUN_TEST_CASE(MSP, CreateUARTEXHandleInnerFuncFail);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleSuccess);
+	
+	// UnityMalloc_SetMemHandleTestData(NULL);
 }
 
 

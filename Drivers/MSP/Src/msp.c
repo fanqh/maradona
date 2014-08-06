@@ -79,7 +79,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail0;
 	}
 	
-	ret = GPIOEX_InitByConfig(rxpinH, cfg->rxpin, msp->gpio_clk);
+	ret = msp->gpioex_init_by_config(rxpinH, cfg->rxpin, msp->gpio_clk);
 	if (ret != 0) {
 		errno = -ret;
 		goto fail1;
@@ -92,7 +92,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail1;
 	}
 	
-	ret = GPIOEX_InitByConfig(txpinH, cfg->txpin, msp->gpio_clk);
+	ret = msp->gpioex_init_by_config(txpinH, cfg->txpin, msp->gpio_clk);
 	if (ret != 0)
 	{
 		errno = -ret;

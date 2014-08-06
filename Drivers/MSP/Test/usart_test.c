@@ -697,6 +697,7 @@ TEST_SETUP(UART_DMA_TxRx)
 		.irq_registry = &IRQ_HandlerObjectRegistry,
 		
 		.create_dmaex_handle = msp_create_dmaex_handle,
+		.gpioex_init_by_config = GPIOEX_InitByConfig,		
 	};
 	
 	HUARTEX_DMA = msp_create_uartex_handle(&msp, &cfg);
