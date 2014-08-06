@@ -144,10 +144,10 @@ typedef struct
 	
 } UARTEX_ConfigTypeDef;	
 
-UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 	gpio_clk,
-																										DMA_ClockProviderTypeDef*		dma_clk,
-																										IRQ_HandleRegistryTypeDef*	irq_registry,
-																										const UARTEX_ConfigTypeDef* uartex_configs);
+//UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 	gpio_clk,
+//																										DMA_ClockProviderTypeDef*		dma_clk,
+//																										IRQ_HandleRegistryTypeDef*	irq_registry,
+//																										const UARTEX_ConfigTypeDef* uartex_configs);
 																										
 //void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h);																										
 
