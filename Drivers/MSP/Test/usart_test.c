@@ -588,8 +588,22 @@ TEST(UARTEX_Handle, FactoryCreate)
 		
 		TEST_ASSERT_EQUAL(cfg.uart->Instance, h->huart.Instance);
 	
-		DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
-		DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
+		// DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
+		if (h->hdmaex_rx)
+		{
+			if (h->hdmaex_rx->hirq)
+				free(h->hdmaex_rx->hirq);
+			free(h->hdmaex_rx);
+		}
+		
+		// DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
+		if (h->hdmaex_tx)
+		{
+			if (h->hdmaex_tx->hirq)
+				free(h->hdmaex_tx->hirq);
+			free(h->hdmaex_tx);
+		}
+		
 		free(h->rxpin);
 		free(h->txpin);
 		free(h->hirq);

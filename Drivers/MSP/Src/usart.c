@@ -508,8 +508,21 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	return h;
 	
 	fail5:	if (cfg->uart_irq) free(irqH);
-	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
-	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
+	fail4:	if (cfg->dmarx && cfg->dmatx_irq) {
+						if (dmaExTxH) {
+							if (dmaExTxH->hirq)
+								free(dmaExTxH->hirq);
+						}
+						free(dmaExTxH);
+					};
+	fail3:	if (cfg->dmatx && cfg->dmarx_irq) {
+						if (dmaExRxH) {
+							if (dmaExRxH->hirq)
+								free(dmaExRxH->hirq);
+						}
+						free(dmaExRxH);
+					};
+		
 	fail2: 	free(txpinH);
 	fail1:	free(rxpinH);
 	fail0:	return NULL;
@@ -518,8 +531,20 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h)
 {
 	
-	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
-	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
+//	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
+	if (h->hdmaex_rx)
+	{
+		if (h->hdmaex_rx->hirq)
+			free(h->hdmaex_rx->hirq);
+		free(h->hdmaex_rx);
+	}
+//	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
+	if (h->hdmaex_tx)
+	{
+		if (h->hdmaex_tx->hirq)
+			free(h->hdmaex_tx->hirq);
+		free(h->hdmaex_tx);
+	}	
 	free(h->rxpin);
 	free(h->txpin);
 

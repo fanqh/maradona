@@ -137,8 +137,8 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 	
 	fail6:	free(h);
 	fail5:	if (cfg->uart_irq) free(irqH);
-	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
-	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
+	fail4:	if (cfg->dmarx && cfg->dmatx_irq) msp->destroy_dmaex_handle(msp, dmaExTxH); // DMAEX_Handle_FactoryDestroy(dmaExTxH);
+	fail3:	if (cfg->dmatx && cfg->dmarx_irq) msp->destroy_dmaex_handle(msp, dmaExRxH); // DMAEX_Handle_FactoryDestroy(dmaExRxH);
 	fail2: 	free(txpinH);
 	fail1:	free(rxpinH);
 	fail0:	return NULL;

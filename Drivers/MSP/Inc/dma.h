@@ -63,7 +63,7 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma
 																									const IRQ_ConfigTypeDef				*irq_config);
 																						
 /** the factory isn't really required in impl. pass it for user not calling the wrong factory **/																									
-void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle);																									
+//void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle);																									
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

@@ -283,26 +283,26 @@ TEST(DMAEX_Handle, FactoryCreate)
 	if (h) free(h);
 }
 
-TEST(DMAEX_Handle, FactoryDestroy)
-{
-	DMA_ClockProviderTypeDef					clk;
-	IRQ_HandleRegistryTypeDef					registry;
-	
-	DMA_HandleTypeDef									hdma;
-	DMA_ConfigTypeDef									dma_config;
-	IRQ_HandleTypeDef									hirq;
-	IRQ_ConfigTypeDef									irq_config;
+//TEST(DMAEX_Handle, FactoryDestroy)
+//{
+//	DMA_ClockProviderTypeDef					clk;
+//	IRQ_HandleRegistryTypeDef					registry;
+//	
+//	DMA_HandleTypeDef									hdma;
+//	DMA_ConfigTypeDef									dma_config;
+//	IRQ_HandleTypeDef									hirq;
+//	IRQ_ConfigTypeDef									irq_config;
 
-	DMAEX_HandleTypeDef*							h;
-	
-	memset(&hdma, 0xA5, sizeof(hdma));
-	memset(&hirq, 0xB5, sizeof(hirq));
+//	DMAEX_HandleTypeDef*							h;
+//	
+//	memset(&hdma, 0xA5, sizeof(hdma));
+//	memset(&hirq, 0xB5, sizeof(hirq));
 
-	hirq.state = IRQ_HANDLE_STATE_RESET;
+//	hirq.state = IRQ_HANDLE_STATE_RESET;
 
-	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
-	DMAEX_Handle_FactoryDestroy(h);
-}
+//	h = DMAEX_Handle_FactoryCreate(&clk, &registry, &dma_config, &irq_config);
+//	DMAEX_Handle_FactoryDestroy(h);
+//}
 
 
 
@@ -370,7 +370,7 @@ TEST_GROUP_RUNNER(DMAEX_Handle)
 	RUN_TEST_CASE(DMAEX_Handle, HandleInitByConfigSuccess);
 	
 	RUN_TEST_CASE(DMAEX_Handle, FactoryCreate);
-	RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
+	// RUN_TEST_CASE(DMAEX_Handle, FactoryDestroy);
 	
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_HAL_Init);
 	RUN_TEST_CASE(DMAEX_Handle, DMAEX_HAL_DeInit);

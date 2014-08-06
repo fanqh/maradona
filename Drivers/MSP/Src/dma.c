@@ -267,18 +267,18 @@ DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma
 	return dmaExH;
 }
 
-void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle)
-{
-	if (handle)
-	{
-		if (handle->hirq)
-		{
-			free(handle->hirq);
-		}
-		
-		free(handle);
-	}
-}
+//void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle)
+//{
+//	if (handle)
+//	{
+//		if (handle->hirq)
+//		{
+//			free(handle->hirq);
+//		}
+//		
+//		free(handle);
+//	}
+//}
 
 
 void DMA1_Stream5_IRQHandler(void)
