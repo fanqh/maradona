@@ -33,16 +33,15 @@ struct msp_factory
 	
 	
 	void (*ll_huartex_destroy)(UARTEX_HandleTypeDef* h);	
+
+	DMAEX_HandleTypeDef*	(*create_dmaex_handle)(struct msp_factory * msp, const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
 	
-	DMAEX_HandleTypeDef*	(*create_dmaex_handle)(struct msp_factory * msp, 
-		const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
-	
+	/////////////////////////////////////////////////////////////////////////////
 	// required functions
 	int (*gpioex_init_by_config)(GPIOEX_TypeDef* ge, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);
-	
-	
-	
-	
+	int	(*irq_handle_init_by_config)(IRQ_HandleTypeDef* h, const IRQ_ConfigTypeDef* config, IRQ_HandleRegistryTypeDef* registry);
+	int	(*uartex_handle_init_by_config)(UARTEX_HandleTypeDef* h, const UART_ConfigTypeDef	*config, GPIOEX_TypeDef	*rxpin, GPIOEX_TypeDef *txpin, 
+		DMAEX_HandleTypeDef *hdmaex_rx, DMAEX_HandleTypeDef *hdmaex_tx, IRQ_HandleTypeDef *hirq, const struct UARTEX_Operations		*ops);
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// test data

@@ -113,7 +113,16 @@ UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef* uart_
 																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
 																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
 																					IRQ_HandleTypeDef				*hirq,			// DI
-																					const struct UARTEX_Operations				*ops);																					
+																					const struct UARTEX_Operations				*ops);		
+
+int	UARTEX_Handle_InitByConfig(	UARTEX_HandleTypeDef* 						h,
+																const UART_ConfigTypeDef					*config,	
+																GPIOEX_TypeDef										*rxpin, 				// DI
+																GPIOEX_TypeDef										*txpin, 				// DI		
+																DMAEX_HandleTypeDef								*hdmaex_rx,			// DI
+																DMAEX_HandleTypeDef								*hdmaex_tx,			// DI
+																IRQ_HandleTypeDef									*hirq,					// DI
+																const struct UARTEX_Operations		*ops);
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
 																					

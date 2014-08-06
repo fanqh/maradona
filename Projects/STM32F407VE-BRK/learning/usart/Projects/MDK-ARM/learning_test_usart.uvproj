@@ -809,11 +809,6 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Unity\extras\fixture\src\unity_fixture.c</FilePath>
             </File>
-            <File>
-              <FileName>test_utils.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\test_utils.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

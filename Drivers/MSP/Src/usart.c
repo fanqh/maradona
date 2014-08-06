@@ -362,7 +362,11 @@ int	UARTEX_Handle_Init( UARTEX_HandleTypeDef						*h,
 												IRQ_HandleTypeDef								*hirq,			// DI
 												const struct UARTEX_Operations	*ops)
 {	
-	if (h == NULL || uart == NULL || init == NULL || rxpin == NULL || txpin == NULL || ops == NULL)
+	if (h == NULL || (!IS_USART_INSTANCE(uart)) || init == NULL || rxpin == NULL || txpin == NULL || ops == NULL)
+		return -EINVAL;
+	
+	/** all or none **/
+	if (!((hdmaex_rx && hdmaex_tx && hirq) || (!hdmaex_rx && !hdmaex_tx && !hirq))) 
 		return -EINVAL;
 	
 	memset(h, 0, sizeof(UARTEX_HandleTypeDef));
@@ -379,15 +383,30 @@ int	UARTEX_Handle_Init( UARTEX_HandleTypeDef						*h,
 	return 0;
 }
 
-UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef		*config,	
-																					GPIOEX_TypeDef										*rxpin, 				// DI
-																					GPIOEX_TypeDef										*txpin, 				// DI		
-																					DMAEX_HandleTypeDef								*hdmaex_rx,			// DI
-																					DMAEX_HandleTypeDef								*hdmaex_tx,			// DI
-																					IRQ_HandleTypeDef									*hirq,					// DI
-																					const struct UARTEX_Operations		*ops)
+UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(	const UART_ConfigTypeDef					*config,	
+																									GPIOEX_TypeDef										*rxpin, 				// DI
+																									GPIOEX_TypeDef										*txpin, 				// DI		
+																									DMAEX_HandleTypeDef								*hdmaex_rx,			// DI
+																									DMAEX_HandleTypeDef								*hdmaex_tx,			// DI
+																									IRQ_HandleTypeDef									*hirq,					// DI
+																									const struct UARTEX_Operations		*ops)
 {
 	return UARTEX_Handle_Ctor(config->Instance, &config->Init, rxpin, txpin, hdmaex_rx, hdmaex_tx, hirq, ops);
+}
+
+int	UARTEX_Handle_InitByConfig(	UARTEX_HandleTypeDef* 						h,
+																const UART_ConfigTypeDef					*config,	
+																GPIOEX_TypeDef										*rxpin, 				// DI
+																GPIOEX_TypeDef										*txpin, 				// DI		
+																DMAEX_HandleTypeDef								*hdmaex_rx,			// DI
+																DMAEX_HandleTypeDef								*hdmaex_tx,			// DI
+																IRQ_HandleTypeDef									*hirq,					// DI
+																const struct UARTEX_Operations		*ops)
+{
+	if (config == NULL)
+		return -EINVAL;
+	
+	return UARTEX_Handle_Init(h, config->Instance, &config->Init, rxpin, txpin, hdmaex_rx, hdmaex_tx, hirq, ops);
 }
 
 void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle)

@@ -317,7 +317,54 @@ TEST(UARTEX_Handle, Ctor)
 
 TEST(UARTEX_Handle, HandleInitInvalidArgs)
 {
-	// TODO
+  int ret;
+	UARTEX_HandleTypeDef h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	struct UARTEX_Operations ops;
+	
+	memset(&ops, 0xA5, sizeof(ops));
+	
+	/** must have **/
+	ret = UARTEX_Handle_Init(NULL, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, (USART_TypeDef*)0xDEADBEEF, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, NULL, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, NULL, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, NULL, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, NULL);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	/** all or none **/
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, NULL, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, NULL, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, &hdmaex_tx, NULL, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, NULL, NULL, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, NULL, &hdmaex_tx, NULL, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_Init(&h, USART2, &UART_Handle_Uart2_Default.Init, &rx, &tx, &hdmaex_rx, NULL, NULL, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
 }
 
 TEST(UARTEX_Handle, HandleInitSuccess)
@@ -372,12 +419,69 @@ TEST(UARTEX_Handle, CtorByConfig)
 	TEST_ASSERT_EQUAL_HEX32(&hdmaex_rx, h->hdmaex_rx);
 	TEST_ASSERT_EQUAL_HEX32(&hdmaex_tx, h->hdmaex_tx);
 	TEST_ASSERT_EQUAL_HEX32(&hirq, h->hirq);
-	// TEST_ASSERT_EQUAL_HEX32(&ops, h->ops);
 	TEST_ASSERT_EQUAL_MEMORY(&ops, &h->ops, sizeof(ops));
 	TEST_ASSERT_EQUAL_HEX32(0, h->testdata);
 	
 	if (h) free(h);
 }
+
+TEST(UARTEX_Handle, HandleInitByConfigInvalidArgs)
+{
+	int ret;
+	
+	UARTEX_HandleTypeDef h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	struct UARTEX_Operations ops;
+	
+	UART_ConfigTypeDef config;
+	
+	memset(&ops, 0xA5, sizeof(ops));
+	memset(&config, 0xA5, sizeof(config));
+	config.Instance = USART2;
+	
+	ret = UARTEX_Handle_InitByConfig(NULL, &config, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+	
+	ret = UARTEX_Handle_InitByConfig(&h, NULL, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	TEST_ASSERT_EQUAL(-EINVAL, ret);
+}
+
+TEST(UARTEX_Handle, HandleInitByConfigSuccess)
+{
+	int ret;
+	
+	UARTEX_HandleTypeDef h;
+	GPIOEX_TypeDef rx = PD6_As_Uart2Rx_Default;
+	GPIOEX_TypeDef tx = PD5_As_Uart2Tx_Default;
+	DMAEX_HandleTypeDef hdmaex_rx;
+	DMAEX_HandleTypeDef	hdmaex_tx;
+	IRQ_HandleTypeDef	hirq;
+	struct UARTEX_Operations ops;
+	
+	UART_ConfigTypeDef config;
+	
+	memset(&ops, 0xA5, sizeof(ops));
+	memset(&config, 0xA5, sizeof(config));
+	config.Instance = USART2;
+	
+	ret = UARTEX_Handle_InitByConfig(&h, &config, &rx, &tx, &hdmaex_rx, &hdmaex_tx, &hirq, &ops);
+	
+	TEST_ASSERT_EQUAL(0, ret);
+	TEST_ASSERT_EQUAL_HEX32(&rx, h.rxpin);
+	TEST_ASSERT_EQUAL_HEX32(&tx, h.txpin);
+	TEST_ASSERT_EQUAL(config.Instance, h.huart.Instance);
+	TEST_ASSERT_EQUAL_MEMORY(&config.Init, &h.huart.Init, sizeof(config.Init));
+	TEST_ASSERT_EQUAL_HEX32(&hdmaex_rx, h.hdmaex_rx);
+	TEST_ASSERT_EQUAL_HEX32(&hdmaex_tx, h.hdmaex_tx);
+	TEST_ASSERT_EQUAL_HEX32(&hirq, h.hirq);
+	TEST_ASSERT_EQUAL_MEMORY(&ops, &h.ops, sizeof(ops));
+	TEST_ASSERT_EQUAL_HEX32(0, h.testdata);
+}
+
 
 TEST(UARTEX_Handle, CtorInvalidArgs)
 {
@@ -659,10 +763,16 @@ TEST(UARTEX_Handle, FactoryDestroy)
 TEST_GROUP_RUNNER(UARTEX_Handle)
 {
 	RUN_TEST_CASE(UARTEX_Handle, HandleInitSuccess);
+	RUN_TEST_CASE(UARTEX_Handle, HandleInitInvalidArgs);
+	
+	RUN_TEST_CASE(UARTEX_Handle, HandleInitByConfigInvalidArgs);
+	RUN_TEST_CASE(UARTEX_Handle, HandleInitByConfigSuccess);
+	
 	RUN_TEST_CASE(UARTEX_Handle, Ctor);
 	RUN_TEST_CASE(UARTEX_Handle, CtorByConfig);
 	RUN_TEST_CASE(UARTEX_Handle, CtorInvalidArgs);
 	RUN_TEST_CASE(UARTEX_Handle, Dtor);
+	
 	RUN_TEST_CASE(UARTEX_Handle, FactoryCreate);
 	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithInvalidFactory);
 	RUN_TEST_CASE(UARTEX_Handle, FactoryCreateWithoutDMAIRQ);
@@ -698,6 +808,8 @@ TEST_SETUP(UART_DMA_TxRx)
 		
 		.create_dmaex_handle = msp_create_dmaex_handle,
 		.gpioex_init_by_config = GPIOEX_InitByConfig,		
+		.irq_handle_init_by_config = IRQ_Handle_InitByConfig,
+		.uartex_handle_init_by_config = UARTEX_Handle_InitByConfig,
 	};
 	
 	HUARTEX_DMA = msp_create_uartex_handle(&msp, &cfg);

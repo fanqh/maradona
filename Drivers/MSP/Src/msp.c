@@ -69,8 +69,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 	UARTEX_HandleTypeDef* h = NULL;
 
 	/** validate object **/
-	if (msp == NULL || msp->dma_clk == NULL || msp->gpio_clk == NULL || msp->irq_registry == NULL || msp->create_dmaex_handle == NULL
-			|| cfg == NULL)
+	if (msp == NULL || msp->dma_clk == NULL || msp->gpio_clk == NULL || msp->irq_registry == NULL || msp->create_dmaex_handle == NULL || cfg == NULL)
 		return NULL;
 	
 	rxpinH = malloc(sizeof(*rxpinH));
@@ -122,7 +121,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 			goto fail4;
 		}
 		
-		ret = IRQ_Handle_InitByConfig(irqH, cfg->uart_irq, msp->irq_registry);
+		ret = msp->irq_handle_init_by_config(irqH, cfg->uart_irq, msp->irq_registry);
 		if (ret != 0)
 		{
 			errno = -ret;
@@ -130,12 +129,24 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		}
 	}
 	
-	h = UARTEX_Handle_Ctor(cfg->uart->Instance, &cfg->uart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
+	h = malloc(sizeof(*h));
 	if (h == NULL)
+	{
+		errno = ENOMEM;
 		goto fail5;
+	}
+	
+	// ret = UARTEX_Handle_InitByConfig(h, cfg->uart, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
+	ret = msp->uartex_handle_init_by_config(h, cfg->uart, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
+	if (ret != 0)
+	{
+		errno = -ret;
+		goto fail6;
+	}
 	
 	return h;
 	
+	fail6:	free(h);
 	fail5:	if (cfg->uart_irq) free(irqH);
 	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
 	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
