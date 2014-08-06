@@ -149,7 +149,7 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 	g
 																										IRQ_HandleRegistryTypeDef*	irq_registry,
 																										const UARTEX_ConfigTypeDef* uartex_configs);
 																										
-void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h);																										
+//void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h);																										
 
 
 

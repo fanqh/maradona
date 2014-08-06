@@ -528,31 +528,31 @@ UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 		
 	fail0:	return NULL;
 }
 
-void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h)
-{
-	
-//	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
-	if (h->hdmaex_rx)
-	{
-		if (h->hdmaex_rx->hirq)
-			free(h->hdmaex_rx->hirq);
-		free(h->hdmaex_rx);
-	}
-//	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
-	if (h->hdmaex_tx)
-	{
-		if (h->hdmaex_tx->hirq)
-			free(h->hdmaex_tx->hirq);
-		free(h->hdmaex_tx);
-	}	
-	free(h->rxpin);
-	free(h->txpin);
+//void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h)
+//{
+//	
+////	DMAEX_Handle_FactoryDestroy(h->hdmaex_rx);
+//	if (h->hdmaex_rx)
+//	{
+//		if (h->hdmaex_rx->hirq)
+//			free(h->hdmaex_rx->hirq);
+//		free(h->hdmaex_rx);
+//	}
+////	DMAEX_Handle_FactoryDestroy(h->hdmaex_tx);
+//	if (h->hdmaex_tx)
+//	{
+//		if (h->hdmaex_tx->hirq)
+//			free(h->hdmaex_tx->hirq);
+//		free(h->hdmaex_tx);
+//	}	
+//	free(h->rxpin);
+//	free(h->txpin);
 
-	/** is this problematic ??? undefined combination ??? **/
-	if (h->hirq) free(h->hirq);
-		
-	free(h);
-}
+//	/** is this problematic ??? undefined combination ??? **/
+//	if (h->hirq) free(h->hirq);
+//		
+//	free(h);
+//}
 
 
 ///** obsolete, don't use **/
