@@ -12,4 +12,6 @@
 #define ENODEV			(EBASE + 19)
 #define EFATAL			(EBASE + 100)		/** no way to recover until a system reset **/
 
+#define EMAGIC			(0x10203040)		/** used in test mock to ensure the errno is not further touched. **/
+
 #endif

@@ -76,7 +76,7 @@ typedef struct
 extern GPIO_ClockProviderTypeDef GPIO_ClockProvider;
 
 int GPIOEX_Init(GPIOEX_TypeDef* gpioex, GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk);
-int GPIOEX_InitByConfig(GPIOEX_TypeDef* gpioex, GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);	// thin wrapper
+int GPIOEX_InitByConfig(GPIOEX_TypeDef* gpioex, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);
 
 void	GPIOEX_HAL_Init(GPIOEX_TypeDef* gpioex);
 void 	GPIOEX_HAL_DeInit(GPIOEX_TypeDef* gpioex);

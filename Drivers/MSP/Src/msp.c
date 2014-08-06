@@ -5,39 +5,42 @@
 
 UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp, int port) {
 	
-	if (msp == NULL || msp->board_config == NULL) 
+	if (msp == NULL || msp->board_config == NULL || port < 1 || port > 6)  {
+			
+			errno = EINVAL;
 			return NULL;
+	}
 	
 	switch(port)
 	{
 		case 1:
 			if (msp->board_config->uart1 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart1);
+				return msp->create_uartex_handle(msp, msp->board_config->uart1);
 			break;
 			
 		case 2:
 			if (msp->board_config->uart2 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart2);
+				return msp->create_uartex_handle(msp, msp->board_config->uart2);
 			break;
 			
 		case 3:
 			if (msp->board_config->uart3 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart3);
+				return msp->create_uartex_handle(msp, msp->board_config->uart3);
 			break;
 
 		case 4:
 			if (msp->board_config->uart4 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart4);
+				return msp->create_uartex_handle(msp, msp->board_config->uart4);
 			break;			
 
 		case 5:
 			if (msp->board_config->uart5 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart5);
+				return msp->create_uartex_handle(msp, msp->board_config->uart5);
 			break;
 
 		case 6:
 			if (msp->board_config->uart6 != NULL)	
-				return msp->ll_huartex_create(msp->gpio_clk, msp->dma_clk, msp->irq_registry, msp->board_config->uart6);
+				return msp->create_uartex_handle(msp, msp->board_config->uart6);
 			break;			
 		
 		default:
@@ -46,6 +49,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp,
 	
 	return NULL;
 }
+
 
 UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UARTEX_ConfigTypeDef* cfg)															
 {
@@ -58,8 +62,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 	UARTEX_HandleTypeDef* h = NULL;
 
 	/** validate object **/
-	if (msp == NULL || msp->dma_clk == NULL || msp->gpio_clk == NULL || msp->irq_registry == NULL || msp->create_dmaex_handle == NULL
-			|| cfg == NULL)
+	if (msp == NULL || msp->dma_clk == NULL || msp->gpio_clk == NULL || msp->irq_registry == NULL || msp->create_dmaex_handle == NULL || cfg == NULL)
 		return NULL;
 	
 	rxpinH = malloc(sizeof(*rxpinH));
@@ -68,7 +71,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail0;
 	}
 	
-	ret = GPIOEX_Init(rxpinH, cfg->rxpin->instance, &cfg->rxpin->init, msp->gpio_clk);
+	ret = msp->gpioex_init_by_config(rxpinH, cfg->rxpin, msp->gpio_clk);
 	if (ret != 0) {
 		errno = -ret;
 		goto fail1;
@@ -81,7 +84,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail1;
 	}
 	
-	ret = GPIOEX_Init(txpinH, cfg->txpin->instance, &cfg->txpin->init, msp->gpio_clk);
+	ret = msp->gpioex_init_by_config(txpinH, cfg->txpin, msp->gpio_clk);
 	if (ret != 0)
 	{
 		errno = -ret;
@@ -111,7 +114,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 			goto fail4;
 		}
 		
-		ret = IRQ_Handle_InitByConfig(irqH, cfg->uart_irq, msp->irq_registry);
+		ret = msp->irq_handle_init_by_config(irqH, cfg->uart_irq, msp->irq_registry);
 		if (ret != 0)
 		{
 			errno = -ret;
@@ -119,20 +122,58 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		}
 	}
 	
-	h = UARTEX_Handle_Ctor(cfg->uart->Instance, &cfg->uart->Init, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
+	h = malloc(sizeof(*h));
 	if (h == NULL)
+	{
+		errno = ENOMEM;
 		goto fail5;
+	}
+	
+	ret = msp->uartex_handle_init_by_config(h, cfg->uart, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
+	if (ret != 0)
+	{
+		errno = -ret;
+		goto fail6;
+	}
 	
 	return h;
 	
+	fail6:	free(h);
 	fail5:	if (cfg->uart_irq) free(irqH);
-	fail4:	if (cfg->dmarx && cfg->dmatx_irq) DMAEX_Handle_FactoryDestroy(dmaExTxH);
-	fail3:	if (cfg->dmatx && cfg->dmarx_irq) DMAEX_Handle_FactoryDestroy(dmaExRxH);
+	fail4:	if (cfg->dmarx && cfg->dmatx_irq) msp->destroy_dmaex_handle(msp, dmaExTxH); // DMAEX_Handle_FactoryDestroy(dmaExTxH);
+	fail3:	if (cfg->dmatx && cfg->dmarx_irq) msp->destroy_dmaex_handle(msp, dmaExRxH); // DMAEX_Handle_FactoryDestroy(dmaExRxH);
 	fail2: 	free(txpinH);
 	fail1:	free(rxpinH);
 	fail0:	return NULL;
 }
 
+void msp_destroy_uartex_handle(struct msp_factory * msp, UARTEX_HandleTypeDef* h)
+{
+	if (h->hdmaex_rx)
+	{
+		if (h->hdmaex_rx->hirq)
+			free(h->hdmaex_rx->hirq);
+		free(h->hdmaex_rx);
+	}
+
+	if (h->hdmaex_tx)
+	{
+		if (h->hdmaex_tx->hirq)
+			free(h->hdmaex_tx->hirq);
+		free(h->hdmaex_tx);
+	}	
+	free(h->rxpin);
+	free(h->txpin);
+
+	/** is this problematic ??? undefined combination ??? **/
+	if (h->hirq) free(h->hirq);
+		
+	free(h);	
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// create dmaex handle
 DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp, 
 	const DMA_ConfigTypeDef * dma_config, const IRQ_ConfigTypeDef * irq_config)
 {
@@ -174,4 +215,18 @@ DMAEX_HandleTypeDef*	msp_create_dmaex_handle(struct msp_factory * msp,
 
 	return dmaExH;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// destroy dmaex handle
+void msp_destroy_dmaex_handle(struct msp_factory * msp, DMAEX_HandleTypeDef* handle)
+{
+	if (handle) {
+		if (handle->hirq) {
+			free(handle->hirq);
+		}
+		
+		free(handle);
+	}
+}
+
 

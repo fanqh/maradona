@@ -52,18 +52,7 @@ int DMAEX_Handle_InitByConfig(DMAEX_HandleTypeDef* h, const DMA_ConfigTypeDef* c
 	DMA_ClockProviderTypeDef *clk, IRQ_HandleTypeDef *hirq);
 
 void 	DMAEX_HAL_Init(DMAEX_HandleTypeDef* dmaex);
-void	DMAEX_HAL_DeInit(DMAEX_HandleTypeDef* dmaex);
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-DMAEX_HandleTypeDef*	DMAEX_Handle_FactoryCreate(	DMA_ClockProviderTypeDef			*dma_clk,
-																									IRQ_HandleRegistryTypeDef			*irq_registry,
-																									const DMA_ConfigTypeDef				*dma_config,
-																									const IRQ_ConfigTypeDef				*irq_config);
-																						
-/** the factory isn't really required in impl. pass it for user not calling the wrong factory **/																									
-void DMAEX_Handle_FactoryDestroy(DMAEX_HandleTypeDef* handle);																									
+void	DMAEX_HAL_DeInit(DMAEX_HandleTypeDef* dmaex);																								
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
