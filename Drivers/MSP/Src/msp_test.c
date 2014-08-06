@@ -1,5 +1,6 @@
 #include <string.h>
 #include "msp.h"
+#include "test_utils.h"
 
 
 static void* passby = 0;
@@ -122,7 +123,60 @@ UARTEX_HandleTypeDef* mock_ll_huartex_create(	GPIO_ClockProviderTypeDef* 	gpio_c
 //	
 //	passby = 0;
 //}
-TEST(MSP, CreateUARTEXHandle)
+
+///////////////////////////////////////////////////////////////////////////////
+TEST(MSP, CreateUARTEXHandleMallocFail)
+{
+	
+}
+
+struct create_uartex_handle_testdata
+{
+	int gpioex_init_fail_countdown;
+};
+
+int mock_gpioex_init_by_config(GPIOEX_TypeDef* gpioex, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
+{
+	
+}
+
+TEST(MSP, CreateUARTEXHandleInnerFuncFail)
+{
+	UARTEX_HandleTypeDef* h;
+
+	UARTEX_ConfigTypeDef	cfg = {
+		.uart = &UART2_DefaultConfig,
+		.rxpin = &PD6_As_Uart2Rx_DefaultConfig,
+		.txpin = &PD5_As_Uart2Tx_DefaultConfig,
+		.dmarx = &DMA_Uart2Rx_DefaultConfig,
+		.dmarx_irq = &IRQ_Uart2RxDMA_DefaultConfig,
+		.dmatx = &DMA_Uart2Tx_DefaultConfig,
+		.dmatx_irq = &IRQ_Uart2TxDMA_DefaultConfig,
+		.uart_irq = &IRQ_Uart2_DefaultConfig,
+		.uartex_ops = &UARTEX_Ops_DefaultConfig,
+	};
+	
+	GPIO_ClockProviderTypeDef gpio_clk;
+	DMA_ClockProviderTypeDef dma_clk;
+	IRQ_HandleRegistryTypeDef irq_registry;
+	
+	struct msp_factory msp = {
+		.gpio_clk = &gpio_clk,
+		.dma_clk = &dma_clk,
+		.irq_registry = &irq_registry,
+		
+		.create_dmaex_handle = msp_create_dmaex_handle,
+		.gpioex_init_by_config = GPIOEX_InitByConfig,
+	};
+	
+	
+	
+	h = msp_create_uartex_handle(&msp, &cfg);	
+	
+	
+}
+
+TEST(MSP, CreateUARTEXHandleSuccess)
 {
 	UARTEX_HandleTypeDef* h;
 
@@ -261,7 +315,7 @@ TEST_GROUP_RUNNER(MSP)
 	// RUN_TEST_CASE(MSP, CreateHuartEx);
 	
 	RUN_TEST_CASE(MSP, CreateDMAEXHandle);
-	RUN_TEST_CASE(MSP, CreateUARTEXHandle);
+	RUN_TEST_CASE(MSP, CreateUARTEXHandleSuccess);
 }
 
 

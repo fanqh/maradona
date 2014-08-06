@@ -273,7 +273,7 @@ int GPIOEX_Init(GPIOEX_TypeDef* ge, GPIO_TypeDef* gpiox, const GPIO_InitTypeDef*
 	return 0;
 }
 
-int GPIOEX_InitByConfig(GPIOEX_TypeDef* ge, GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
+int GPIOEX_InitByConfig(GPIOEX_TypeDef* ge, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
 {
 	return GPIOEX_Init(ge, config->instance, &config->init, clk);
 }

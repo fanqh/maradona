@@ -17,7 +17,8 @@
 
 typedef struct GuardBytes
 {
-    size_t size;
+    size_t 	size;
+		void*		testdata;
     char guard[sizeof(size_t)];
 } Guard;
 

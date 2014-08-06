@@ -37,6 +37,12 @@ struct msp_factory
 	DMAEX_HandleTypeDef*	(*create_dmaex_handle)(struct msp_factory * msp, 
 		const DMA_ConfigTypeDef * dmacfg, const IRQ_ConfigTypeDef * irqcfg);
 	
+	// required functions
+	int (*gpioex_init_by_config)(GPIOEX_TypeDef* ge, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk);
+	
+	
+	
+	
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// test data

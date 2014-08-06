@@ -129,7 +129,7 @@
   * @brief This is the HAL system configuration section
   */     
   
-#define  VDD_VALUE					  ((uint32_t)3300) /*!< Value of VDD in mv */           
+#define  VDD_VALUE					  				((uint32_t)3300) /*!< Value of VDD in mv */           
 #define  USE_RTOS                     0     
 #define  PREFETCH_ENABLE              1
 #define  INSTRUCTION_CACHE_ENABLE     1
@@ -140,7 +140,7 @@
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 
   *        HAL drivers code
   */
-#define USE_FULL_ASSERT    1
+#define USE_FULL_ASSERT    						1
 
 /* ################## Ethernet peripheral configuration ##################### */
 

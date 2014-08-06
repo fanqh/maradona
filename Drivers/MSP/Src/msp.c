@@ -47,6 +47,17 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle_by_port(struct msp_factory * msp,
 	return NULL;
 }
 
+/** failure analysis 
+1. valid args ( at least the ones used in func)
+2. rxpin init fail
+3. txpin init fail
+
+
+
+**/
+
+
+
 UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UARTEX_ConfigTypeDef* cfg)															
 {
 	int ret;
@@ -68,7 +79,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail0;
 	}
 	
-	ret = GPIOEX_Init(rxpinH, cfg->rxpin->instance, &cfg->rxpin->init, msp->gpio_clk);
+	ret = GPIOEX_InitByConfig(rxpinH, cfg->rxpin, msp->gpio_clk);
 	if (ret != 0) {
 		errno = -ret;
 		goto fail1;
@@ -81,7 +92,7 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail1;
 	}
 	
-	ret = GPIOEX_Init(txpinH, cfg->txpin->instance, &cfg->txpin->init, msp->gpio_clk);
+	ret = GPIOEX_InitByConfig(txpinH, cfg->txpin, msp->gpio_clk);
 	if (ret != 0)
 	{
 		errno = -ret;
