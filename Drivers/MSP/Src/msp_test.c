@@ -173,12 +173,7 @@ UARTEX_HandleTypeDef* mock_ll_huartex_create(	GPIO_ClockProviderTypeDef* 	gpio_c
 //}
 
 ///////////////////////////////////////////////////////////////////////////////
-TEST(MSP, CreateUARTEXHandleMallocFail)
-{
-	
-}
-
-
+// TEST CASES for CreateUARTEXHandle
 
 static int mock_gpioex_init_by_config(GPIOEX_TypeDef* gpioex, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
 {
@@ -360,6 +355,71 @@ TEST(MSP, CreateUARTEXHandleUARTEXHandleInitFail)
 	TEST_ASSERT_EQUAL(1, testdata->uartex_handle_init_by_config_called);
 }
 
+TEST(MSP, CreateUARTEXHandleMallocFail)
+{
+	UARTEX_HandleTypeDef* h;
+	
+	struct create_uartex_handle_testdata * testdata = 
+		(struct create_uartex_handle_testdata *)get_testdata();
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(0);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);
+	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(1);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(2);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(3);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(4);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(5);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(6);	
+	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+	
+	errno = 0;
+	UnityMalloc_MakeMallocFailAfterCount(7);	// no more, 7 times of successful allocation still fail.
+																						// actually the func needs 8 times of malloc success.	
+	h = msp_create_uartex_handle(testdata->msp, testdata->config);
+	TEST_ASSERT_NULL(h);
+	TEST_ASSERT_EQUAL(ENOMEM, errno);	
+}
+
 TEST(MSP, CreateUARTEXHandleSuccess)
 {
 	UARTEX_HandleTypeDef* h;
@@ -517,13 +577,13 @@ TEST_GROUP_RUNNER(MSP)
 	
 	/////////////////////////////////////////////////////////////////////////////
 	// use global testdata
-	
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleGPIOEXInitFailFirstCall);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleGPIOEXInitFailSecondCall);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleCreateDMAEXFailFirstCall);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleCreateDMAEXFailSecondCall);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleIRQHandleInitFail);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleUARTEXHandleInitFail);
+	RUN_TEST_CASE(MSP, CreateUARTEXHandleMallocFail);
 	RUN_TEST_CASE(MSP, CreateUARTEXHandleSuccess);
 	
 	/////////////////////////////////////////////////////////////////////////////

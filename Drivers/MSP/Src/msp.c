@@ -136,7 +136,6 @@ UARTEX_HandleTypeDef* msp_create_uartex_handle(struct msp_factory* msp, const UA
 		goto fail5;
 	}
 	
-	// ret = UARTEX_Handle_InitByConfig(h, cfg->uart, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
 	ret = msp->uartex_handle_init_by_config(h, cfg->uart, rxpinH, txpinH, dmaExRxH, dmaExTxH, irqH, cfg->uartex_ops);
 	if (ret != 0)
 	{
