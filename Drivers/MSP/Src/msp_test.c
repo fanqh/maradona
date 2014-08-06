@@ -1,7 +1,5 @@
 #include <string.h>
 #include "msp.h"
-#include "test_utils.h"
-
 
 static void* passby = 0;
 
@@ -137,6 +135,7 @@ struct create_uartex_handle_testdata
 
 int mock_gpioex_init_by_config(GPIOEX_TypeDef* gpioex, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
 {
+	/** assuming this is malloced handle **/
 	
 }
 

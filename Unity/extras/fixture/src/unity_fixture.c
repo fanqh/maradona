@@ -158,6 +158,16 @@ void UnityMalloc_SetMemHandleTestData(void* testdata)
 		memhandle_testdata = testdata;
 }
 
+void* UnityMalloc_GetMemHandleTestData(void* mem)
+{
+		if (mem == NULL)
+			return NULL;
+		
+		Guard* g = (Guard*)mem;
+		g--;
+		return g->testdata;
+}
+
 #ifdef malloc
 #undef malloc
 #endif
@@ -194,7 +204,7 @@ void * unity_malloc(size_t size)
 
     guard = (Guard*)malloc(size + sizeof(Guard) + 4);
     guard->size = size;
-		guard->testdata = memhandle_testdata;
+		guard->testdata = memhandle_testdata;	// UGlee
     mem = (char*)&(guard[1]);
     memcpy(&mem[size], end, strlen(end) + 1);
 
