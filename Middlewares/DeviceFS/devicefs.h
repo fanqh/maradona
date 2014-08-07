@@ -16,15 +16,17 @@ struct file_operations;						// simulate file_operations in kernel
 
 struct device
 {
-	const char											*name;
+	const char											*name;		/** device name, such as "UART2" 	**/
+	const	int												number;		/** device number if any					**/
 	const struct file_operations		*f_ops;
+	struct file_operations* const		test;
 };
 
 /** represent an opened (device) file **/
 struct file	
 {
-	struct device										*dev;
 	const struct file_operations    *f_ops;
+	void														*private_data;
 };
 
 struct file_operations

@@ -78,5 +78,7 @@ int UnityMain(int argc, char* argv[], void (*runAllTests)(void));
 #define DOUBLES_EQUAL(expected, actual, delta)         TEST_ASSERT_FLOAT_WITHIN(((expected), (actual), (delta))
 
 void UnityMalloc_MakeMallocFailAfterCount(int count);
+void UnityMalloc_SetMemHandleTestData(void* testdata);
+void* UnityMalloc_GetMemHandleTestData(void* mem);
 
 #endif /* UNITY_FIXTURE_H_ */

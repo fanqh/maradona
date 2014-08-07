@@ -343,8 +343,8 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
-            <oTime>0</oTime>
+            <Optim>3</Optim>
+            <oTime>1</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
             <Strict>0</Strict>
@@ -470,14 +470,14 @@
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\irq_test.c</FilePath>
             </File>
             <File>
-              <FileName>uart_io_test.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\uart_io_test.c</FilePath>
-            </File>
-            <File>
               <FileName>uart_io.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\uart_io.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_io_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\uart_io_test.c</FilePath>
             </File>
             <File>
               <FileName>msp.c</FileName>

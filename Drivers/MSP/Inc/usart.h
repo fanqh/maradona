@@ -74,7 +74,7 @@ struct UARTEX_HandleTypeDef
 	
 	/** This field are used for test/mock					**/
 	/** UART Ex Operations never touch this field **/
-	void											*test_data;					
+	void											*testdata;					
 };
 
 typedef struct
@@ -83,44 +83,30 @@ typedef struct
   UART_InitTypeDef              Init;             /* UART communication parameters      */
 } UART_ConfigTypeDef;	
 
-	
-
-
 ///////////////////////////////////////////////////////////////////////////////
-// constructor & destructor
-UARTEX_HandleTypeDef*	 UARTEX_Handle_Ctor(USART_TypeDef						*uart,
-																					const UART_InitTypeDef	*init,
-																					GPIOEX_TypeDef					*rxpin, 		// DI
-																					GPIOEX_TypeDef					*txpin, 		// DI		
-																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
-																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
-																					IRQ_HandleTypeDef				*hirq,			// DI
-																					const struct UARTEX_Operations				*ops);
-																					
-UARTEX_HandleTypeDef*	UARTEX_Handle_CtorByConfig(const UART_ConfigTypeDef* uart_config,	
-																					GPIOEX_TypeDef					*rxpin, 		// DI
-																					GPIOEX_TypeDef					*txpin, 		// DI		
-																					DMAEX_HandleTypeDef			*hdmaex_rx,	// DI
-																					DMAEX_HandleTypeDef			*hdmaex_tx,	// DI
-																					IRQ_HandleTypeDef				*hirq,			// DI
-																					const struct UARTEX_Operations				*ops);																					
+// UARTEX Handle Init
+int	 UARTEX_Handle_Init(UARTEX_HandleTypeDef						*h,
+												USART_TypeDef										*uart,
+												const UART_InitTypeDef					*init,
+												GPIOEX_TypeDef									*rxpin, 		// DI
+												GPIOEX_TypeDef									*txpin, 		// DI		
+												DMAEX_HandleTypeDef							*hdmaex_rx,	// DI
+												DMAEX_HandleTypeDef							*hdmaex_tx,	// DI
+												IRQ_HandleTypeDef								*hirq,			// DI
+												const struct UARTEX_Operations	*ops);																						
 
-void UARTEX_Handle_Dtor(UARTEX_HandleTypeDef* handle);
+int	UARTEX_Handle_InitByConfig(	UARTEX_HandleTypeDef* 						h,
+																const UART_ConfigTypeDef					*config,	
+																GPIOEX_TypeDef										*rxpin, 				// DI
+																GPIOEX_TypeDef										*txpin, 				// DI		
+																DMAEX_HandleTypeDef								*hdmaex_rx,			// DI
+																DMAEX_HandleTypeDef								*hdmaex_tx,			// DI
+																IRQ_HandleTypeDef									*hirq,					// DI
+																const struct UARTEX_Operations		*ops);
+
 																					
 ///////////////////////////////////////////////////////////////////////////////
-// uart factory
-																					
-//typedef struct 
-//{
-//	GPIO_ClockProviderTypeDef*				gpio_clk;
-//	DMA_ClockProviderTypeDef*					dma_clk;
-//	IRQ_HandleRegistryTypeDef* 				registry;	
-//	
-//	struct UARTEX_Operations*					uart_ops;
-//	
-//} UARTEX_Handle_FactoryTypeDef;	
-
-/** an aggregate class **/
+// aggregates
 typedef struct
 {
 	const UART_ConfigTypeDef* uart;	
@@ -135,17 +121,8 @@ typedef struct
 	
 } UARTEX_ConfigTypeDef;	
 
-UARTEX_HandleTypeDef* UARTEX_Handle_FactoryCreate(	GPIO_ClockProviderTypeDef* 	gpio_clk,
-																										DMA_ClockProviderTypeDef*		dma_clk,
-																										IRQ_HandleRegistryTypeDef*	irq_registry,
-																										const UARTEX_ConfigTypeDef* uartex_configs);
-																										
-void UARTEX_Handle_FactoryDestroy(UARTEX_HandleTypeDef* h);																										
-
-
-
 ///////////////////////////////////////////////////////////////////////////////																										
-/** utility **/
+// utilities
 void HAL_UART_ClockEnable(USART_TypeDef* uart);
 void HAL_UART_ClockDisable(USART_TypeDef* uart);
 bool HAL_UART_ClockIsEnabled(USART_TypeDef* uart);
@@ -155,7 +132,8 @@ HAL_StatusTypeDef HAL_UART_SwapRxDMABuffer(UART_HandleTypeDef* h, uint8_t* buf, 
 									
 int UART_Instance_To_Index(USART_TypeDef* uart);
 									
-/*********************** Defaults *********************************************/
+///////////////////////////////////////////////////////////////////////////////
+// defaults
 
 extern const UART_ConfigTypeDef	UART2_DefaultConfig;
 

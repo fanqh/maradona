@@ -36,18 +36,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <string.h>
+#include "errno_ex.h"
 #include "gpio.h"
 
 GPIO_ClockProviderTypeDef GPIO_ClockProvider = {0};
 
-void	GPIOEX_Init(GPIOEX_TypeDef* gpioex)
+void	GPIOEX_HAL_Init(GPIOEX_TypeDef* gpioex)
 {
 	GPIO_Clock_Get(gpioex->clk, gpioex->instance, gpioex->init.Pin);
 	HAL_GPIO_Init(gpioex->instance, &gpioex->init);
 	gpioex->state = GPIOEX_STATE_SET;
 }
 
-void 	GPIOEX_DeInit(GPIOEX_TypeDef* gpioex)
+void 	GPIOEX_HAL_DeInit(GPIOEX_TypeDef* gpioex)
 {
 	HAL_GPIO_DeInit(gpioex->instance, gpioex->init.Pin);
 	GPIO_Clock_Put(gpioex->clk, gpioex->instance, gpioex->init.Pin);
@@ -257,11 +258,11 @@ bool GPIO_Clock_Status(GPIO_ClockProviderTypeDef* clk, GPIO_TypeDef* gpiox, uint
 	return (clk->bits[index] & Pin) ? true : false;
 }
 
-GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk)
+int GPIOEX_Init(GPIOEX_TypeDef* ge, GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, GPIO_ClockProviderTypeDef* clk)
 {
-	GPIOEX_TypeDef* ge = (GPIOEX_TypeDef*)malloc(sizeof(GPIOEX_TypeDef));
-	if (ge == NULL) return NULL;
-	
+	if (ge == NULL || gpiox == NULL || init == NULL || clk == NULL)
+		return -EINVAL;
+		
 	memset(ge, 0, sizeof(GPIOEX_TypeDef));
 	
 	ge->instance = gpiox;
@@ -269,17 +270,12 @@ GPIOEX_TypeDef* GPIOEX_Ctor(GPIO_TypeDef* gpiox, const GPIO_InitTypeDef* init, G
 	ge->clk = clk;
 	ge->state = GPIOEX_STATE_RESET;
 	
-	return ge;
+	return 0;
 }
 
-GPIOEX_TypeDef* GPIOEX_CtorByConfig(GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
+int GPIOEX_InitByConfig(GPIOEX_TypeDef* ge, const GPIO_ConfigTypeDef* config, GPIO_ClockProviderTypeDef* clk)
 {
-	return GPIOEX_Ctor(config->instance, &config->init, clk);
-}
-
-void GPIOEX_Dtor(GPIOEX_TypeDef* ge)
-{
-	if (ge) free(ge);
+	return GPIOEX_Init(ge, config->instance, &config->init, clk);
 }
 
 /************************ Defaults ********************************************/

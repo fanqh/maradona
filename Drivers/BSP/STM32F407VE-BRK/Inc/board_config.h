@@ -5,8 +5,8 @@
 
 typedef struct {
 	
-	UARTEX_ConfigTypeDef* uart1;
-	UARTEX_ConfigTypeDef*	uart2;
+	const UARTEX_ConfigTypeDef* uart1;
+	const UARTEX_ConfigTypeDef*	uart2;
 	UARTEX_ConfigTypeDef* uart3;
 	UARTEX_ConfigTypeDef*	uart4;
 	UARTEX_ConfigTypeDef* uart5;

@@ -421,13 +421,76 @@ n/a		HAL_UART_STATE_ERROR             = 0x04     /*!< Error                     
 
 int	UART_IO_Open(struct device * dev, struct file * filp)
 {
+	void* h;
+	int ret;
 	struct uart_device * udev = container_of(dev, struct uart_device, dev);
 	
-	udev->handle = udev->msp->huartex_create(udev->msp, 2);
+	h = malloc(udev->rbuf_size);
+	if (h == NULL) {
+		ret = -ENOMEM;
+		goto fail0;
+	}
 	
+	udev->rbuf[0] = h;
+
+	h = malloc(udev->rbuf_size);
+	if (h == NULL) {
+		ret = -ENOMEM;
+		goto fail1;
+	}
+	
+	udev->rbuf[1] = h;
+	
+	h = malloc(udev->tbuf_size);
+	if (h == NULL) {
+		ret = -ENOMEM;
+		goto fail2;
+	}
+	
+	udev->tbuf[0] = h;
+	
+	h = malloc(udev->tbuf_size);
+	if (h == NULL) {
+		ret = -ENOMEM;
+		goto fail3;
+	}
+	
+	udev->tbuf[1] = h;	
+	
+	// factory create
+	udev->handle = udev->msp->create_uartex_handle_by_port(udev->msp, udev->dev.number);
+	if (udev->handle == NULL) {
+		ret = -EFATAL;
+		goto fail4;
+	}
+	
+	// init, HAL_UART_Init, this function return HAL_OK as long as argument valid.
 	udev->handle->ops.init(udev->handle);
 	
+	udev->rx_upper = udev->rbuf[1];
+	udev->rx_head = udev->rbuf[1];
+	udev->rx_tail = udev->rbuf[1];
+	
+	// recv, HAL_UART_Receive_DMA, this function return HAL_OK when HAL_UART_STATE_READY
+	udev->handle->ops.recv(udev->handle, (void*)udev->rbuf[0], udev->rbuf_size);
+	
+	udev->tx_head = udev->tbuf[1];
+	udev->tx_tail = udev->tbuf[1];
+	
+	udev->open_count = 1;
+	
+	filp->private_data = udev;
+	filp->f_ops = udev->dev.f_ops;
+	
 	return 0;
+	
+	fail4: 	free(udev->tbuf[1]); udev->tbuf[1] = NULL;
+	fail3: 	free(udev->tbuf[0]); udev->tbuf[0] = NULL;
+	fail2: 	free(udev->rbuf[1]); udev->rbuf[1] = NULL;
+	fail1:	free(udev->rbuf[0]); udev->rbuf[0] = NULL;
+	fail0:	;
+	
+	return ret;
 }
 
 
