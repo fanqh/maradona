@@ -343,8 +343,13 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
+<<<<<<< HEAD
             <Optim>4</Optim>
             <oTime>0</oTime>
+=======
+            <Optim>3</Optim>
+            <oTime>1</oTime>
+>>>>>>> upstream/master
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
             <Strict>0</Strict>
@@ -470,21 +475,16 @@
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\irq_test.c</FilePath>
             </File>
             <File>
-              <FileName>uart_io_test.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\uart_io_test.c</FilePath>
-            </File>
-            <File>
               <FileName>uart_io.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\uart_io.c</FilePath>
             </File>
             <File>
-<<<<<<< HEAD
-              <FileName>rtc.c</FileName>
+              <FileName>uart_io_test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\rtc.c</FilePath>
-=======
+              <FilePath>..\..\..\..\..\..\Drivers\MSP\Test\uart_io_test.c</FilePath>
+            </File>
+            <File>
               <FileName>msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\msp.c</FilePath>
@@ -493,7 +493,6 @@
               <FileName>msp_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\Drivers\MSP\Src\msp_test.c</FilePath>
->>>>>>> upstream/master
             </File>
           </Files>
         </Group>
@@ -509,11 +508,6 @@
               <FileName>note.txt</FileName>
               <FileType>5</FileType>
               <FilePath>..\note.txt</FilePath>
-            </File>
-            <File>
-              <FileName>learn_rtc.txt</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\learn_rtc.txt</FilePath>
             </File>
           </Files>
         </Group>
