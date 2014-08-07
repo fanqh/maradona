@@ -86,41 +86,41 @@ typedef struct
 HAL_StatusTypeDef HAL_RTC_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format)
 HAL_StatusTypeDef HAL_RTC_GetDate(RTC_HandleTypeDef *hrtc, RTC_DateTypeDef *sDate, uint32_t Format)
 **/
-HAL_StatusTypeDef mock_get_time(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format)
-{
-	RTCEX_HandleTypeDef* hrtcex = container_of(hrtc, RTCEX_HandleTypeDef, rtc);
-	
-	TEST_ASSERT_EQUAL(hrtcex->format, Format);
-	memset(sTime, 0xA5, sizeof(RTC_TimeTypeDef));
-}
+//HAL_StatusTypeDef mock_get_time(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format)
+//{
+//	RTCEX_HandleTypeDef* hrtcex = container_of(hrtc, RTCEX_HandleTypeDef, rtc);
+//	
+//	TEST_ASSERT_EQUAL(hrtcex->format, Format);
+//	memset(sTime, 0xA5, sizeof(RTC_TimeTypeDef));
+//}
 
-HAL_StatusTypeDef mock_get_date(RTC_HandleTypeDef *hrtc, RTC_DateTypeDef *sDate, uint32_t Format)
-{
-	RTCEX_HandleTypeDef* hrtcex = container_of(hrtc, RTCEX_HandleTypeDef, rtc);
-	
-	TEST_ASSERT_EQUAL(hrtcex->format, Format);
-	memset(sDate, 0xB5, sizeof(RTC_DateTypeDef));
-}
+//HAL_StatusTypeDef mock_get_date(RTC_HandleTypeDef *hrtc, RTC_DateTypeDef *sDate, uint32_t Format)
+//{
+//	RTCEX_HandleTypeDef* hrtcex = container_of(hrtc, RTCEX_HandleTypeDef, rtc);
+//	
+//	TEST_ASSERT_EQUAL(hrtcex->format, Format);
+//	memset(sDate, 0xB5, sizeof(RTC_DateTypeDef));
+//}
 
-TEST(RTC_READ, read)
-{
-	int ret;
-	RTCEX_HandleTypeDef hrtc;
+//TEST(RTC_READ, read)
+//{
+//	int ret;
+//	RTCEX_HandleTypeDef hrtc;
 
-	RTC_CalendarTypeDef bytes;
-	RTC_DateTypeDef expected_date;
-	RTC_TimeTypeDef expected_time;
-	
-	hrtc.get_date = &mock_get_date;
-	hrtc.get_time = &mock_get_time;
-	memset(&expected_date, 0xB5, sizeof(expected_date));
-	memset(&expected_time, 0xA5, sizeof(expected_time));
-	
-	ret = RTC_read(&hrtc, &bytes, sizeof(bytes));
-	
-	TEST_ASSERT_EQUAL_MEMORY(&expected_date, &bytes.initsdatestructure, sizeof(RTC_DateTypeDef));
-	TEST_ASSERT_EQUAL_MEMORY(&expected_time, &bytes.initstimestructure, sizeof(RTC_TimeTypeDef));
-}
+//	RTC_CalendarTypeDef bytes;
+//	RTC_DateTypeDef expected_date;
+//	RTC_TimeTypeDef expected_time;
+//	
+//	hrtc.get_date = &mock_get_date;
+//	hrtc.get_time = &mock_get_time;
+//	memset(&expected_date, 0xB5, sizeof(expected_date));
+//	memset(&expected_time, 0xA5, sizeof(expected_time));
+//	
+//	ret = RTC_read(&hrtc, &bytes, sizeof(bytes));
+//	
+//	TEST_ASSERT_EQUAL_MEMORY(&expected_date, &bytes.initsdatestructure, sizeof(RTC_DateTypeDef));
+//	TEST_ASSERT_EQUAL_MEMORY(&expected_time, &bytes.initstimestructure, sizeof(RTC_TimeTypeDef));
+//}
 
 TEST_GROUP_RUNNER(RTC_All)
 {

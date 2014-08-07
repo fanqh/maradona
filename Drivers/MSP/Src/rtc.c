@@ -5,6 +5,23 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+
+
 #define BKUFLAGE  0X32F2
 
 
@@ -160,7 +177,7 @@ int RTC_close(RTCEX_HandleTypeDef* hRTChandle)
 				return -1;	
 }
 
-
+#endif
 
 
 

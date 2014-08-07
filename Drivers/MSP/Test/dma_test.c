@@ -116,7 +116,7 @@ TEST_SETUP(DMAEX_Handle)
 }
 
 TEST_TEAR_DOWN(DMAEX_Handle)
-{	
+{
 }
 
 TEST(DMAEX_Handle, Ctor)
